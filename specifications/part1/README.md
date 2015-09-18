@@ -79,7 +79,7 @@ You will validate your implementation with the following test strategy:
 
 ## Documentation
 
-In the first part of the project, you must also create a product page to present your ideas (the features that you plan to implement in the second and third phases). You are asked to use GitHub Pages (and Jekyll) for that purpose. You must also integrate a nice-looking template in your product page (there are free and cheap ones available).
+In the first part of the project, you must also create a product page to present your ideas (the features that you plan to implement in the second and third phases). You are asked to use [GitHub Pages](https://pages.github.com) (and [Jekyll](http://jekyllrb.com)) for that purpose. You must also integrate a nice-looking template in your product page (there are [free](http://startbootstrap.com) and [cheap](https://wrapbootstrap.com) ones available).
 
 
 ## Specifications
