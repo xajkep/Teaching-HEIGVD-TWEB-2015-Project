@@ -1,0 +1,16 @@
+extends layout
+
+block content
+  h1 Beers list
+
+  if beers.length > 0
+
+    p There are #{beers.length}beers in the catalog.
+
+    Here they are:
+    ul
+      each beer in beers
+        li #{beer.drink()}
+
+  else
+    p The catalog is empty
