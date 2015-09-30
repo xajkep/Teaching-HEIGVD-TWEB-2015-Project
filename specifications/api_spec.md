@@ -35,10 +35,21 @@ POST data
   'questions': [{
     'name': String,
     'allowAnonymous': Boolean,
+    'maxVote' : Integer
     'answers' : [{
         'name'
       }]
     }],
+}
+~~~
+
+### Delete poll
+
+POST data
+
+~~~json
+{
+  'id_poll': Integer
 }
 ~~~
 
