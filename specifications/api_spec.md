@@ -7,7 +7,10 @@ POST data
 ~~~json
 {
   'email': String,
+  'firstname': String,
+  'lastname': String,
   'password': String,
+  'confirm': String
 }
 ~~~
 
@@ -39,7 +42,7 @@ POST data
 }
 ~~~
 
-### Open poll
+### Run poll
 
 POST data
 
@@ -49,14 +52,23 @@ POST data
 }
 ~~~
 
-### Participate
+### Join poll
 
 POST data
 
 ~~~json
 {
   'id_poll': Integer,
+}
+~~~
 
+### View poll
+
+POST data
+
+~~~json
+{
+  'id_poll': Integer,
 }
 ~~~
 
