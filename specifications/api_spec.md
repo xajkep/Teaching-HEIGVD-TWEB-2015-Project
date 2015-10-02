@@ -1,10 +1,19 @@
 # API REST Specifications
 
-Every message and response encoded in UTF-8.
+* Every message and response encoded in UTF-8.
+* Each call (except login) must have the Authorization HTTP HEADER set with the user session (returned by the login request)
+* Port: 1337
+* BASE: /api/v1
 
-BASE=/
+## General request (if connected)
 
-## General esponse
+~~~json
+{
+  'session': String
+}
+~~~
+
+## General response
 
 ~~~json
 {
@@ -13,7 +22,7 @@ BASE=/
 }
 ~~~
 
-## Messages
+## Requests
 
 ### Register
 
@@ -43,6 +52,34 @@ route: BASE/login
   'password': String,
 }
 ~~~
+
+response:
+~~~json
+{
+  'session': String
+}
+~~~
+
+### Logout
+
+POST data
+route: BASE/logout
+
+onSuccess: redirect to login
+
+### Change password
+
+POST data
+route: BASE/change-password
+
+~~~json
+{
+  'current_password': String,
+  'new_password': String,
+  'confirm': String
+}
+~~~
+
 
 ### Create poll
 
@@ -106,12 +143,15 @@ route: BASE/poll/question/answer/$id
 
 ## Patterns
 
-EMAIL = "\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}\b"
 SHORTNAME = "[a-zA-Z]{1}[a-zA-Z0-9 -_]{2,60}" // firstname, lastname, poll.name
+
 LONGNAME = "[a-zA-Z]{1}[a-zA-Z0-9 -_.!?]{2,255}" // question.name, answer.name
+
 ID = "[0-9]{1,}"
 
 ## Errors
+
+E_CHANGE_PWD = "Wrong password !"
 
 E_REQUIRED = "Please complete required inputs"
 
@@ -121,15 +161,17 @@ E_NAME = "This name is not valid"
 
 E_ID = "This id don't exist"
 
-E_REGISTER_PWD_CONFIRM = "Passwords don't match"
-
 E_POLL_CLOSED = "This poll is closed"
 
 E_POLL_CREATE = "Bad format receive"
 
 ## Success
 
-S_LOGIN = "Welome in the best TWEB project of the universe !!!"
+S_LOGIN = "Welcome to you human"
+
+S_LOGOUT = "You have been disconnected successfully"
+
+S_CHANGE_PASSWORD = "Password changed !"
 
 S_POLL_CREATED = "Your poll has been created successfully"
 
