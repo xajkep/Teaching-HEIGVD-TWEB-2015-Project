@@ -63,6 +63,44 @@ Mockup
 
 ![Mockup](./pictures/mockups_visio_v0.png)
 
+Process flow
+=========================================
+
+1. Both teacher and student register in the application
+
+2. Both clients log-in
+
+3. The teacher create a poll and run it. He gets here the poll's ID he has to transmit to the students.
+
+4. To create a poll the teacher has to add questions and possible answer to those
+
+5. The student enter the poll's ID and join it
+
+6. The student has joined the poll, he now has to wait the teacher to launch de quizz.
+
+7. The teacher launch the poll
+
+8. The question is displayed on the teacher's device during the allotted time.
+
+9. The question and the possible answers are displayed on the student's device.
+
+10. When the timer is at 0 OR if everybody's answered to the question the graphs are displayed on the teacher's device.
+
+11. When the student's answered the question, he has to wait the teacher to click on the "next" or "end" button that will display the next question
+
+12. Just like point 8
+
+13. Just like point 9
+
+14. If this is the last question, the teacher click the "end" button and return to the member's
+page.
+
+15. On the member's page, the user can view the previous poll's results.
+
+16. The poll is at it's end, the user can just quit it.
+
+17. When the user click on the "view" button, he can see the results of every questions of the poll.
+
 High level architecture
 =======================================
 
