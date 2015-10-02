@@ -6,7 +6,9 @@ QuickPoll is a web based application that allows a user to create, join, manage 
 
 Target users
 ========================================
-Every person that want to get a free and fast question asking tool for all kind of audience.
+Every person that want to get a free and fast poll tool. Here we'll use the example of a classroom.
+
+Nowadays, nearly everybody in a school have a smartphone or a computer and we can use this to spare everybody's time ! If the teacher has questions to ask to the classroom he can prepare those questions in advance by creating a poll and when it's time to ask those questions to the students, he simply has to give them the link to the application and the poll number.
 
 
 Description of the usecases
@@ -62,3 +64,5 @@ Mockup
 
 High level architecture
 =======================================
+
+![high-level architecture](./architecture_bloc_v0.png)
