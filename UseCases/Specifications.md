@@ -55,5 +55,10 @@ If a user log-in in a Poll after it began, he has to wait for the creator to swi
 question to be able to answer to it.
 On the teacher's screen the graphs (vote results) automatically refresh themselves when a student vote.
 
+Mockup
+=========================================
+
+![Mockup](./mockups_visio_v0.png)
+
 High level architecture
 =======================================
