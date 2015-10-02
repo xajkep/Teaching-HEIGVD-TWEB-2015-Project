@@ -9,8 +9,7 @@ POST data
   'email': String,
   'firstname': String,
   'lastname': String,
-  'password': String,
-  'confirm': String
+  'password': String
 }
 ~~~
 
