@@ -13,8 +13,9 @@ Nowadays, nearly everybody in a school have a smartphone or a computer and we ca
 
 Description of the usecases
 ========================================
-This document provides the first draft of the TWEB's project specifications and usecases.
+This section provides the first draft of the TWEB's project specifications and usecases.
 
+![Usecases](./pictures/General_Usecases_V0.bmp)
 
 ----------------------------------------
 1) Login
@@ -60,9 +61,9 @@ On the teacher's screen the graphs (vote results) automatically refresh themselv
 Mockup
 =========================================
 
-![Mockup](./mockups_visio_v0.png)
+![Mockup](./pictures/mockups_visio_v0.png)
 
 High level architecture
 =======================================
 
-![high-level architecture](./architecture_bloc_v0.png)
+![high-level architecture](./pictures/architecture_bloc_v0.png)
