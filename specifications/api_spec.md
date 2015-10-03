@@ -1,6 +1,6 @@
 # API REST Specifications
 
-* Every message and response encoded in UTF-8.
+* Every message and response is encoded in UTF-8.
 * Each call (except login) must have the Authorization HTTP HEADER set with the user session (returned by the login request)
 * Port: 1337
 * BASE: /api/v1
@@ -18,7 +18,8 @@
 ~~~json
 {
   'status': ('ok'|'ko'),
-  'messages': [String]
+  'messages': [String],
+  'response': {}
 }
 ~~~
 
@@ -34,8 +35,7 @@ route: BASE/register
   'email': String,
   'firstname': String,
   'lastname': String,
-  'password': String,
-  'confirm': String
+  'password': String
 }
 ~~~
 
@@ -49,7 +49,7 @@ route: BASE/login
 ~~~json
 {
   'email': String,
-  'password': String,
+  'password': String
 }
 ~~~
 
@@ -65,21 +65,16 @@ response:
 POST data
 route: BASE/logout
 
-onSuccess: redirect to login
-
-### Change password
+### Edit password
 
 POST data
-route: BASE/change-password
+route: BASE/account/password/edit
 
 ~~~json
 {
-  'current_password': String,
-  'new_password': String,
-  'confirm': String
+  'password': String
 }
 ~~~
-
 
 ### Create poll
 
@@ -92,11 +87,11 @@ route: BASE/poll/create
   'questions': [{
     'name': String,
     'allowAnonymous': Boolean,
-    'maxVote' : Integer
+    'maxVote' : Integer,
     'answers' : [{
         'name'
       }]
-    }],
+    }]
 }
 ~~~
 
@@ -118,7 +113,7 @@ route: BASE/poll/join/$id
 ### View poll
 
 POST data
-route BASE/poll/$id
+route: BASE/poll/$id
 
 response:
 ~~~json
@@ -127,19 +122,38 @@ response:
   'questions': [{
       'name': String,
       'allowAnonymous': Boolean,
-      'maxVote' : Integer
+      'maxVote' : Integer,
       'answers' : [{
-        'name'
+        'name' : String
       }]
     }]
 }
 ~~~
 
-### Answer
+### View completed poll
 
 POST data
-route: BASE/poll/question/answer/$id
+route: BASE/poll/$id
 
+response:
+~~~json
+{
+  'name': String,
+  'questions': [{
+      'name': String,
+      'allowAnonymous': Boolean,
+      'maxVote' : Integer,
+      'answers' : [{
+        'name' : String,
+        'voted' : [{
+            'firstname' : String,
+            'lastname' : String,
+            'id' : String
+          }]
+      }]
+    }]
+}
+~~~
 
 ## Patterns
 
@@ -151,7 +165,7 @@ ID = "[0-9]{1,}"
 
 ## Errors
 
-E_CHANGE_PWD = "Wrong password !"
+E_WRONG_PWD = "Wrong password"
 
 E_REQUIRED = "Please complete required inputs"
 
@@ -171,7 +185,7 @@ S_LOGIN = "Welcome to you human"
 
 S_LOGOUT = "You have been disconnected successfully"
 
-S_CHANGE_PASSWORD = "Password changed !"
+S_CHANGE_PASSWORD = "Password changed"
 
 S_POLL_CREATED = "Your poll has been created successfully"
 
@@ -181,4 +195,4 @@ S_POLL_RUNNING = "Your poll is now open"
 
 S_POLL_JOINED = "Poll joined"
 
-S_QUESTION_ANSWERED = "Answered !"
+S_QUESTION_ANSWERED = "Answered"
