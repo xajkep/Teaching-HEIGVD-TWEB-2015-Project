@@ -105,3 +105,14 @@ High level architecture
 =======================================
 
 ![high-level architecture](./pictures/architecture_bloc_v0.png)
+
+Our architecture is as follows:
+
+The server is composed of the following components:
+
+* The REST API : used to create, modify and delete various features
+* NodeJS : used to serve and process HTPP requests to our application
+* MongoDB : storage engine used to store our business objects
+* Mongoose : layer of abstraction used between the application and the storage model
+* Jade : template engine used for the presentation aspect
+* AngularJS is used as a client side presentation and business framework. It allows us to create a single page application more easily 
