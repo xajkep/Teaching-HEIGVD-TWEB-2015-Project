@@ -7,11 +7,10 @@
 
 ## General request (if connected)
 
-~~~json
-{
-  'session': String
-}
-~~~
+Note: use HTTP AUTH
+
+'session': String
+
 
 ## General response
 
@@ -28,7 +27,8 @@
 ### Register
 
 POST data
-route: BASE/register
+
+route: BASE/registration
 
 ~~~json
 {
@@ -44,7 +44,8 @@ onSuccess: auto sign in the user
 ### Login
 
 POST data
-route: BASE/login
+
+route: BASE/signin
 
 ~~~json
 {
@@ -63,12 +64,14 @@ response:
 ### Logout
 
 POST data
+
 route: BASE/logout
 
 ### Edit password
 
 POST data
-route: BASE/account/password/edit
+
+route: BASE/account/password/edition
 
 ~~~json
 {
@@ -78,8 +81,9 @@ route: BASE/account/password/edit
 
 ### Create poll
 
-POST data
-route: BASE/poll/create
+PUT request
+
+route: BASE/poll/creation
 
 ~~~json
 {
@@ -97,13 +101,14 @@ route: BASE/poll/create
 
 ### Delete poll
 
-POST data
-route: BASE/poll/delete/$id
+DELETE request
+
+route: BASE/poll/deletion/$id
 
 ### Run poll
 
 POST data
-route: BASE/poll/run/$id
+route: BASE/poll/running/$id
 
 ### Join poll
 
@@ -112,7 +117,8 @@ route: BASE/poll/join/$id
 
 ### View poll
 
-POST data
+GET request
+
 route: BASE/poll/$id
 
 response:
@@ -132,7 +138,8 @@ response:
 
 ### View completed poll
 
-POST data
+GET request
+
 route: BASE/poll/$id
 
 response:
