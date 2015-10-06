@@ -26,9 +26,9 @@ Note: use HTTP AUTH
 
 ### Register
 
-POST data
+PUT data
 
-route: BASE/registration
+route: BASE/account
 
 ~~~json
 {
@@ -45,7 +45,7 @@ onSuccess: auto sign in the user
 
 POST data
 
-route: BASE/signin
+route: BASE/account
 
 ~~~json
 {
@@ -65,7 +65,7 @@ response:
 
 POST data
 
-route: BASE/logout
+route: BASE/account
 
 ### Edit password
 
@@ -83,7 +83,7 @@ route: BASE/account/password/edition
 
 PUT request
 
-route: BASE/poll/creation
+route: BASE/poll
 
 ~~~json
 {
@@ -103,7 +103,7 @@ route: BASE/poll/creation
 
 DELETE request
 
-route: BASE/poll/deletion/$id
+route: BASE/poll/$id
 
 ### Run poll
 
