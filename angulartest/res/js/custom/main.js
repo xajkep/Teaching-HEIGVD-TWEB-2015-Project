@@ -28,8 +28,16 @@ tweb.controller('home', function($scope) {
 	$scope.message = 'Page: home';
 });
 
-tweb.controller('login', function($scope) {
-	$scope.message = 'Page: login';
+tweb.controller('login', function($scope, $http, $location) {
+	$scope.login = function() {
+		$http.post("test.txt", {"username":"luc", "password":"swagger"})
+		.success(function(data, status, headers, config) {
+			$scope.msg = data;
+			$location.path("/polls");
+		}).error(function(data, status, headers, config) {
+			$scope.msg2 = data;
+		});
+	};
 });
 
 tweb.controller('polls', function($scope) {

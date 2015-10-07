@@ -7,10 +7,7 @@
 
 ## General request (if connected)
 
-Note: use HTTP AUTH
-
-'session': String
-
+Note: set the Authorization header with your session id
 
 ## General response
 
@@ -39,8 +36,6 @@ route: BASE/account
 }
 ~~~
 
-onSuccess: auto sign in the user
-
 ### Login
 
 POST data
@@ -54,10 +49,11 @@ route: BASE/account
 }
 ~~~
 
-response:
+response, in case of success:
 ~~~json
 {
-  'session': String
+  'status': 'ok',
+  'response': {session: <session>}
 }
 ~~~
 
@@ -71,7 +67,7 @@ route: BASE/account
 
 POST data
 
-route: BASE/account/password/edition
+route: BASE/account/password
 
 ~~~json
 {
@@ -79,7 +75,7 @@ route: BASE/account/password/edition
 }
 ~~~
 
-### Create poll
+### Create a new poll
 
 PUT request
 
@@ -99,16 +95,16 @@ route: BASE/poll
 }
 ~~~
 
-### Delete poll
+### Delete an existing poll
 
 DELETE request
 
 route: BASE/poll/$id
 
-### Run poll
+### Open a poll
 
 POST data
-route: BASE/poll/running/$id
+route: BASE/poll/opened/$id
 
 ### Join poll
 
@@ -124,15 +120,70 @@ route: BASE/poll/$id
 response:
 ~~~json
 {
+  '_id': String,
   'name': String,
   'questions': [{
+      '_id': String,
       'name': String,
       'allowAnonymous': Boolean,
-      'maxVote' : Integer,
-      'answers' : [{
-        'name' : String
+      'maxVote': Integer,
+      'answers': [{
+	    '_id': String,
+        'name': String
       }]
     }]
+}
+~~~
+
+questions is an array which contains all of the questions in the requested poll
+for each question, there a multiple possible answers. These are represented in the
+answers array.
+
+Hereafter is an example :
+
+~~~json
+{
+  '_id': '1234567879',
+  'name': 'First course',
+  'questions': [{
+      '_id': '1234567879-0',
+      'name': 'How are you today?',
+      'allowAnonymous': true,
+      'maxVote' : 1,
+      'answers' : [
+					{
+					  '_id': '1234567879-0-0',
+					  name: 'Motivated'
+					},
+					{
+					  '_id': '1234567879-0-1',
+					  name: 'Depressed'
+					},
+					{
+					  '_id': '1234567879-0-2',
+					  name: 'Lucky'
+					},
+					{
+					  '_id': '1234567879-0-3',
+					  name: 'OK I guess'
+					}
+				  ]
+    },
+    {
+      '_id': '1234567879-1',
+      'name': 'Do you have a pet?',
+      'allowAnonymous': true,
+      'maxVote' : 1,
+      'answers' : [
+					{
+					  '_id': '1234567879-1-0',
+					  name: 'Yes'
+					},
+					{
+					  '_id': '1234567879-1-1',
+					  name: 'No'
+					}
+				  ]
 }
 ~~~
 
@@ -145,22 +196,102 @@ route: BASE/poll/$id
 response:
 ~~~json
 {
+  '_id': String,
   'name': String,
   'questions': [{
+      '_id': String,
       'name': String,
       'allowAnonymous': Boolean,
       'maxVote' : Integer,
       'answers' : [{
+	    '_id': String,
         'name' : String,
         'voted' : [{
+		    '_id': String,
             'firstname' : String,
-            'lastname' : String,
-            'id' : String
+            'lastname' : String
           }]
       }]
     }]
 }
 ~~~
+
+Example:
+
+~~~json
+{
+  '_id': '1234567879',
+  'name': 'First course',
+  'questions': [{
+      '_id': '1234567879-0',
+      'name': 'How are you today?',
+      'allowAnonymous': true,
+      'maxVote' : 1,
+      'answers' : [
+					{
+					  '_id': '1234567879-0-0',
+					  name: 'Motivated',
+					  voted: [ {
+					             '_id': '87216',
+								 'firstname': 'Paul',
+								 'lastname': 'Tikken'
+					           },
+							   {
+					             '_id': '32991',
+								 'firstname': 'Luc',
+								 'lastname': 'Durand'
+					           }]
+					},
+					{
+					  '_id': '1234567879-0-1',
+					  name: 'Depressed',
+					  voted: []
+					},
+					{
+					  '_id': '1234567879-0-2',
+					  name: 'Lucky',
+					  voted: [ {
+					             '_id': '1355',
+								 'firstname': 'Laura',
+								 'lastname': 'Swagger'
+					           }]
+					},
+					{
+					  '_id': '1234567879-0-3',
+					  name: 'OK I guess',
+					  voted: []
+					}
+				  ]
+    },
+    {
+      '_id': '1234567879-1',
+      'name': 'Do you have a pet?',
+      'allowAnonymous': true,
+      'maxVote' : 1,
+      'answers' : [
+					{
+					  '_id': '1234567879-1-0',
+					  name: 'Yes',
+					  voted: [ {
+					             '_id': '87216',
+								 'firstname': 'Paul',
+								 'lastname': 'Tikken'
+					           },
+							   {
+					             '_id': '32991',
+								 'firstname': 'Luc',
+								 'lastname': 'Durand'
+					           }]
+					},
+					{
+					  '_id': '1234567879-1-1',
+					  name: 'No',
+					  voted: []
+					}
+				  ]
+}
+~~~
+
 
 ## Patterns
 
