@@ -5,7 +5,7 @@ var _ = require('underscore'), copilot = require('api-copilot');
 var scenario = new copilot.Scenario({
   name: 'Premier Scenario',
   summary: 'peupler l\'API avec des données',
-  baseUrl: 'localhost/api',
+  baseUrl: 'http://localhost:8080',
   defaultRequestOptions: {
     json: true
   }
