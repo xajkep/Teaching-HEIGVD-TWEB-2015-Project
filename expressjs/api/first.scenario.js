@@ -12,7 +12,17 @@ var scenario = new copilot.Scenario({
 });
 
 // Définition des étapes (steps)
-scenario.step('register a user', function() {
+scenario.step('go to homepage', function(){
+  return this.get({
+    url: '/',
+    expect: {statusCode: 200},
+    json: false,
+    headers: {Accept: 'text/html'}
+  });
+});
+
+
+scenario.step('register a user', function(response) {
   // make HTTP calls
   return this.post({
     url: '/account',
