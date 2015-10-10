@@ -5,7 +5,7 @@ var mongoose = require('mongoose');
 
 var mongoDBConfig = 'mongodb://localhost/tweb';
 var appListenOnPortConfig = 8080;
-  
+
 mongoose.connect(mongoDBConfig);
 
 var db = mongoose.connection;

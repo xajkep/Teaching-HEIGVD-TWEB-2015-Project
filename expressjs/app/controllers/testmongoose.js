@@ -12,9 +12,9 @@ module.exports = function (app) {
 };
 
 router.get('/getPolls', function (req, res) {
-	
+
 	console.log('Getting polls');
-	
+
 	Poll.find({}).populate('created_by').exec(function(err, polls) {
 		polls.forEach(function(poll) {
 		  console.log('Poll: ' + poll);
@@ -23,16 +23,16 @@ router.get('/getPolls', function (req, res) {
 });
 
 router.get('/closePoll', function (req, res) {
-	
+
 	var urlParts = url.parse(req.url, true);
 	var pollIdRequested = urlParts.query.id;
-	
+
 	console.log('Closing poll');
-	
+
 	Poll.findOne({ _id: pollIdRequested }, function (err, poll){
 	  if (err) return console.error(err); // Poll not found
 	  poll.state = 'closed';
-	  
+
 	  poll.save(function (err, poll) {
 		if (err) return console.error(err);
 		console.log('Poll closed ' + poll);
@@ -41,9 +41,9 @@ router.get('/closePoll', function (req, res) {
 });
 
 router.get('/createPoll', function (req, res) {
-	
+
 	console.log('Adding new poll');
-	
+
 	var newPoll = new Poll({ _id: '927253287',
  	                         state: 'open',
 							 created_by: 'idbon',
@@ -76,9 +76,9 @@ router.get('/createPoll', function (req, res) {
 											            }
 											          ]
 							              }
-							 
+
 							            ]});
-								   
+
 	newPoll.save(function (err, newPoll) {
 		if (err) return console.error(err);
 		console.log('Poll added ' + newPoll);
@@ -86,16 +86,16 @@ router.get('/createPoll', function (req, res) {
 });
 
 router.get('/addUser', function (req, res) {
-	
+
 	console.log('Adding new user');
-	
+
 	var newUser = new User({ _id: 'idbon',
  	                         email: 'bon@bon.com',
 							 salt: '123456',
 							 encrypted_password: 'sosecure',
 							 firstname: 'Luc',
 							 lastname: 'Dupont' });
-								   
+
 	newUser.save(function (err, newUser) {
 		if (err) return console.error(err);
 		console.log('User added ' + newUser);
@@ -103,17 +103,17 @@ router.get('/addUser', function (req, res) {
 });
 
 router.get('/getUser', function (req, res) {
-	
+
 	var urlParts = url.parse(req.url, true);
 	var userIdRequested = urlParts.query.id;
-	
+
 	console.log('Selecting user[id=' + userIdRequested + ']');
-	
+
 	User.findOne({ '_id': userIdRequested }, 'salt encrypted_password', function (err, person) {
 	  if (err) return handleError(err);
-	  
+
 		console.log('User found: ' + person);
-	  
+
 		res.format({
 			'application/json': function() {
 			  res.send(person);
@@ -127,16 +127,16 @@ router.get('/getUser', function (req, res) {
 
 
 router.get('/updateUser', function (req, res) {
-	
+
 	var urlParts = url.parse(req.url, true);
 	var userIdToEdit = urlParts.query.id;
 	var newFirstname = urlParts.query.firstname;
-	
+
 	console.log('Updating user[id=' + userIdToEdit + '] setting[firstname=' + newFirstname + ']');
-	
+
 	User.findOneAndUpdate({ '_id': userIdToEdit }, { 'firstname': newFirstname }, function (err, person) {
 	  if (err) return handleError(err);
-	  
+
 		console.log('User Updated: ' + person);
 	})
 });
