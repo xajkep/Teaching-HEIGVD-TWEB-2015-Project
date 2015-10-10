@@ -1,10 +1,13 @@
 var express = require('express');
+var session = require('express-session');
 var glob = require('glob');
 var mongoose = require('mongoose');
+var bodyParser = require('body-parser');
 
 
 var mongoDBConfig = 'mongodb://localhost/tweb';
 var appListenOnPortConfig = 8080;
+var sessionSecret = 'iV3yS6w9FBSPMkvLY89OwAUWHvZM0iH6';
   
 mongoose.connect(mongoDBConfig);
 
@@ -19,6 +22,7 @@ require(__dirname + '/app/db/schemas.js');
 // Express configuration
 var app = express();
 
+app.use(bodyParser.json());
 app.set('views', __dirname + '/app/views');
 app.set('view engine', 'jade');
 
@@ -30,3 +34,11 @@ controllers.forEach(function (controller) {
 app.listen(appListenOnPortConfig, function () {
   console.log('Express server listening on port ' + appListenOnPortConfig);
 });
+
+app.set('trust proxy', 1);
+app.use(session({
+  secret: sessionSecret,
+  resave: false,
+  saveUninitialized: true,
+  cookie: { secure: true , id: 1234 }
+}));

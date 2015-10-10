@@ -1,0 +1,37 @@
+{
+  "name": "NewPoll1",
+  "questions": [{
+    "name": "How old are you?",
+    "allowAnonymous": true,
+    "maxVote" : 1,
+    "answers" : [{
+        "name": "15 and below"
+      },
+	  {
+        "name": "Between 15 and 30"
+      },
+	  {
+        "name": "Between 30 and 50"
+      },
+	  {
+        "name": "50 and above"
+      }]
+    },
+	{
+    "name": "How are you today?",
+    "allowAnonymous": true,
+    "maxVote" : 1,
+    "answers" : [{
+        "name": "fine"
+      },
+	  {
+        "name": "good"
+      },
+	  {
+        "name": "excellent"
+      },
+	  {
+        "name": "depressed"
+      }]
+    }]
+}

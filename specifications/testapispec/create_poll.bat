@@ -1,0 +1,1 @@
+curlw -D- -H "Content-Type: application/json" 127.0.0.1:8080/testmongoose/createPoll -X PUT -d @create_poll.json
