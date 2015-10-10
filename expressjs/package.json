@@ -1,0 +1,20 @@
+{
+  "name": "expressjs",
+  "version": "1.0.0",
+  "description": "Projet TWEB",
+  "main": "app.js",
+  "dependencies": {
+    "api-copilot": "^0.6.1",
+    "express": "^4.13.3",
+    "glob": "^5.0.15",
+    "jade": "^1.11.0",
+    "mongoose": "^4.1.9",
+    "underscore": "^1.8.3"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC"
+}
