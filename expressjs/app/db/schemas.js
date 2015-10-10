@@ -19,8 +19,8 @@ var PollSchema = new Schema({
   questions: [ {
 				  _id: String,
 				  name: String,
-				  max_user_vote: Number,
-				  can_vote_as_anonymous: Boolean,
+				  maxVote: Number,
+				  allowAnonymous: Boolean,
 				  answers: [
 							   {
 								   _id: String,
