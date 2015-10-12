@@ -8,6 +8,7 @@
     "express": "^4.13.3",
     "glob": "^5.0.15",
     "jade": "^1.11.0",
+    "jsonwebtoken": "^5.4.0",
     "mongoose": "^4.1.9",
     "underscore": "^1.8.3"
   },

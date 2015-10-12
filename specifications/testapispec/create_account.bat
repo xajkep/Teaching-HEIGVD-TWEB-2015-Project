@@ -1,1 +1,1 @@
-curlw -D- -H "Content-Type: application/json" 127.0.0.1:8080/testmongoose/register -X PUT -d @authenticate.json
+curlw -D- -H "Content-Type: application/json" 127.0.0.1:8080/testmongoose/register -X PUT -d @create_user.json
