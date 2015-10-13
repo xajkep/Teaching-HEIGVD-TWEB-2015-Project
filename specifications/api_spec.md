@@ -15,7 +15,7 @@ Note: set the Authorization header with your session id
 {
   'status': ('ok'|'ko'),
   'messages': [String],
-  'response': {}
+  'data': {}
 }
 ~~~
 
@@ -53,7 +53,7 @@ response, in case of success:
 ~~~json
 {
   'status': 'ok',
-  'response': {session: <session>}
+  'data': {session: <session>}
 }
 ~~~
 

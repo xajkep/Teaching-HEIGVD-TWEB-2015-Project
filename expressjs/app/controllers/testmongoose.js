@@ -385,7 +385,7 @@ router.post('/account', function (req, res) {
 
 	if (errors.length == 0) {
 		User.findOne({ 'email': req.body.email }, '_id salt encrypted_password', function (err, userFound) {
-			if (err) {
+			if (userFound == null) {
 				errors.push("User not found");
 			} else {
 				hashPassword(userFound.salt, req.body.password, function(encryptedPasswordComputed) {

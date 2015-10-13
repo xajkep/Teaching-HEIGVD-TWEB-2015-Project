@@ -42,3 +42,6 @@ app.use(session({
   saveUninitialized: true,
   cookie: { secure: true , id: 1234 }
 }));
+
+// Static pages (such as angularjs, css and client-side js) are statically served
+app.use('/static', express.static('app/static'));

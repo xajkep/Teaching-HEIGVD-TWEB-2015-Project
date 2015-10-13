@@ -1,0 +1,29 @@
+<h1>Login</h1>
+<form novalidate class="simple-form">
+	<div class="form-group">
+		<label for="firstname">Firstname:</label>
+		<input type="text" name="firstname" class="form-control" ng-model="user.firstname" required />
+	</div>
+	<div class="form-group">
+		<label for="lastname">Lastname:</label>
+		<input type="text" name="lastname" class="form-control" ng-model="user.lastname" required />
+	</div>
+	<div class="form-group">
+		<label for="email">Email:</label>
+		<input type="text" name="email" class="form-control" ng-model="user.email" required />
+	</div>
+	<div class="form-group">
+		<label for="password1">Password:</label>
+		<input type="password" name="password1" class="form-control" ng-model="user.password1" required />
+	</div>
+	<div class="form-group">
+		<label for="password2">Confirm:</label>
+		<input type="password" name="password2" class="form-control" ng-model="user.password2" required />
+	</div>
+	<input type="button" value="Register" class="btn btn-default" ng-click="register()" />
+</form>
+
+{{msg}}
+<p>
+{{msg2}}
+</p>

@@ -1,0 +1,17 @@
+<h1>Login</h1>
+<form novalidate class="simple-form">
+	<div class="form-group">
+		<label for="email">Email:</label>
+		<input type="text" name="email" class="form-control" ng-model="user.email" required />
+	</div>
+	<div class="form-group">
+		<label for="password">Password:</label>
+		<input type="password" name="password" class="form-control" ng-model="user.password" required />
+	</div>
+	<input type="button" value="Login" class="btn btn-default" ng-click="login()" />
+</form>
+
+{{msg}}
+<p>
+{{msg2}}
+</p>
