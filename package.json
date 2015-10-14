@@ -1,0 +1,38 @@
+{
+  "name": "Teaching-HEIGVD-TWEB-2015-Project",
+  "version": "0.0.1",
+  "description": "TWEB Project",
+  "homepage": "https://github.com/xajkep/Teaching-HEIGVD-TWEB-2015-Project/",
+  "main": "expressjs/app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/xajkep/Teaching-HEIGVD-TWEB-2015-Project/"
+  },
+  "keywords": [
+    "project",
+    "tweb",
+    "heig",
+    "nodejs"
+  ],
+  "author" : "HEIG-VD",
+  "contributors": [
+    "Julien Amacher <julien.amacher@heig-vd.ch>",
+    "Thibault Schowing <thibault-schowing@heig-vd.ch>",
+    "Yannick Widmer <yannick.widmer@heig-vd.ch>",
+    "Benoît Zuckschwerdt <benoit.zuckschwerdt@heig-vd.ch>"
+  ],
+  "license": "Private",
+  "dependencies": {
+    "body-parser" : "1.14.1",
+    "mongoose" : "4.1.10",
+    "jsonwebtoken" : "5.4.0",
+    "crypto" : "0.0.3",
+    "express" : "4.13.3"
+  },
+  "engine" : {
+    "npm": ">=1.4.28"
+  }
+}
