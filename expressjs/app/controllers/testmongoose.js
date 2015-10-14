@@ -1,10 +1,8 @@
 var express = require('express');
 var crypto = require('crypto');
-var session = require('express-session');
 var router = express.Router();
 var mongoose = require('mongoose');
 var url = require('url');
-var qs = require('querystring');
 var jwt = require('jsonwebtoken');
 
 // Mongoose schemas
@@ -168,8 +166,8 @@ router.put('/poll', function (req, res) {
 
 												console.log("Question: " + currentQuestionName);
 												
-												if (currentQuestionAnswers.length < 2) {
-													errors.push("At least one answer must be specified");
+												if (currentQuestionAnswers.length <= 2) {
+													errors.push("At least two answers must be specified");
 												}
 												
 												for (var answerIndex = 0; answerIndex < currentQuestionAnswers.length ; answerIndex++) {

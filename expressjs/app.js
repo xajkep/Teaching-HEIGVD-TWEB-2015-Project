@@ -1,5 +1,4 @@
 var express = require('express');
-var session = require('express-session');
 var glob = require('glob');
 var mongoose = require('mongoose');
 var bodyParser = require('body-parser');
@@ -35,13 +34,5 @@ app.listen(appListenOnPortConfig, function () {
   console.log('Express server listening on port ' + appListenOnPortConfig);
 });
 
-app.set('trust proxy', 1);
-app.use(session({
-  secret: sessionSecret,
-  resave: false,
-  saveUninitialized: true,
-  cookie: { secure: true , id: 1234 }
-}));
-
 // Static pages (such as angularjs, css and client-side js) are statically served
-app.use('/static', express.static('app/static'));
+app.use('/static', express.static(__dirname + '/app/static'));

@@ -1,0 +1,62 @@
+<p>Poll name: <input type="text" ng-model="poll.name" size="50" /></p>
+
+<p><a href="" class="btn btn-info" role="button" ng-click="addQuestionAtPos(0)">Add question here</a></p>
+
+<div ng-repeat="question in poll.questions track by $index">
+	<data ng-init="parentIndex=$index"/>
+	
+  <hr />
+  <h3>
+      Question {{parentIndex + 1}}
+	  <a href="" class="btn btn-danger" role="button" ng-click="deleteQuestion(parentIndex)">Delete</a>
+	  <a href="" class="btn btn-default" role="button" ng-click="inverseQuestionOrder(parentIndex - 1, parentIndex)" ng-if="parentIndex > 0">Up</a>
+	  <a href="" class="btn btn-default" role="button" ng-click="inverseQuestionOrder(parentIndex, parentIndex + 1)" ng-if="parentIndex + 1 < poll.questions.length">Down</a>
+  </h3>
+  
+  <!-- <span contenteditable ng-model="question.name"></span> -->
+  Name: <input type="text" ng-model="question.name"  size="50" />
+  
+   <table class="table">
+	<thead>
+		<tr>
+			<th>Option</th>
+			<th>Value</th>
+		</tr>
+	</thead>
+	<tbody>
+		<tr>
+			<td>Allow anonymous?</td>
+			<td><input type="checkbox" ng-model="question.allowAnonymous"/></td>
+		</tr>
+		<tr>
+			<td>Max vote per user</td>
+			<td><input type="text" ng-model="question.maxVote" size="2"  ng-model="val" min="1" max="20" /></td>
+		</tr>
+	</tbody>
+   </table>
+
+  <h4>Answers <a href="" class="btn btn-info" role="button" ng-click="addAnswer(parentIndex)">Add Answer</a></h4>
+
+  <table class="table">
+	<thead>
+		<tr>
+			<th>Actions</th>
+			<th>Name</th>
+		</tr>
+	</thead>
+	<tbody>
+		<tr ng-repeat="answer in question.answers track by $index">
+			<td><a href="" class="btn btn-danger" role="button" ng-click="deleteAnswer(parentIndex, $index)">Delete</a>
+			<a href="" class="btn btn-default" role="button" ng-click="inverseAnswerOrder(parentIndex, $index - 1, $index)" ng-if="$index > 0">Up</a>
+			<a href="" class="btn btn-default" role="button" ng-click="inverseAnswerOrder(parentIndex, $index, $index + 1)" ng-if="$index + 1 < question.answers.length">Down</a></td>
+
+			<td><input type="text" ng-model="answer.name" size="50" /></td>
+		</tr>
+	</tbody>
+   </table>
+	
+  
+  <p><a href="" class="btn btn-info" role="button" ng-click="addQuestionAtPos($index + 1)">Add question here</a></p>
+</div>
+
+ <p><a href="" class="btn btn-success" role="button" ng-click="save()">Save poll</a></p>
