@@ -1,4 +1,3 @@
-# API REST Specifications
 
 * Every message and response is encoded in UTF-8.
 * Each call (except login) must have the Authorization HTTP HEADER set with the user session (returned by the login request)
@@ -54,6 +53,16 @@ response, in case of success:
 {
   'status': 'ok',
   'data': {session: <session>}
+}
+~~~
+
+
+response, in case of failure:
+~~~json
+{
+  'status': 'ko',
+  'messages': <errors>,
+  'data': null}
 }
 ~~~
 
@@ -292,6 +301,21 @@ Example:
 }
 ~~~
 
+### View my polls
+
+GET request
+
+route: BASE/polls
+
+response:
+~~~json
+{
+  '_id': String,
+  'name': String,
+  'creation_date': Date,
+  'state': String
+}
+~~~
 
 ## Patterns
 

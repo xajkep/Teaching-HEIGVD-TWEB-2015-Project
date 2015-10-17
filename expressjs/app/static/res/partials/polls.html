@@ -1,3 +1,43 @@
 <h1>POLLS.HTML</h1>
 <p>Session: {{ userSession }}</p>
+
+<div>
+	<input type="text" ng-model="searchText" />
+	<div ng-show="search.users.length > 0">
+		<div ng-repeat="user in search.users">
+			<h4>{{ user.email }}</h4>
+			<ul ng-repeat="poll in user.polls">
+				<li><a href="" class="btn btn-info" role="button" ng-click="joinPoll(poll._id)">Join</a> {{ poll.name }} ({{ poll.creation_date }})</li>
+			</ul>
+		</div>
+    </div>
+</div>
+
+<a href="" class="btn btn-info" role="button" ng-click="createPoll()">Create a new poll</a>
+
+<table class="table" ng-if="polls.length > 0">
+	<thead>
+		<tr>
+			<th>Actions</th>
+			<th>Name</th>
+			<th>Date</th>
+			<th>State</th>
+		</tr>
+	</thead>
+	<tbody>
+		<tr ng-repeat="poll in polls track by $index">
+			<td>
+				<a href="" class="btn btn-danger" role="button" ng-click="deletePoll(poll._id)">Delete</a>
+				<a href="" class="btn btn-info" role="button" ng-click="openPoll(poll._id)">Open</a>
+				<a href="" class="btn btn-info" role="button" ng-click="editPoll(poll._id)">Edit</a>
+				<a href="" class="btn btn-info" role="button" ng-click="viewPollResults(poll._id)">View results</a>
+			</td>
+			<td>{{poll.name}}</td>
+			<td>{{poll.creation_date}}</td>
+			<td>{{poll.state}}</td>
+		</tr>
+	</tbody>
+</table>
+
+
 <a href="#/">Go to home</a>

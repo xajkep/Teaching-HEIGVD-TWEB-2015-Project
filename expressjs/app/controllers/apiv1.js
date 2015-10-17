@@ -1,22 +1,172 @@
+// HMAC secret used to secure pseudo-sessions against tampering
+var sessionSecret = 'VlL_LGgy5yu89-nW+7U6f7u0TbIlmP.z';
+var socketIOPort = 8090;
+
 var express = require('express');
 var crypto = require('crypto');
 var router = express.Router();
 var mongoose = require('mongoose');
 var url = require('url');
 var jwt = require('jsonwebtoken');
+var globals = require(__dirname + '/../inmemory/globals.js'); // Our globals.js file
+var sio = require('socket.io').listen(socketIOPort);
 
 // Mongoose schemas
 var User = mongoose.model('User');
 var Poll = mongoose.model('Poll');
 
-// HMAC secret used to secure pseudo-sessions against tampering
-var sessionSecret = 'VlL_LGgy5yu89-nW+7U6f7u0TbIlmP.z';
-
 module.exports = function (app) {
-  app.use('/testmongoose', router);
+  app.use('/api/v1', router);
 };
 
+sio.sockets.on('connection', function (socket) {
+	socket.isAuthenticated = false;
+	console.log('New socket.io connection');
+	
+	socket.on('authAndJoin', function(authData) {
+		console.log('Processing authAndJoin');
+		checkAndExtractFromSessionToken(authData.session,
+		                                function(userId) {
+											socket.isAuthenticated = true;
+											socket.userId = userId;
+		
+											var joinPollResult = globals.userJoinPoll(authData.poll, socket);
+		
+											if (joinPollResult === false) {
+												console.log('ERROR: cannot join poll');
+												socket.emit('authAndJoinResult', {'status': 'ko', 'messages': ['Cannot join poll']});
+											} else {
+												console.log('Socket.io authentication success');
+												
+												// joinPollResult = 'speaker|audience'
+												socket.emit('authAndJoinResult', {'status': 'ok', 'data': joinPollResult});
+												
+												// Speaker is notified when a new user connects
+												if (joinPollResult == 'audience'){
+													sio.to('poll_' + authData.poll + '_speaker').emit('userConnect',
+													                                                  { '_id': 'lolololol', 'firstName': 'Luc', 'lastName': 'Smith' });
+												}
+											}
+										},
+										function() {
+											console.log('Socket.io authentication failure');
+											socket.emit('authAndJoinResult', {'status': 'ko', 'messages': ['Invalid session or no session provided']});
+										});
+	});
+	
+	
+});
 
+// Open a poll
+router.post('/poll/:id', function (req, res) {
+	var pollIdToOpen = req.params.id;
+	var authorizationHeader = req.headers['authorization'];
+	console.log('Authorization header provided: ' + authorizationHeader);
+	
+	var errors = [];
+	var dataRespondToClient = {};
+	var respondCallback = function () { respondToUser(res, errors, dataRespondToClient); };
+
+	checkAndExtractFromSessionToken(authorizationHeader,
+									function(userId) {
+										Poll.findOne({ '_id': pollIdToOpen }, function (err, poll) {
+										  if (err) {
+											  errors.push('Invalid poll id provided');
+										  } else {
+											 if (checkStringTimeConst(poll.created_by, userId)) {
+												if (poll.state == 'pending') {
+													
+													if (!globals.loadPollInMemory(poll)) {
+														errors.push('Cannot load poll in memory');
+													}
+
+												} else {
+													errors.push('Poll cannot be opened');
+												}
+											 } else {
+												 errors.push('You did not create this poll');
+											 }
+										  }
+										  
+										  respondCallback();
+										});
+									},
+									function() {
+										errors.push('Invalid or no session provided');
+										respondCallback();
+									});
+});
+
+// View my polls
+router.get('/polls', function (req, res) {
+	var authorizationHeader = req.headers['authorization'];
+	console.log('Authorization header provided: ' + authorizationHeader);
+	
+	var errors = [];
+	var dataRespondToClient = {};
+	var respondCallback = function () { respondToUser(res, errors, dataRespondToClient); };
+	
+	checkAndExtractFromSessionToken(authorizationHeader,
+									function(userId) {
+										Poll.find({ created_by: userId }, '_id state creation_date name', function (err, userPolls){
+											dataRespondToClient = userPolls;
+											respondCallback();
+										});
+									},
+									function() {
+										errors.push('Invalid or no session provided');
+										respondCallback();
+									});
+});
+
+// Search users by email
+router.get('/users/email/:id', function (req, res) {
+	var emailToSearch = req.params.id;
+	var authorizationHeader = req.headers['authorization'];
+	console.log('Authorization header provided: ' + authorizationHeader);
+	
+	var errors = [];
+	var dataRespondToClient = [];
+	var respondCallback = function () { respondToUser(res, errors, dataRespondToClient); };
+	
+	checkAndExtractFromSessionToken(authorizationHeader,
+									function(userId) {
+										if (emailToSearch.length >= 3) {
+											// email LIKE 'emailToSearch%'
+											User.find({ email: new RegExp('^' + emailToSearch, 'i') }).select('_id email').limit(5).exec(function (err, users) {
+												
+												var retrieved = 0;
+												
+												var usersCount = users.length;
+												for (var i=0; i < usersCount; i++) {
+													var currentUser = users[i];
+							
+													Poll.find({ 'created_by': currentUser._id }).select('_id name creation_date').exec(function (err, polls) {
+			
+														dataRespondToClient.push({
+															'email': currentUser.email,
+															'polls': polls
+														});
+	
+														if (++retrieved == users.length) {
+															console.log(dataRespondToClient);
+															respondCallback();
+														}
+													});
+												}
+											});
+										} else {
+											errors.push('Email is too short');
+											respondCallback();
+										}
+									},
+									function() {
+										errors.push('Invalid or no session provided');
+										respondCallback();
+									});
+});
+
+// Get a poll
 router.get('/poll/:id', function (req, res) {
 	var pollIdToRetrieve = req.params.id;
 	var authorizationHeader = req.headers['authorization'];
@@ -97,7 +247,6 @@ router.delete('/poll/:id', function (req, res) {
 });
 
 
-
 // Create new poll
 router.put('/poll', function (req, res) {
 	
@@ -166,7 +315,7 @@ router.put('/poll', function (req, res) {
 
 												console.log("Question: " + currentQuestionName);
 												
-												if (currentQuestionAnswers.length <= 2) {
+												if (currentQuestionAnswers.length < 2) {
 													errors.push("At least two answers must be specified");
 												}
 												
@@ -249,6 +398,7 @@ router.put('/poll', function (req, res) {
 
 	
 });
+
 
 // New user account
 router.put('/register', function (req, res) {
@@ -393,9 +543,11 @@ router.post('/account', function (req, res) {
 						//res.header('Authorization', req.sessionID);
 						console.log('User authenticated ' + req.body.email);
 						
-						dataToSendToClient = jwt.sign({ userId: userFound._id }, sessionSecret, {
-						  expiresIn: 3600
-						});
+						var userSessionToken = jwt.sign({ userId: userFound._id }, sessionSecret, {
+														   expiresIn: 3600
+														});
+						
+						dataToSendToClient = { 'session': userSessionToken };
 						
 						console.log('User authenticated: ' + req.body.email + " session: " + dataToSendToClient);
 					} else {

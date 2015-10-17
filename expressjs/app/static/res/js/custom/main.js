@@ -39,6 +39,66 @@ tweb.factory('UserDataFactory', function () {
 	}
 });
 
+tweb.factory('ServerPushPoll', function () {
+	var _sio;
+	var _connectedUsers = [];
+	var _cbOnUserConnect = null;
+	var _cbOnUserDisconnect = null;
+	
+	
+	var _registerEventsWhenPeopleConnectAndDisconnect = function(cbOnUserConnect, cbOnUserDisconnect) {
+		_cbOnUserConnect = cbOnUserConnect;
+		_cbOnUserDisconnect = cbOnUserDisconnect;
+	};
+
+	var _connect = function(host, port, session, pollIdToJoin, cbJoinedAsSpeaker, cbJoinedAsAudience) {
+		_sio = io.connect(host + ':' + port);
+
+		_sio.on('connect', function() {
+			//alert('Socket connected');
+			_sio.emit('authAndJoin', { 'session': session, 'poll': pollIdToJoin });
+		});
+		
+		_sio.on('authAndJoinResult', function(authAndJoinResult) {
+			if (authAndJoinResult.status == 'ok') {
+				//alert('Join poll success, as: ' + authAndJoinResult.data);
+				if (authAndJoinResult.data == 'speaker') {
+					cbJoinedAsSpeaker();
+				} else {
+					cbJoinedAsAudience();
+				}
+			} else {
+				alert('Join poll failure: ' + authAndJoinResult.messages.join());
+			}
+		});
+		
+		_sio.on('userConnect', function(user) {
+			
+			_connectedUsers.push(user);
+			alert('New user: ' + user._id);
+
+			if (_cbOnUserConnect != null) {
+				_cbOnUserConnect();
+			}
+		});
+		
+		_sio.on('userDisconnect', function(user) {
+			
+			// TO-DO
+			
+			if (_cbOnUserDisconnect != null) {
+				_cbOnUserDisconnect();
+			}
+		});
+	};
+
+	return {
+		connect: _connect,
+		registerEventsWhenPeopleConnectAndDisconnect: _registerEventsWhenPeopleConnectAndDisconnect,
+		connectedUsers: _connectedUsers
+	}
+});
+
 /*
 tweb.factory('BuildPollFactory', function () {
     var userData = {
@@ -83,6 +143,18 @@ tweb.config(['$routeProvider',
                     templateUrl: 'res/partials/polldetails.html',
                     controller: 'polldetails'
                 }).
+				when('/polljoin', {
+                    templateUrl: 'res/partials/polljoin.html',
+                    controller: 'polljoin'
+                }).
+				when('/pollspeakerwait', {
+                    templateUrl: 'res/partials/pollspeakerwait.html',
+                    controller: 'pollspeakerwait'
+                }).
+				when('/pollaudiencewait', {
+                    templateUrl: 'res/partials/pollaudiencewait.html',
+                    controller: 'pollaudiencewait'
+                }).
                 otherwise({
                     redirectTo: '/login'
                 });
@@ -93,20 +165,25 @@ tweb.controller('home', function($scope) {
 });
 
 tweb.controller('login', function($scope, $http, $location, UserDataFactory) {
+	// DEBUG TO-DO
+	$scope.user = {
+		'email': 'test@test.com',
+		'password': 'TestTest1991'
+	};
+	
 	$scope.login = function() {
 
 		var submittedEmail = $scope.user.email;
 		var submittedPassword = $scope.user.password;
 
-		$http.post("/testmongoose/account", {
+		$http.post("/api/v1/account", {
 			email: submittedEmail,
 			password: submittedPassword
 		})
 		.success(function(data, status, headers, config) {
 			if (data.status == 'ok') {
-				
-				UserDataFactory.setSession(data.data);
-				alert('Logged in. Redirecting');
+				UserDataFactory.setSession(data.data.session);
+				//alert('Logged in. Redirecting');
 				$location.path("/polls");
 			} else {
 				alert("Could not login: " + data.messages.join());
@@ -117,8 +194,146 @@ tweb.controller('login', function($scope, $http, $location, UserDataFactory) {
 	};
 });
 
-tweb.controller('polls', function($scope, UserDataFactory) {
+
+
+tweb.controller('pollspeakerwait', function($scope, $location, UserDataFactory, ServerPushPoll) {
 	$scope.userSession = UserDataFactory.getSession();
+	
+	$scope.connected = ServerPushPoll.connectedUsers;
+	
+
+	ServerPushPoll.registerEventsWhenPeopleConnectAndDisconnect(function() {
+																	$scope.$apply();
+															    },
+																function() {
+																	$scope.$apply();
+																});
+
+});
+
+tweb.controller('pollaudiencewait', function($scope, $location, UserDataFactory, ServerPushPoll) {
+	$scope.userSession = UserDataFactory.getSession();
+});
+
+
+tweb.controller('polljoin', function($scope, $location, UserDataFactory, ServerPushPoll) {
+	$scope.userSession = UserDataFactory.getSession();
+	var pollIdToJoin = $location.search().id;
+
+	//alert('Joining poll: ' + pollIdToJoin);
+	socketIOConnectToServer(ServerPushPoll,
+	                        UserDataFactory.getSession(),
+	                        pollIdToJoin,
+							function() {
+							   $location.path("/pollspeakerwait");
+							   $scope.$apply();
+						   }, function() {
+								$location.path("/pollaudiencewait");
+								$scope.$apply();
+						   }
+	);
+	
+});
+
+function socketIOConnectToServer(spp, session, pollIdToJoin, cbAsSpeaker, cbAsAudience) {
+	var socketIOPort = 8090;
+	spp.connect('http://localhost', socketIOPort, session, pollIdToJoin,
+	            cbAsSpeaker, cbAsAudience);
+}
+
+tweb.controller('polls', function($scope, $http, $location, UserDataFactory, ServerPushPoll) {
+	$scope.userSession = UserDataFactory.getSession();
+
+	$scope.createPoll = function() {
+		$location.path("/polldetails");
+	}
+	
+	$scope.joinPoll = function(pollIdToJoin) {
+		socketIOConnectToServer(ServerPushPoll, UserDataFactory.getSession(), pollIdToJoin,
+							function() {
+							   $location.path("/pollspeakerwait");
+							   $scope.$apply();
+						   }, function() {
+								$location.path("/pollaudiencewait");
+								$scope.$apply();
+						   });
+	}
+	
+	$scope.openPoll = function(pollId) {
+		$http({
+			method: 'POST',
+			url: "/api/v1/poll/" + pollId,
+			cache: false,
+			headers: {
+				'Authorization': $scope.userSession
+			}
+		})
+		.success(function(data, status, headers, config) {
+			if (data.status == 'ok') {
+				//alert('Poll is now open: ' + pollId);
+				$location.path("/polljoin").search({ 'id': pollId });
+			} else {
+				alert("Could not open poll: " + data.messages.join());
+			}
+		}).error(function(data, status, headers, config) {
+			alert("Could not open poll: http error");
+		});
+	}
+	
+	// User's polls
+	$scope.polls = [];
+	
+	// Search results
+	$scope.search = {
+		users: []
+	};
+	
+	if (UserDataFactory.getSession() == null) {
+		alert("Please login first");
+		$location.path("login");
+	} else {
+		$http({
+			method: 'GET',
+			url: "/api/v1/polls",
+			cache: false,
+			headers: {
+				'Authorization': $scope.userSession
+			}
+		})
+		.success(function(data, status, headers, config) {
+			if (data.status == 'ok') {
+				$scope.polls = data.data;
+			} else {
+				alert("Could not retrieve polls: " + data.messages.join());
+			}
+		}).error(function(data, status, headers, config) {
+			alert("Could not retrieve polls: http error");
+		});
+
+		$scope.$watch('searchText', function (val) {
+			if (val != '' && val != undefined && val.length >= 3){
+				$http({
+					method: 'GET',
+					url: "/api/v1/users/email/" + val,
+					cache: false,
+					headers: {
+						'Authorization': $scope.userSession
+					}
+				})
+				.success(function(data, status, headers, config) {
+					if (data.status == 'ok') {
+						$scope.search.users = data.data;
+					} else {
+						alert("Could not retrieve users by email: " + data.messages.join());
+					}
+				}).error(function(data, status, headers, config) {
+					alert("Could not retrieve users by email: http error");
+				});
+			} else {
+				$scope.search.users = [];
+			}
+		});
+	}
 });
 
 tweb.controller('join', function($scope) {
@@ -144,7 +359,7 @@ tweb.controller('register', function($scope, $http, $location, UserDataFactory) 
 				errors.push('Password do not match');
 			}
 			
-			$http.put("/testmongoose/register", {
+			$http.put("/api/v1/register", {
 				email: submittedEmail,
 				firstname: submittedFirstname,
 				lastname: submittedLastname,
@@ -330,7 +545,7 @@ tweb.controller('polldetails', function($scope, $location, $http, UserDataFactor
 
 				$http({
 					method: 'PUT',
-					url: "/testmongoose/poll",
+					url: "/api/v1/poll",
 					data: $scope.poll,
 					cache: false,
 					headers: {
@@ -344,6 +559,7 @@ tweb.controller('polldetails', function($scope, $location, $http, UserDataFactor
 						alert("Could not create poll: " + data.messages.join());
 					}
 				}).error(function(data, status, headers, config) {
+					alert("Could not create poll: http error");
 				});
 			} else {
 				alert(errors.join());
