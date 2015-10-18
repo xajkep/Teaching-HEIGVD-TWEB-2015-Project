@@ -13,3 +13,21 @@
 		</tr>
 	</tbody>
 </table>
+
+<div>
+	<a href="" class="btn btn-default" role="button" ng-click="goNextQuestion()" ng-if="goNextQuestionAllowed">Go to the next question</a>
+</div>
+
+<div ng-if="displayQuestion">
+	<h4>{{currentQuestion.name}}</h4>
+	<ul ng-repeat="answer in currentQuestion.answers">
+		<li>{{answer.name}} ({{answer.count}} votes)</li>
+	</ul>
+</div>
+
+<canvas id="doughnut" class="chart chart-doughnut" chart-data="data" chart-labels="labels"></canvas> 
+
+<div>
+	<h4 ng-if="votingIsAllowed === true">Voting is allowed!</h4>
+	<h4 ng-if="votingIsAllowed === false">Voting is not allowed</h4>
+</div>

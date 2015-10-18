@@ -1,2 +1,14 @@
 <h1>POLLAUDIENCEWAIT.HTML</h1>
-<h1>Waiting for the poll to begin. Please wait.</h1>
+<div>
+	<h4 ng-if="votingIsAllowed === true">Voting is allowed!</h4>
+	<h4 ng-if="votingIsAllowed === false">Voting is not allowed</h4>
+</div>
+
+<div ng-if="displayQuestion">
+	<h4>{{currentQuestion.name}}</h4>
+	<ul ng-repeat="answer in currentQuestion.answers track by $index">
+		<li><span ng-if="answer.voted === true">VOTED</span><a href="" class="btn btn-default" role="button" ng-click="vote($index)" ng-if="votingIsAllowed">Vote</a> {{answer.name}}</li>
+	</ul>
+</div>
+
+<h4 ng-if="voteRegistered">Your vote has been registered</h4>

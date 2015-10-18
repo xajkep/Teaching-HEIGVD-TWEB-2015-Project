@@ -26,11 +26,8 @@ sio.sockets.on('connection', function (socket) {
 	socket.on('authAndJoin', function(authData) {
 		console.log('Processing authAndJoin');
 		checkAndExtractFromSessionToken(authData.session,
-		                                function(userId) {
-											socket.isAuthenticated = true;
-											socket.userId = userId;
-		
-											var joinPollResult = globals.userJoinPoll(authData.poll, socket);
+										function(userId) {
+											var joinPollResult = globals.userJoinPoll(authData.poll, userId);
 		
 											if (joinPollResult === false) {
 												console.log('ERROR: cannot join poll');
@@ -38,13 +35,22 @@ sio.sockets.on('connection', function (socket) {
 											} else {
 												console.log('Socket.io authentication success');
 												
+												socket.isAuthenticated = true;
+												socket.userId = userId;
+												socket.pollId = authData.poll;
+												socket.isSpeaker = (joinPollResult == 'speaker');
+												
+												// Poll room
+												socket.join('poll_' + authData.poll);
+												socket.join('poll_' + authData.poll + '_' + joinPollResult);
+												
 												// joinPollResult = 'speaker|audience'
 												socket.emit('authAndJoinResult', {'status': 'ok', 'data': joinPollResult});
 												
 												// Speaker is notified when a new user connects
 												if (joinPollResult == 'audience'){
 													sio.to('poll_' + authData.poll + '_speaker').emit('userConnect',
-													                                                  { '_id': 'lolololol', 'firstName': 'Luc', 'lastName': 'Smith' });
+																									  { '_id': 'lolololol', 'firstName': 'Luc', 'lastName': 'Smith' });
 												}
 											}
 										},
@@ -53,8 +59,55 @@ sio.sockets.on('connection', function (socket) {
 											socket.emit('authAndJoinResult', {'status': 'ko', 'messages': ['Invalid session or no session provided']});
 										});
 	});
+
+	socket.on('goNextQuestion', function() {
+		console.log('Processing goNextQuestion');
+
+		if (socket.isAuthenticated === true && socket.isSpeaker === true) {
+			globals.goNextQuestion(socket.pollId,
+			                       function(nextQuestion) {
+									   // Next question (timer is running)
+									   sio.to('poll_' + socket.pollId).emit('nextQuestion', nextQuestion);
+									   console.log('Notified clients: next question data');
+								   },
+								   function() {
+									   // Poll completed
+									   sio.to('poll_' + socket.pollId).emit('pollCompleted');
+									   console.log('Notified clients: poll completed');
+								   },
+								   function() {
+									   // Question timeout
+									   sio.to('poll_' + socket.pollId).emit('votingOnThisQuestionEnded');
+									   console.log('Notified clients: question timeout');
+								   },
+								   function() {
+									   console.log('ERROR: cannot move to the next question');
+								   });
+		} else {
+			socket.emit('goNextQuestionResult', {'status': 'ko', 'messages': ['Unauthorized']});
+		}
+	});
 	
-	
+	socket.on('vote', function(answerIndex) {
+		console.log('Processing vote');
+
+		if (socket.isAuthenticated === true && socket.isSpeaker !== true) {
+			if (globals.vote(socket.pollId, answerIndex, socket.userId)) {
+				console.log('Vote registered');
+				socket.emit('voteResult', {'status': 'ok'});
+				
+				var liveResults = globals.getLiveResults(socket.pollId);
+				console.log('Live vote results: ' + liveResults);
+				
+				sio.to('poll_' + socket.pollId + '_speaker').emit('liveVoteResults', liveResults);
+				
+			} else {
+				socket.emit('voteResult', {'status': 'ko', 'messages': ['Invalid data or request']});
+			}
+		} else {
+			socket.emit('voteResult', {'status': 'ko', 'messages': ['Unauthorized']});
+		}
+	});
 });
 
 // Open a poll
@@ -136,19 +189,27 @@ router.get('/users/email/:id', function (req, res) {
 											User.find({ email: new RegExp('^' + emailToSearch, 'i') }).select('_id email').limit(5).exec(function (err, users) {
 												
 												var retrieved = 0;
-												
 												var usersCount = users.length;
+												var currentUsers = {};
 												for (var i=0; i < usersCount; i++) {
-													var currentUser = users[i];
-							
-													Poll.find({ 'created_by': currentUser._id }).select('_id name creation_date').exec(function (err, polls) {
-			
-														dataRespondToClient.push({
-															'email': currentUser.email,
-															'polls': polls
-														});
-	
+													currentUsers[users[i]._id] = {
+														'email': users[i].email,
+														'polls': []
+													};
+
+													Poll.find({ 'created_by': users[i]._id }).select('_id created_by name creation_date').exec(function (err, polls) {
+														
+														if (polls.length > 0) {
+															currentUsers[polls[0].created_by].polls = polls;
+														}
+														
 														if (++retrieved == users.length) {
+															
+															for (var k in currentUsers) {
+																dataRespondToClient.push(currentUsers[k]);
+															}
+															
+															
 															console.log(dataRespondToClient);
 															respondCallback();
 														}

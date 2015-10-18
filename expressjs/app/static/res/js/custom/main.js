@@ -1,4 +1,4 @@
-var tweb = angular.module('tweb', ['ngRoute', 'ngAnimate']);
+var tweb = angular.module('tweb', ['ngRoute', 'ngAnimate', 'chart.js']);
 
 tweb.directive("contenteditable", function() {
   return {
@@ -42,13 +42,40 @@ tweb.factory('UserDataFactory', function () {
 tweb.factory('ServerPushPoll', function () {
 	var _sio;
 	var _connectedUsers = [];
+	
+	
 	var _cbOnUserConnect = null;
 	var _cbOnUserDisconnect = null;
 	
+	var _cbOnNextQuestion = null;
+	var _cbOnPollCompleted = null;
+	var _cbOnVotingOnThisQuestionEnded = null;
+	var _cbOnVoteResult = null;
+	
+	var _cbOnLiveVoteResults = null;
+	
+	var _registerLiveVoteResults = function(cbOnLiveVoteResults) {
+		_cbOnLiveVoteResults = cbOnLiveVoteResults
+	}
+	
+	var _registerBasicPollEvents = function(cbOnNextQuestion, cbOnPollCompleted, cbOnVotingOnThisQuestionEnded, cbOnVoteResult) {
+		_cbOnNextQuestion = cbOnNextQuestion;
+		_cbOnPollCompleted = cbOnPollCompleted;
+		_cbOnVotingOnThisQuestionEnded = cbOnVotingOnThisQuestionEnded;
+		_cbOnVoteResult = cbOnVoteResult;
+	};
 	
 	var _registerEventsWhenPeopleConnectAndDisconnect = function(cbOnUserConnect, cbOnUserDisconnect) {
 		_cbOnUserConnect = cbOnUserConnect;
 		_cbOnUserDisconnect = cbOnUserDisconnect;
+	};
+	
+	var _goNextQuestion = function() {
+		_sio.emit('goNextQuestion');
+	};
+	
+	var _vote = function(answerIndex) {
+		_sio.emit('vote', answerIndex);
 	};
 
 	var _connect = function(host, port, session, pollIdToJoin, cbJoinedAsSpeaker, cbJoinedAsAudience) {
@@ -90,12 +117,47 @@ tweb.factory('ServerPushPoll', function () {
 				_cbOnUserDisconnect();
 			}
 		});
+
+		_sio.on('nextQuestion', function(nextQuestion) {
+			if (_cbOnNextQuestion != null) {
+				_cbOnNextQuestion(nextQuestion);
+			}
+		});
+		
+		_sio.on('pollCompleted', function() {
+			if (_cbOnPollCompleted != null) {
+				_cbOnPollCompleted();
+			}
+		});
+		
+		_sio.on('votingOnThisQuestionEnded', function() {
+			if (_cbOnVotingOnThisQuestionEnded != null) {
+				_cbOnVotingOnThisQuestionEnded();
+			}
+		});
+		
+		_sio.on('voteResult', function(result) {
+			if (_cbOnVoteResult != null) {
+				_cbOnVoteResult(result);
+			}
+		});
+		
+		_sio.on('liveVoteResults', function(results) {
+			if (_cbOnLiveVoteResults != null) {
+				_cbOnLiveVoteResults(results);
+			}
+		});
+		
 	};
 
 	return {
 		connect: _connect,
 		registerEventsWhenPeopleConnectAndDisconnect: _registerEventsWhenPeopleConnectAndDisconnect,
-		connectedUsers: _connectedUsers
+		connectedUsers: _connectedUsers,
+		registerBasicPollEvents: _registerBasicPollEvents,
+		goNextQuestion: _goNextQuestion,
+		vote: _vote,
+		registerLiveVoteResults: _registerLiveVoteResults
 	}
 });
 
@@ -200,7 +262,18 @@ tweb.controller('pollspeakerwait', function($scope, $location, UserDataFactory, 
 	$scope.userSession = UserDataFactory.getSession();
 	
 	$scope.connected = ServerPushPoll.connectedUsers;
+	$scope.currentQuestion = {};
+	$scope.displayQuestion = false;
+	$scope.votingIsAllowed = false;
+	$scope.goNextQuestionAllowed = true;
 	
+	$scope.goNextQuestion = function() {
+		$scope.goNextQuestionAllowed = false;
+		ServerPushPoll.goNextQuestion();
+	}
+	
+	$scope.labels = ['Test1', 'Test2'];
+	$scope.data = [50, 100];
 
 	ServerPushPoll.registerEventsWhenPeopleConnectAndDisconnect(function() {
 																	$scope.$apply();
@@ -208,11 +281,104 @@ tweb.controller('pollspeakerwait', function($scope, $location, UserDataFactory, 
 																function() {
 																	$scope.$apply();
 																});
+																
 
+	ServerPushPoll.registerBasicPollEvents(function(nextQuestion) {
+		
+											   // Next question
+											   $scope.votingIsAllowed = true;
+											   
+											   var graphLabels = [];
+											   var graphValues = [];
+											   var answersCount = nextQuestion.answers.length;
+											   for (var i = 0; i < answersCount; i++) {
+												   nextQuestion.answers[i].count = 0;
+												   graphLabels.push(nextQuestion.answers[i].name);
+												   graphValues.push(0);
+											   }
+
+											   $scope.labels = graphLabels;
+											   $scope.data = graphValues;
+											   
+											   $scope.currentQuestion = nextQuestion;
+											   $scope.displayQuestion = true;
+											   $scope.$apply();
+										   },
+										   function() {
+											   // Poll completed
+											   $scope.votingIsAllowed = false;
+											   $scope.goNextQuestionAllowed = false;
+											   $scope.$apply();
+										   },
+										   function() {
+											   // Question timeout
+											   $scope.votingIsAllowed = false;
+											   $scope.goNextQuestionAllowed = true;
+											   $scope.$apply();
+										   },
+										   function(voteResult) {
+											   // Vote result
+											   // Do nothing. The speaker cannot vote.
+										   });
+
+	ServerPushPoll.registerLiveVoteResults(function(results) {
+											   var resultsCount = results.length;
+											   var graphValues = [];
+											   for (var i = 0; i < resultsCount; i++) {
+												   $scope.currentQuestion.answers[i].count = results[i].count;
+												   graphValues.push(results[i].count);
+											   }
+											   
+											   $scope.data = graphValues;
+										   });
 });
 
 tweb.controller('pollaudiencewait', function($scope, $location, UserDataFactory, ServerPushPoll) {
 	$scope.userSession = UserDataFactory.getSession();
+
+	$scope.currentQuestion = {};
+	$scope.displayQuestion = false;
+	$scope.votingIsAllowed = false;
+	$scope.voteRegistered = false;
+	
+	$scope.vote = function(answerIndex) {
+		$scope.currentQuestion.answers[answerIndex].voted = true;
+		ServerPushPoll.vote(answerIndex);
+	}
+	
+	ServerPushPoll.registerBasicPollEvents(function(nextQuestion) {
+											   // Next question
+											   $scope.voteRegistered = false;
+											   $scope.votingIsAllowed = true;
+											   $scope.currentQuestion = nextQuestion;
+											   $scope.displayQuestion = true;
+											   $scope.$apply();
+											   alert('Next question');
+										   },
+										   function() {
+											   // Poll completed
+											   $scope.votingIsAllowed = false;
+											   $scope.$apply();
+											   alert('Poll completed');
+										   },
+										   function() {
+											   // Question timeout
+											   $scope.votingIsAllowed = false;
+											   $scope.$apply();
+											   alert('Question timeout');
+										   },
+										   function(voteResult) {
+											   // Vote result
+											   
+											   if (voteResult.status == 'ok') {
+												   $scope.votingIsAllowed = false;
+												   $scope.voteRegistered = true;
+												   $scope.$apply();
+												   alert('Result registered');
+											   } else {
+												   alert('Cannot vote: ' + voteResult.messages.join());
+											   }
+										   });	
 });
 
 
