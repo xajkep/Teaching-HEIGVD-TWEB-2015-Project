@@ -96,8 +96,9 @@ route: BASE/poll
   'questions': [{
     'name': String,
     'allowAnonymous': Boolean,
-    'maxVote' : Integer,
-    'answers' : [{
+    'maxVote': Integer,
+    'timeout': Integer,
+    'answers': [{
         'name'
       }]
     }]
@@ -136,6 +137,7 @@ response:
       'name': String,
       'allowAnonymous': Boolean,
       'maxVote': Integer,
+      'timeout': Integer,
       'answers': [{
 	    '_id': String,
         'name': String
@@ -159,6 +161,7 @@ Hereafter is an example :
       'name': 'How are you today?',
       'allowAnonymous': true,
       'maxVote' : 1,
+      'timeout': 30,
       'answers' : [
 					{
 					  '_id': '1234567879-0-0',
@@ -212,6 +215,7 @@ response:
       'name': String,
       'allowAnonymous': Boolean,
       'maxVote' : Integer,
+      'timeout': Integer,
       'answers' : [{
 	    '_id': String,
         'name' : String,
@@ -236,6 +240,7 @@ Example:
       'name': 'How are you today?',
       'allowAnonymous': true,
       'maxVote' : 1,
+      'timeout': 30,
       'answers' : [
 					{
 					  '_id': '1234567879-0-0',
@@ -277,6 +282,7 @@ Example:
       'name': 'Do you have a pet?',
       'allowAnonymous': true,
       'maxVote' : 1,
+      'timeout': 30,
       'answers' : [
 					{
 					  '_id': '1234567879-1-0',

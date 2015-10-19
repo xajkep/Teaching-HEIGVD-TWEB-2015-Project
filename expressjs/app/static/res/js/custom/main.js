@@ -101,6 +101,7 @@ tweb.factory('ServerPushPoll', function () {
 		
 		_sio.on('userConnect', function(user) {
 			
+			user.voted = false;
 			_connectedUsers.push(user);
 			alert('New user: ' + user._id);
 
@@ -110,15 +111,29 @@ tweb.factory('ServerPushPoll', function () {
 		});
 		
 		_sio.on('userDisconnect', function(user) {
-			
-			// TO-DO
-			
+
+			var newList = [];
+			var usersCount = _connectedUsers.length;
+			for (var i=0; i < usersCount; i++) {
+				if (_connectedUsers[i]._id != user._id) {
+					newList.push(_connectedUsers[i]);
+				}
+			}
+
+			_connectedUsers = newList;
+
 			if (_cbOnUserDisconnect != null) {
-				_cbOnUserDisconnect();
+				_cbOnUserDisconnect(_connectedUsers);
 			}
 		});
 
 		_sio.on('nextQuestion', function(nextQuestion) {
+			
+			var usersCount = _connectedUsers.length;
+			for (var i=0; i < usersCount; i++) {
+				_connectedUsers[i].voted = false;
+			}
+			
 			if (_cbOnNextQuestion != null) {
 				_cbOnNextQuestion(nextQuestion);
 			}
@@ -143,6 +158,14 @@ tweb.factory('ServerPushPoll', function () {
 		});
 		
 		_sio.on('liveVoteResults', function(results) {
+
+			var usersCount = _connectedUsers.length;
+			for (var i=0; i < usersCount; i++) {
+				if (_connectedUsers[i]._id == results.whovoted) {
+					_connectedUsers[i].voted = true;
+				}
+			}
+			
 			if (_cbOnLiveVoteResults != null) {
 				_cbOnLiveVoteResults(results);
 			}
@@ -209,13 +232,13 @@ tweb.config(['$routeProvider',
                     templateUrl: 'res/partials/polljoin.html',
                     controller: 'polljoin'
                 }).
-				when('/pollspeakerwait', {
-                    templateUrl: 'res/partials/pollspeakerwait.html',
-                    controller: 'pollspeakerwait'
+				when('/pollspeaker', {
+                    templateUrl: 'res/partials/pollspeaker.html',
+                    controller: 'pollspeaker'
                 }).
-				when('/pollaudiencewait', {
-                    templateUrl: 'res/partials/pollaudiencewait.html',
-                    controller: 'pollaudiencewait'
+				when('/pollaudience', {
+                    templateUrl: 'res/partials/pollaudience.html',
+                    controller: 'pollaudience'
                 }).
                 otherwise({
                     redirectTo: '/login'
@@ -258,7 +281,7 @@ tweb.controller('login', function($scope, $http, $location, UserDataFactory) {
 
 
 
-tweb.controller('pollspeakerwait', function($scope, $location, UserDataFactory, ServerPushPoll) {
+tweb.controller('pollspeaker', function($scope, $location, UserDataFactory, ServerPushPoll) {
 	$scope.userSession = UserDataFactory.getSession();
 	
 	$scope.connected = ServerPushPoll.connectedUsers;
@@ -266,24 +289,50 @@ tweb.controller('pollspeakerwait', function($scope, $location, UserDataFactory, 
 	$scope.displayQuestion = false;
 	$scope.votingIsAllowed = false;
 	$scope.goNextQuestionAllowed = true;
+	$scope.timerHdl = null;
+	$scope.timerRemaining = 0;
+	
+	$scope.startTimer = function() {
+		$scope.timerHdl = setInterval(function() {
+									     $scope.timerRemaining = $scope.timerRemaining - 1;
+										 $scope.$apply();
+										 
+										 if ($scope.timerRemaining <= 0) {
+											 $scope.stopTimer();
+										 }
+									 }, 1000);
+	};
+	
+	$scope.stopTimer = function() {
+		if ($scope.timerHdl != null) {
+			clearTimeout($scope.timerHdl);
+			$scope.timerHdl = null;
+		}
+	};
 	
 	$scope.goNextQuestion = function() {
 		$scope.goNextQuestionAllowed = false;
 		ServerPushPoll.goNextQuestion();
-	}
-	
-	$scope.labels = ['Test1', 'Test2'];
-	$scope.data = [50, 100];
+	};
+
+	$scope.labels = [];
+	$scope.data = [];
+	$scope.options = { animationSteps: 20 };
 
 	ServerPushPoll.registerEventsWhenPeopleConnectAndDisconnect(function() {
 																	$scope.$apply();
 															    },
-																function() {
+																// Workaround. Eveny $apply doesn't work.
+																function(newConnectedList) {
+																	$scope.connected = newConnectedList;
 																	$scope.$apply();
 																});
 																
 
 	ServerPushPoll.registerBasicPollEvents(function(nextQuestion) {
+		
+											   $scope.timerRemaining = nextQuestion.timeout;
+											   $scope.startTimer();
 		
 											   // Next question
 											   $scope.votingIsAllowed = true;
@@ -302,18 +351,21 @@ tweb.controller('pollspeakerwait', function($scope, $location, UserDataFactory, 
 											   
 											   $scope.currentQuestion = nextQuestion;
 											   $scope.displayQuestion = true;
+											   
 											   $scope.$apply();
 										   },
 										   function() {
 											   // Poll completed
 											   $scope.votingIsAllowed = false;
 											   $scope.goNextQuestionAllowed = false;
+											   $scope.stopTimer();
 											   $scope.$apply();
 										   },
 										   function() {
 											   // Question timeout
 											   $scope.votingIsAllowed = false;
 											   $scope.goNextQuestionAllowed = true;
+											   $scope.stopTimer();
 											   $scope.$apply();
 										   },
 										   function(voteResult) {
@@ -322,24 +374,45 @@ tweb.controller('pollspeakerwait', function($scope, $location, UserDataFactory, 
 										   });
 
 	ServerPushPoll.registerLiveVoteResults(function(results) {
-											   var resultsCount = results.length;
+											   var resultsCount = results.results.length;
 											   var graphValues = [];
 											   for (var i = 0; i < resultsCount; i++) {
-												   $scope.currentQuestion.answers[i].count = results[i].count;
-												   graphValues.push(results[i].count);
+												   var count = results.results[i].count;
+												   $scope.currentQuestion.answers[i].count = count;
+												   graphValues.push(count);
 											   }
 											   
 											   $scope.data = graphValues;
+											   $scope.$apply();
 										   });
 });
 
-tweb.controller('pollaudiencewait', function($scope, $location, UserDataFactory, ServerPushPoll) {
+tweb.controller('pollaudience', function($scope, $location, UserDataFactory, ServerPushPoll) {
 	$scope.userSession = UserDataFactory.getSession();
 
 	$scope.currentQuestion = {};
 	$scope.displayQuestion = false;
 	$scope.votingIsAllowed = false;
 	$scope.voteRegistered = false;
+	$scope.voteCountOnThisQuestion = 0;
+	
+	$scope.startTimer = function() {
+		$scope.timerHdl = setInterval(function() {
+									     $scope.timerRemaining = $scope.timerRemaining - 1;
+										 $scope.$apply();
+										 
+										 if ($scope.timerRemaining <= 0) {
+											 $scope.stopTimer();
+										 }
+									 }, 1000);
+	};
+	
+	$scope.stopTimer = function() {
+		if ($scope.timerHdl != null) {
+			clearTimeout($scope.timerHdl);
+			$scope.timerHdl = null;
+		}
+	};
 	
 	$scope.vote = function(answerIndex) {
 		$scope.currentQuestion.answers[answerIndex].voted = true;
@@ -347,7 +420,12 @@ tweb.controller('pollaudiencewait', function($scope, $location, UserDataFactory,
 	}
 	
 	ServerPushPoll.registerBasicPollEvents(function(nextQuestion) {
+		
+											   $scope.timerRemaining = nextQuestion.timeout;
+											   $scope.startTimer();
+		
 											   // Next question
+											   $scope.voteCountOnThisQuestion = 0;
 											   $scope.voteRegistered = false;
 											   $scope.votingIsAllowed = true;
 											   $scope.currentQuestion = nextQuestion;
@@ -357,24 +435,32 @@ tweb.controller('pollaudiencewait', function($scope, $location, UserDataFactory,
 										   },
 										   function() {
 											   // Poll completed
+											   $scope.stopTimer();
 											   $scope.votingIsAllowed = false;
 											   $scope.$apply();
 											   alert('Poll completed');
 										   },
 										   function() {
 											   // Question timeout
+											   $scope.stopTimer();
 											   $scope.votingIsAllowed = false;
 											   $scope.$apply();
 											   alert('Question timeout');
 										   },
 										   function(voteResult) {
 											   // Vote result
-											   
 											   if (voteResult.status == 'ok') {
-												   $scope.votingIsAllowed = false;
+												   $scope.voteCountOnThisQuestion = $scope.voteCountOnThisQuestion + 1;
 												   $scope.voteRegistered = true;
+												   
+												   
+												   if ($scope.voteCountOnThisQuestion >= $scope.currentQuestion.maxVote) {
+													   $scope.votingIsAllowed = false;
+												   }
+												   
 												   $scope.$apply();
-												   alert('Result registered');
+
+												   alert('Vote registered');
 											   } else {
 												   alert('Cannot vote: ' + voteResult.messages.join());
 											   }
@@ -391,10 +477,10 @@ tweb.controller('polljoin', function($scope, $location, UserDataFactory, ServerP
 	                        UserDataFactory.getSession(),
 	                        pollIdToJoin,
 							function() {
-							   $location.path("/pollspeakerwait");
+							   $location.path("/pollspeaker");
 							   $scope.$apply();
 						   }, function() {
-								$location.path("/pollaudiencewait");
+								$location.path("/pollaudience");
 								$scope.$apply();
 						   }
 	);
@@ -417,10 +503,10 @@ tweb.controller('polls', function($scope, $http, $location, UserDataFactory, Ser
 	$scope.joinPoll = function(pollIdToJoin) {
 		socketIOConnectToServer(ServerPushPoll, UserDataFactory.getSession(), pollIdToJoin,
 							function() {
-							   $location.path("/pollspeakerwait");
+							   $location.path("/pollspeaker");
 							   $scope.$apply();
 						   }, function() {
-								$location.path("/pollaudiencewait");
+								$location.path("/pollaudience");
 								$scope.$apply();
 						   });
 	}
@@ -558,6 +644,7 @@ tweb.controller('polldetails', function($scope, $location, $http, UserDataFactor
 							name: 'How is the weather today?',
 							allowAnonymous: false,
 							maxVote: 5,
+							timeout: 30,
 							answers: [
 									{
 									   name: 'Good'
@@ -576,6 +663,7 @@ tweb.controller('polldetails', function($scope, $location, $http, UserDataFactor
 							name: 'Yes or no?',
 							allowAnonymous: false,
 							maxVote: 5,
+							timeout: 30,
 							answers: [
 									{
 									   name: 'Yes'
@@ -650,6 +738,7 @@ tweb.controller('polldetails', function($scope, $location, $http, UserDataFactor
 										  name: 'What do you prefer?',
 										  allowAnonymous: false,
 										  maxVote: 1,
+										  timeout: 30,
 										  answers: [{
 														name: 'Yellow'
 													},
@@ -682,7 +771,7 @@ tweb.controller('polldetails', function($scope, $location, $http, UserDataFactor
 			for (var i=0;i<questionsCount;i++) {
 				var currentQuestion = $scope.poll.questions[i];
 				var currentQuestionNameLength = currentQuestion.name.length;
-				
+
 				if (currentQuestionNameLength < 5) {
 					errors.push('Question ' + i + ': question name is too short');
 				} else if (currentQuestionNameLength > 30) {

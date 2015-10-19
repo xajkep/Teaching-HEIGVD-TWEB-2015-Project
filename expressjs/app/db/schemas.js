@@ -21,6 +21,7 @@ var PollSchema = new Schema({
 				  name: String,
 				  maxVote: Number,
 				  allowAnonymous: Boolean,
+				  timeout: Number,
 				  answers: [
 							   {
 								   _id: String,

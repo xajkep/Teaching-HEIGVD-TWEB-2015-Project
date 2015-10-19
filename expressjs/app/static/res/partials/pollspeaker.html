@@ -1,0 +1,44 @@
+<h1>POLLSPEAKER.HTML</h1>
+<h1></h1>
+
+<div class="container">
+	<div class="row">
+		<div class="col-md-6">
+			<div ng-if="displayQuestion">
+				<h4>{{currentQuestion.name}}</h4>
+				<ul ng-repeat="answer in currentQuestion.answers">
+					<li>{{answer.name}} ({{answer.count}} votes)</li>
+				</ul>
+			</div>
+			
+			<h4 ng-if="votingIsAllowed === true">Voting is allowed! {{timerRemaining}} seconds remaining</h4>
+			<h4 ng-if="votingIsAllowed === false">Voting is not allowed</h4>
+			
+			<a href="" class="btn btn-default" role="button" ng-click="goNextQuestion()" ng-if="goNextQuestionAllowed">Go to the next question</a>
+		</div>
+		
+		<div class="col-md-6">
+			<canvas id="doughnut" class="chart chart-doughnut" chart-options="options" chart-data="data" chart-labels="labels"></canvas> 
+		</div>
+	</div>
+</div>
+
+
+<table class="table">
+	<thead>
+		<tr>
+			<th></th>
+			<th>Firstname</th>
+			<th>Lastname</th>
+			<th>Email</th>
+		</tr>
+	</thead>
+	<tbody>
+		<tr ng-repeat="user in connected track by $index">
+			<td><img src="res/img/tick1.png" alt="Voted" ng-if="user.voted === true" /></td>
+			<td>{{user.firstName}}</td>
+			<td>{{user.lastName}}</td>
+			<td>{{user.email}}</td>
+		</tr>
+	</tbody>
+</table>

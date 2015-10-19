@@ -23,6 +23,12 @@ sio.sockets.on('connection', function (socket) {
 	socket.isAuthenticated = false;
 	console.log('New socket.io connection');
 	
+	socket.on('disconnect', function() {
+		console.log("User disconnected");
+		sio.to('poll_' + socket.pollId + '_speaker').emit('userDisconnect',
+													   	  { '_id': socket.userId, 'firstName': socket.firstName, 'lastName': socket.lastName, 'email': socket.email });
+	});
+	
 	socket.on('authAndJoin', function(authData) {
 		console.log('Processing authAndJoin');
 		checkAndExtractFromSessionToken(authData.session,
@@ -35,23 +41,32 @@ sio.sockets.on('connection', function (socket) {
 											} else {
 												console.log('Socket.io authentication success');
 												
-												socket.isAuthenticated = true;
-												socket.userId = userId;
-												socket.pollId = authData.poll;
-												socket.isSpeaker = (joinPollResult == 'speaker');
-												
-												// Poll room
-												socket.join('poll_' + authData.poll);
-												socket.join('poll_' + authData.poll + '_' + joinPollResult);
-												
-												// joinPollResult = 'speaker|audience'
-												socket.emit('authAndJoinResult', {'status': 'ok', 'data': joinPollResult});
-												
-												// Speaker is notified when a new user connects
-												if (joinPollResult == 'audience'){
-													sio.to('poll_' + authData.poll + '_speaker').emit('userConnect',
-																									  { '_id': 'lolololol', 'firstName': 'Luc', 'lastName': 'Smith' });
-												}
+												User.findOne({ '_id': userId }, function (err, user) {
+												  if (err) {
+													  console.log('Invalid user id provided');
+												  } else {
+														socket.isAuthenticated = true;
+														socket.userId = userId;
+														socket.firstName = user.firstname;
+														socket.lastName = user.lastname;
+														socket.email = user.email;
+														socket.pollId = authData.poll;
+														socket.isSpeaker = (joinPollResult == 'speaker');
+														
+														// Poll room
+														socket.join('poll_' + authData.poll);
+														socket.join('poll_' + authData.poll + '_' + joinPollResult);
+														
+														// joinPollResult = 'speaker|audience'
+														socket.emit('authAndJoinResult', {'status': 'ok', 'data': joinPollResult});
+														
+														// Speaker is notified when a new user connects
+														if (joinPollResult == 'audience'){
+															sio.to('poll_' + authData.poll + '_speaker').emit('userConnect',
+																											  { '_id': socket.userId, 'firstName': socket.firstName, 'lastName': socket.lastName, 'email': socket.email });
+														}
+												  }
+												});
 											}
 										},
 										function() {
@@ -99,7 +114,7 @@ sio.sockets.on('connection', function (socket) {
 				var liveResults = globals.getLiveResults(socket.pollId);
 				console.log('Live vote results: ' + liveResults);
 				
-				sio.to('poll_' + socket.pollId + '_speaker').emit('liveVoteResults', liveResults);
+				sio.to('poll_' + socket.pollId + '_speaker').emit('liveVoteResults', { 'results': liveResults, 'whovoted': socket.userId });
 				
 			} else {
 				socket.emit('voteResult', {'status': 'ko', 'messages': ['Invalid data or request']});
@@ -364,21 +379,45 @@ router.put('/poll', function (req, res) {
 													break;
 												}
 												
+												if (!currentQuestion.hasOwnProperty("timeout")) {
+													errors.push("Question has no timeout");
+													break;
+												}
+												
 												var currentQuestionName = currentQuestion.name;
 												var currentQuestionAllowAnonymous = currentQuestion.allowAnonymous;
 												var currentQuestionMaxVotes = currentQuestion.maxVote;
+												var currentQuestionTimeout = currentQuestion.timeout;
 												var currentQuestionAnswers = currentQuestion.answers;
 												
 												currentQuestionDTO.name = currentQuestionName;
 												currentQuestionDTO.allowAnonymous = currentQuestionAllowAnonymous;
 												currentQuestionDTO.maxVote = currentQuestionMaxVotes;
+												currentQuestionDTO.timeout = currentQuestionTimeout;
 												currentQuestionDTO.answers = [];
 
 												console.log("Question: " + currentQuestionName);
+												console.log(" allowAnonymous: " + currentQuestionDTO.allowAnonymous);
+												console.log(" maxVote: " + currentQuestionDTO.maxVote);
+												console.log(" timeout: " + currentQuestionDTO.timeout);
+												
+												if (currentQuestionDTO.allowAnonymous !== true && currentQuestionDTO.allowAnonymous !== false) {
+													errors.push("AllowAnonymous is invalid");
+												}
+												
+												if (currentQuestionDTO.maxVote < 1 || currentQuestionDTO.maxVote > 10) {
+													errors.push("MaxVote is invalid");
+												}
+												
+												if (currentQuestionDTO.timeout < 15 || currentQuestionDTO.timeout > 600) {
+													errors.push("Timeout is invalid");
+												}
 												
 												if (currentQuestionAnswers.length < 2) {
 													errors.push("At least two answers must be specified");
 												}
+												
+												console.log("  Answers:");
 												
 												for (var answerIndex = 0; answerIndex < currentQuestionAnswers.length ; answerIndex++) {
 													var currentAnswerDTO = {};
@@ -392,7 +431,7 @@ router.put('/poll', function (req, res) {
 													var currentAnswerName = currentAnswer.name;
 													currentAnswerDTO.name = currentAnswerName;
 													
-													console.log("  Answer: " + currentAnswerName);
+													console.log("    Answer: " + currentAnswerName);
 													
 													currentQuestionDTO.answers.push(currentAnswerDTO);
 												}
@@ -411,34 +450,35 @@ router.put('/poll', function (req, res) {
 											generateId(function(generatedPollId) {
 												console.log('Adding new poll');
 												
-												var newPoll = new Poll({ _id: generatedPollId,
-																		 state: 'pending',
-																		 created_by: userId,
-																		 creation_date: new Date(),
-																		 name: newPollDTO.name });
+												var newPoll = new Poll({ '_id': generatedPollId,
+																		 'state': 'pending',
+																		 'created_by': userId,
+																		 'creation_date': new Date(),
+																		 'name': newPollDTO.name });
 																		 
 												newPoll.questions = [];
 
 												for (var indexQuestion = 0 ; indexQuestion < newPollDTO.questions.length; indexQuestion++) {
 													var currentQuestion = newPollDTO.questions[indexQuestion];
-													var currentQuestionToAdd = { _id: generatedPollId + '-' + indexQuestion,
-																				 name: currentQuestion.name,
-																				 maxVote: currentQuestion.maxVote,
-																				 allowAnonymous: currentQuestion.allowAnonymous,
-																				 answers: []
+													var currentQuestionToAdd = { '_id': generatedPollId + '-' + indexQuestion,
+																				 'name': currentQuestion.name,
+																				 'maxVote': currentQuestion.maxVote,
+																				 'allowAnonymous': currentQuestion.allowAnonymous,
+																				 'timeout': currentQuestion.timeout,
+																				 'answers': []
 																				};
 													
 													for (var indexAnswer = 0 ; indexAnswer < currentQuestion.answers.length; indexAnswer++) {
 														var currentAnswer = currentQuestion.answers[indexAnswer];
-														currentQuestionToAdd.answers.push({_id: generatedPollId + '-' + indexQuestion + '-' + indexAnswer,
-																						   name: currentAnswer.name,
-																						   users: []});
+														currentQuestionToAdd.answers.push({'_id': generatedPollId + '-' + indexQuestion + '-' + indexAnswer,
+																						   'name': currentAnswer.name,
+																						   'users': []});
 													}
 													
 													newPoll.questions.push(currentQuestionToAdd);
 												}
-																			   
-												newPoll.save(function (err, newPoll) {
+					   
+												newPoll.save(function (err, newPollInserted) {
 													if (err) {
 														errors.push('Cannot add poll');
 													} else {

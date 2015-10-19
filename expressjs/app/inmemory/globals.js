@@ -132,7 +132,7 @@ module.exports = {
 				
 				var currentQuestion = poll.questions[poll.currentQuestion];
 
-				poll.cancelTimeout = setTimeout(executeWhenQuestionTimeout, 30000);
+				poll.cancelTimeout = setTimeout(executeWhenQuestionTimeout, currentQuestion.timeout * 1000);
 				cbWhenMovedToNextQuestion(currentQuestion);
 			}
 		}

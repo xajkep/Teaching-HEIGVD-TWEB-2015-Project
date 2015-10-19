@@ -1,6 +1,6 @@
-<h1>POLLAUDIENCEWAIT.HTML</h1>
+<h1>POLLAUDIENCE.HTML</h1>
 <div>
-	<h4 ng-if="votingIsAllowed === true">Voting is allowed!</h4>
+	<h4 ng-if="votingIsAllowed === true">Voting is allowed! {{timerRemaining}} seconds remaining</h4>
 	<h4 ng-if="votingIsAllowed === false">Voting is not allowed</h4>
 </div>
 
@@ -9,6 +9,8 @@
 	<ul ng-repeat="answer in currentQuestion.answers track by $index">
 		<li><span ng-if="answer.voted === true">VOTED</span><a href="" class="btn btn-default" role="button" ng-click="vote($index)" ng-if="votingIsAllowed">Vote</a> {{answer.name}}</li>
 	</ul>
+	
+	<p>Voices: {{voteCountOnThisQuestion}}/{{currentQuestion.maxVote}}</p>
 </div>
 
 <h4 ng-if="voteRegistered">Your vote has been registered</h4>
