@@ -4,6 +4,27 @@ var polls = new HashMap();
 var mongoose = require('mongoose');
 var Poll = mongoose.model('Poll');
 
+var countAlreadyVoted = function(poll, userId) {
+	var alreadyVotedCount = 0;
+	
+	var question = poll.questions[poll.currentQuestion];
+	var currentQuestion = poll.questions[poll.currentQuestion];
+	var answersCount = question.answers.length;
+	
+	for (var answerIndex = 0; answerIndex < answersCount; ++answerIndex) {
+		var answer = question.answers[answerIndex];
+		var usersLength = answer.users.length;
+		
+		for (var i = 0; i < usersLength; ++i) {
+			if (answer.users[i] == userId) {
+				alreadyVotedCount = alreadyVotedCount + 1;
+			}
+		}
+	}
+	
+	return alreadyVotedCount;
+};
+
 module.exports = {
 	loadPollInMemory: function(poll) {
 		console.log('Loading poll in memory: ' + poll._id);
@@ -40,19 +61,14 @@ module.exports = {
 			return false;
 		}
 		
-		var answer = question.answers[answerIndex];
-		var alreadyVotedCount = 0;
+
+		var alreadyVotedCount = countAlreadyVoted(poll, userId);
 		
-		for (var i = 0; i < answersCount; ++i) {
-			if (answer.users[i] == userId) {
-				alreadyVotedCount = alreadyVotedCount + 1;
-				
-				if (alreadyVotedCount >= poll.maxVote) {
-					return false;
-				}
-			}
+		if (alreadyVotedCount >= poll.maxVote) {
+			return false;
 		}
 
+		var answer = question.answers[answerIndex];
 		answer.users.push(userId);
 		
 		return true;
@@ -81,6 +97,23 @@ module.exports = {
 		}
 		
 		return response;
+	},
+
+	getCurrentQuestion: function(pollId, userId) {
+		if (!polls.has(pollId)) {
+			return false;
+		}
+		
+		var poll = polls.get(pollId);
+		
+		if (poll.currentQuestion < 0) {
+			return null;
+		}
+		
+		var alreadyVotedCount = countAlreadyVoted(poll, userId);
+		var remainingTimeToVote = Math.floor((poll.timeoutAt - new Date()) / 1000);
+		
+		return { 'question': poll.questions[poll.currentQuestion], 'voted': alreadyVotedCount, 'timeout': remainingTimeToVote };
 	},
 
 	goNextQuestion: function(pollId, cbWhenMovedToNextQuestion, cbWhenPollCompleted, cbWhenQuestionTimeout, cbErrorMoveNextQuestion) {
@@ -127,13 +160,22 @@ module.exports = {
 				executeWhenQuestionTimeout();
 				cbWhenPollCompleted();
 			} else {
+				if (poll.currentQuestion > -1) {
+					poll.questions[poll.currentQuestion] = {}; // freeing memory
+				}
+				
 				poll.currentQuestion = poll.currentQuestion + 1;
 				poll.voteAllowed = true;
 				
+				
 				var currentQuestion = poll.questions[poll.currentQuestion];
 
+				var timeoutTime = new Date();
+				timeoutTime.setSeconds(timeoutTime.getSeconds() + currentQuestion.timeout);
+				poll.timeoutAt = timeoutTime;
+				
 				poll.cancelTimeout = setTimeout(executeWhenQuestionTimeout, currentQuestion.timeout * 1000);
-				cbWhenMovedToNextQuestion(currentQuestion);
+				cbWhenMovedToNextQuestion(currentQuestion, currentQuestion.timeout);
 			}
 		}
 	},

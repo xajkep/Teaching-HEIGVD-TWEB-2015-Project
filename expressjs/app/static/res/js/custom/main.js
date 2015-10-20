@@ -46,6 +46,7 @@ tweb.factory('ServerPushPoll', function () {
 	
 	var _cbOnUserConnect = null;
 	var _cbOnUserDisconnect = null;
+	var _cbOnAudienceList = null;
 	
 	var _cbOnNextQuestion = null;
 	var _cbOnPollCompleted = null;
@@ -65,9 +66,10 @@ tweb.factory('ServerPushPoll', function () {
 		_cbOnVoteResult = cbOnVoteResult;
 	};
 	
-	var _registerEventsWhenPeopleConnectAndDisconnect = function(cbOnUserConnect, cbOnUserDisconnect) {
+	var _registerEventsWhenPeopleConnectAndDisconnect = function(cbOnUserConnect, cbOnUserDisconnect, cbOnAudienceList) {
 		_cbOnUserConnect = cbOnUserConnect;
 		_cbOnUserDisconnect = cbOnUserDisconnect;
+		_cbOnAudienceList = cbOnAudienceList;
 	};
 	
 	var _goNextQuestion = function() {
@@ -81,11 +83,6 @@ tweb.factory('ServerPushPoll', function () {
 	var _connect = function(host, port, session, pollIdToJoin, cbJoinedAsSpeaker, cbJoinedAsAudience) {
 		_sio = io.connect(host + ':' + port);
 
-		_sio.on('connect', function() {
-			//alert('Socket connected');
-			_sio.emit('authAndJoin', { 'session': session, 'poll': pollIdToJoin });
-		});
-		
 		_sio.on('authAndJoinResult', function(authAndJoinResult) {
 			if (authAndJoinResult.status == 'ok') {
 				//alert('Join poll success, as: ' + authAndJoinResult.data);
@@ -101,17 +98,21 @@ tweb.factory('ServerPushPoll', function () {
 		
 		_sio.on('userConnect', function(user) {
 			
+			//alert('userConnect received');
+			
 			user.voted = false;
 			_connectedUsers.push(user);
-			alert('New user: ' + user._id);
+			//alert('New user: ' + user._id);
 
 			if (_cbOnUserConnect != null) {
-				_cbOnUserConnect();
+				_cbOnUserConnect(_connectedUsers);
 			}
 		});
 		
 		_sio.on('userDisconnect', function(user) {
 
+			//alert('userDisconnect received');
+		
 			var newList = [];
 			var usersCount = _connectedUsers.length;
 			for (var i=0; i < usersCount; i++) {
@@ -126,8 +127,21 @@ tweb.factory('ServerPushPoll', function () {
 				_cbOnUserDisconnect(_connectedUsers);
 			}
 		});
+		
+		_sio.on('audienceList', function(audienceList) {
+
+			_connectedUsers = audienceList;
+			
+			//alert('audienceList received');
+
+			if (_cbOnAudienceList != null) {
+				_cbOnAudienceList(_connectedUsers);
+			}
+		});
 
 		_sio.on('nextQuestion', function(nextQuestion) {
+			
+			//alert('nextQuestion received');
 			
 			var usersCount = _connectedUsers.length;
 			for (var i=0; i < usersCount; i++) {
@@ -169,6 +183,11 @@ tweb.factory('ServerPushPoll', function () {
 			if (_cbOnLiveVoteResults != null) {
 				_cbOnLiveVoteResults(results);
 			}
+		});
+		
+		_sio.on('connect', function() {
+			//alert('Socket connected');
+			_sio.emit('authAndJoin', { 'session': session, 'poll': pollIdToJoin });
 		});
 		
 	};
@@ -319,19 +338,34 @@ tweb.controller('pollspeaker', function($scope, $location, UserDataFactory, Serv
 	$scope.data = [];
 	$scope.options = { animationSteps: 20 };
 
-	ServerPushPoll.registerEventsWhenPeopleConnectAndDisconnect(function() {
+	ServerPushPoll.registerEventsWhenPeopleConnectAndDisconnect(function(newConnectedList) {
+																	//alert('userconnect processing');
+																	// One user joined
+																	$scope.connected = newConnectedList;
 																	$scope.$apply();
 															    },
-																// Workaround. Eveny $apply doesn't work.
+																// Workaround. Even $apply doesn't work. Enjoy.
 																function(newConnectedList) {
+																	//alert('userDisconnect processing');
+																	// One user disconnected
+																	$scope.connected = newConnectedList;
+																	$scope.$apply();
+																},
+																function(newConnectedList) {
+																	//alert('audienceList processing');
+																	// When the speaker joins, the list of already connected is received
 																	$scope.connected = newConnectedList;
 																	$scope.$apply();
 																});
 																
 
-	ServerPushPoll.registerBasicPollEvents(function(nextQuestion) {
+	ServerPushPoll.registerBasicPollEvents(function(question) {
 		
-											   $scope.timerRemaining = nextQuestion.timeout;
+											   // question.voted is unused
+											   var nextQuestion = question.question;
+											   var timeout = question.timeout;
+		
+											   $scope.timerRemaining = timeout;
 											   $scope.startTimer();
 		
 											   // Next question
@@ -419,19 +453,21 @@ tweb.controller('pollaudience', function($scope, $location, UserDataFactory, Ser
 		ServerPushPoll.vote(answerIndex);
 	}
 	
-	ServerPushPoll.registerBasicPollEvents(function(nextQuestion) {
+	ServerPushPoll.registerBasicPollEvents(function(question) {
+											   var nextQuestion = question.question;
+											   var timeout = question.timeout;
 		
-											   $scope.timerRemaining = nextQuestion.timeout;
+											   $scope.timerRemaining = timeout;
 											   $scope.startTimer();
 		
 											   // Next question
-											   $scope.voteCountOnThisQuestion = 0;
+											   $scope.voteCountOnThisQuestion = question.voted;
 											   $scope.voteRegistered = false;
 											   $scope.votingIsAllowed = true;
 											   $scope.currentQuestion = nextQuestion;
 											   $scope.displayQuestion = true;
 											   $scope.$apply();
-											   alert('Next question');
+											   //alert('Next question: ' + question.question.name);
 										   },
 										   function() {
 											   // Poll completed
@@ -445,7 +481,7 @@ tweb.controller('pollaudience', function($scope, $location, UserDataFactory, Ser
 											   $scope.stopTimer();
 											   $scope.votingIsAllowed = false;
 											   $scope.$apply();
-											   alert('Question timeout');
+											   //alert('Question timeout');
 										   },
 										   function(voteResult) {
 											   // Vote result
@@ -460,7 +496,7 @@ tweb.controller('pollaudience', function($scope, $location, UserDataFactory, Ser
 												   
 												   $scope.$apply();
 
-												   alert('Vote registered');
+												   //alert('Vote registered');
 											   } else {
 												   alert('Cannot vote: ' + voteResult.messages.join());
 											   }

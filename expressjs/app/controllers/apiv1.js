@@ -64,6 +64,30 @@ sio.sockets.on('connection', function (socket) {
 														if (joinPollResult == 'audience'){
 															sio.to('poll_' + authData.poll + '_speaker').emit('userConnect',
 																											  { '_id': socket.userId, 'firstName': socket.firstName, 'lastName': socket.lastName, 'email': socket.email });
+														} else {
+															// Catching up
+															var audienceInRoom = [];
+															
+															// Speaker re-join
+															for (var socketId in sio.nsps['/'].adapter.rooms['poll_' + authData.poll + '_audience']){
+																var socketInRoom = sio.sockets.connected[socketId];
+																
+																audienceInRoom.push({ '_id': socketInRoom.userId, 'firstName': socketInRoom.firstName, 'lastName': socketInRoom.lastName, 'email': socketInRoom.email, 'voted': socketInRoom.voted });
+															}
+
+															console.log('audienceList=');
+															console.log(audienceInRoom);
+															socket.emit('audienceList', audienceInRoom);
+														}
+														
+														// Catching up
+														// false = error | null = poll not started | obj = current question
+														var currentQuestion = globals.getCurrentQuestion(socket.pollId, socket.userId);
+
+														// If the poll has started, catching up
+														if (currentQuestion !== null) {
+															console.log('Catching up on question. Time remaining: ' + currentQuestion.timeout);
+															socket.emit('nextQuestion', currentQuestion);
 														}
 												  }
 												});
@@ -79,10 +103,14 @@ sio.sockets.on('connection', function (socket) {
 		console.log('Processing goNextQuestion');
 
 		if (socket.isAuthenticated === true && socket.isSpeaker === true) {
+			for (var socketId in sio.nsps['/'].adapter.rooms['poll_' + socket.pollId + '_audience']){
+				sio.sockets.connected[socketId].voted = false;
+			}
+			
 			globals.goNextQuestion(socket.pollId,
-			                       function(nextQuestion) {
+			                       function(nextQuestion, timeout) {
 									   // Next question (timer is running)
-									   sio.to('poll_' + socket.pollId).emit('nextQuestion', nextQuestion);
+									   sio.to('poll_' + socket.pollId).emit('nextQuestion', { 'question': nextQuestion, 'voted': 0, 'timeout': timeout });
 									   console.log('Notified clients: next question data');
 								   },
 								   function() {
@@ -109,6 +137,7 @@ sio.sockets.on('connection', function (socket) {
 		if (socket.isAuthenticated === true && socket.isSpeaker !== true) {
 			if (globals.vote(socket.pollId, answerIndex, socket.userId)) {
 				console.log('Vote registered');
+				socket.voted = true;
 				socket.emit('voteResult', {'status': 'ok'});
 				
 				var liveResults = globals.getLiveResults(socket.pollId);
