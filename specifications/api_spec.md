@@ -105,6 +105,30 @@ route: BASE/poll
 }
 ~~~
 
+### Edit an existing poll
+
+PUT request
+
+route: BASE/poll
+
+~~~json
+{
+  _id: String,
+  'name': String,
+  'questions': [{
+    'name': String,
+    'allowAnonymous': Boolean,
+    'maxVote': Integer,
+    'timeout': Integer,
+    'answers': [{
+        'name'
+      }]
+    }]
+}
+~~~
+
+The \_id attribute identifies the poll to be modified.
+
 ### Delete an existing poll
 
 DELETE request
@@ -146,8 +170,8 @@ response:
 }
 ~~~
 
-questions is an array which contains all of the questions in the requested poll
-for each question, there a multiple possible answers. These are represented in the
+questions is an array which contains all of the questions in the requested poll.
+For each question, there are multiple possible answers. These are represented in the
 answers array.
 
 Hereafter is an example :

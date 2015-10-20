@@ -29,6 +29,48 @@ sio.sockets.on('connection', function (socket) {
 													   	  { '_id': socket.userId, 'firstName': socket.firstName, 'lastName': socket.lastName, 'email': socket.email });
 	});
 	
+	socket.on('catchUp', function() {
+		if (socket.isAuthenticated === true) {
+			
+			if (socket.isSpeaker === true) {
+				var audienceInRoom = [];
+				
+				// Speaker re-join
+				for (var socketId in sio.nsps['/'].adapter.rooms['poll_' + socket.pollId + '_audience']){
+					var socketInRoom = sio.sockets.connected[socketId];
+					
+					audienceInRoom.push({ '_id': socketInRoom.userId, 'firstName': socketInRoom.firstName, 'lastName': socketInRoom.lastName, 'email': socketInRoom.email, 'voted': socketInRoom.voted });
+				}
+
+				console.log('audienceList=');
+				console.log(audienceInRoom);
+				socket.emit('audienceList', audienceInRoom);
+			}
+
+			// false = error | null = poll not started | obj = current question
+			var currentQuestion = globals.getCurrentQuestion(socket.pollId, socket.userId);
+
+			// If the poll has started, catching up
+			if (currentQuestion !== null) {
+				socket.voted = currentQuestion.voted > 0;
+				console.log('Catching up on question. Time remaining: ' + currentQuestion.timeout);
+				socket.emit('nextQuestion', currentQuestion);
+			}
+
+			if (socket.isSpeaker === true) {
+				var liveResults = globals.getLiveResults(socket.pollId);
+				console.log('Live vote results: ' + liveResults);
+				
+				socket.emit('liveVoteResults', { 'results': liveResults, 'whovoted': null });
+			} else {
+				sio.to('poll_' + socket.pollId + '_speaker').emit('userConnect',
+																  { '_id': socket.userId, 'firstName': socket.firstName, 'lastName': socket.lastName, 'email': socket.email, 'voted': socket.voted });
+			}
+			
+			socket.join('poll_' + socket.pollId + '_' + (socket.isSpeaker === true ? 'speaker' : 'audience'));
+		}
+	});
+	
 	socket.on('authAndJoin', function(authData) {
 		console.log('Processing authAndJoin');
 		checkAndExtractFromSessionToken(authData.session,
@@ -52,43 +94,13 @@ sio.sockets.on('connection', function (socket) {
 														socket.email = user.email;
 														socket.pollId = authData.poll;
 														socket.isSpeaker = (joinPollResult == 'speaker');
+														socket.voted = false;
 														
 														// Poll room
 														socket.join('poll_' + authData.poll);
-														socket.join('poll_' + authData.poll + '_' + joinPollResult);
-														
+
 														// joinPollResult = 'speaker|audience'
 														socket.emit('authAndJoinResult', {'status': 'ok', 'data': joinPollResult});
-														
-														// Speaker is notified when a new user connects
-														if (joinPollResult == 'audience'){
-															sio.to('poll_' + authData.poll + '_speaker').emit('userConnect',
-																											  { '_id': socket.userId, 'firstName': socket.firstName, 'lastName': socket.lastName, 'email': socket.email });
-														} else {
-															// Catching up
-															var audienceInRoom = [];
-															
-															// Speaker re-join
-															for (var socketId in sio.nsps['/'].adapter.rooms['poll_' + authData.poll + '_audience']){
-																var socketInRoom = sio.sockets.connected[socketId];
-																
-																audienceInRoom.push({ '_id': socketInRoom.userId, 'firstName': socketInRoom.firstName, 'lastName': socketInRoom.lastName, 'email': socketInRoom.email, 'voted': socketInRoom.voted });
-															}
-
-															console.log('audienceList=');
-															console.log(audienceInRoom);
-															socket.emit('audienceList', audienceInRoom);
-														}
-														
-														// Catching up
-														// false = error | null = poll not started | obj = current question
-														var currentQuestion = globals.getCurrentQuestion(socket.pollId, socket.userId);
-
-														// If the poll has started, catching up
-														if (currentQuestion !== null) {
-															console.log('Catching up on question. Time remaining: ' + currentQuestion.timeout);
-															socket.emit('nextQuestion', currentQuestion);
-														}
 												  }
 												});
 											}
@@ -304,7 +316,6 @@ router.get('/poll/:id', function (req, res) {
 									});
 });
 
-
 // Delete a poll
 router.delete('/poll/:id', function (req, res) {
 	
@@ -351,7 +362,6 @@ router.delete('/poll/:id', function (req, res) {
 									});
 });
 
-
 // Create new poll
 router.put('/poll', function (req, res) {
 	
@@ -366,7 +376,7 @@ router.put('/poll', function (req, res) {
 	
 	checkAndExtractFromSessionToken(authorizationHeader,
 									function(userId) {
-										
+									
 										if (!req.body.hasOwnProperty("name")) {
 											errors.push("Poll name not supplied");
 										}
@@ -476,10 +486,14 @@ router.put('/poll', function (req, res) {
 										}
 										
 										if (errors.length == 0) {
-											generateId(function(generatedPollId) {
+											
+											var editId = req.body.hasOwnProperty("_id") ? req.body._id : null;
+											
+											
+											var insertPoll = function(pollId, mode) {
 												console.log('Adding new poll');
 												
-												var newPoll = new Poll({ '_id': generatedPollId,
+												var newPoll = new Poll({ '_id': pollId,
 																		 'state': 'pending',
 																		 'created_by': userId,
 																		 'creation_date': new Date(),
@@ -489,7 +503,7 @@ router.put('/poll', function (req, res) {
 
 												for (var indexQuestion = 0 ; indexQuestion < newPollDTO.questions.length; indexQuestion++) {
 													var currentQuestion = newPollDTO.questions[indexQuestion];
-													var currentQuestionToAdd = { '_id': generatedPollId + '-' + indexQuestion,
+													var currentQuestionToAdd = { '_id': pollId + '-' + indexQuestion,
 																				 'name': currentQuestion.name,
 																				 'maxVote': currentQuestion.maxVote,
 																				 'allowAnonymous': currentQuestion.allowAnonymous,
@@ -499,7 +513,7 @@ router.put('/poll', function (req, res) {
 													
 													for (var indexAnswer = 0 ; indexAnswer < currentQuestion.answers.length; indexAnswer++) {
 														var currentAnswer = currentQuestion.answers[indexAnswer];
-														currentQuestionToAdd.answers.push({'_id': generatedPollId + '-' + indexQuestion + '-' + indexAnswer,
+														currentQuestionToAdd.answers.push({'_id': pollId + '-' + indexQuestion + '-' + indexAnswer,
 																						   'name': currentAnswer.name,
 																						   'users': []});
 													}
@@ -507,16 +521,52 @@ router.put('/poll', function (req, res) {
 													newPoll.questions.push(currentQuestionToAdd);
 												}
 					   
-												newPoll.save(function (err, newPollInserted) {
-													if (err) {
-														errors.push('Cannot add poll');
-													} else {
-														console.log('Poll added');
-													}
-													
-													respondCallback();
+					   
+												if (mode == 'add') {
+													newPoll.save(function (err, newPollInserted) {
+														if (err) {
+															console.log(err);
+															errors.push('Cannot add poll');
+														} else {
+															console.log('Poll added');
+														}
+														
+														respondCallback();
+													});
+												} else {
+													Poll.update({ '_id': pollId }, newPoll, function(err) {
+														if (err) {
+															console.log(err);
+															errors.push('Cannot edit poll');
+														} else {
+															console.log('Poll edited');
+														}
+														
+														respondCallback();
+													});
+												}
+												
+											};
+											
+											if (editId == null) {
+												console.log('Adding poll');
+												
+												generateId(function(generatedPollId) {
+													insertPoll(generatedPollId, 'add');
 												});
-											});
+											} else {
+												console.log('Updating poll: ' + editId);
+												
+												Poll.findOne({'_id': editId}, 'created_by', function(err, poll) {
+													if (poll != null && checkStringTimeConst(poll.created_by, userId)) {
+														insertPoll(editId, 'edit');
+													} else {
+														errors.push('You did not create this poll');
+														respondCallback();
+													}
+												});
+											}
+											
 										} else {
 											respondCallback();
 										}

@@ -8,7 +8,6 @@ var countAlreadyVoted = function(poll, userId) {
 	var alreadyVotedCount = 0;
 	
 	var question = poll.questions[poll.currentQuestion];
-	var currentQuestion = poll.questions[poll.currentQuestion];
 	var answersCount = question.answers.length;
 	
 	for (var answerIndex = 0; answerIndex < answersCount; ++answerIndex) {
@@ -111,8 +110,11 @@ module.exports = {
 		}
 		
 		var alreadyVotedCount = countAlreadyVoted(poll, userId);
-		var remainingTimeToVote = Math.floor((poll.timeoutAt - new Date()) / 1000);
+		var currentTime = new Date();
 		
+		var remainingTimeToVote = currentTime >= poll.timeoutAt ? 0 : Math.floor((poll.timeoutAt - currentTime) / 1000);
+		
+		console.log('alreadyVotedCount=' + alreadyVotedCount);
 		return { 'question': poll.questions[poll.currentQuestion], 'voted': alreadyVotedCount, 'timeout': remainingTimeToVote };
 	},
 

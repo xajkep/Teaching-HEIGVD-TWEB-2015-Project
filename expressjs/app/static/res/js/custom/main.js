@@ -55,6 +55,10 @@ tweb.factory('ServerPushPoll', function () {
 	
 	var _cbOnLiveVoteResults = null;
 	
+	var _catchUp = function() {
+		_sio.emit('catchUp');
+	}
+	
 	var _registerLiveVoteResults = function(cbOnLiveVoteResults) {
 		_cbOnLiveVoteResults = cbOnLiveVoteResults
 	}
@@ -99,8 +103,7 @@ tweb.factory('ServerPushPoll', function () {
 		_sio.on('userConnect', function(user) {
 			
 			//alert('userConnect received');
-			
-			user.voted = false;
+
 			_connectedUsers.push(user);
 			//alert('New user: ' + user._id);
 
@@ -173,10 +176,13 @@ tweb.factory('ServerPushPoll', function () {
 		
 		_sio.on('liveVoteResults', function(results) {
 
-			var usersCount = _connectedUsers.length;
-			for (var i=0; i < usersCount; i++) {
-				if (_connectedUsers[i]._id == results.whovoted) {
-					_connectedUsers[i].voted = true;
+			// null if catching up
+			if (results.whovoted != null) {
+				var usersCount = _connectedUsers.length;
+				for (var i=0; i < usersCount; i++) {
+					if (_connectedUsers[i]._id == results.whovoted) {
+						_connectedUsers[i].voted = true;
+					}
 				}
 			}
 			
@@ -198,7 +204,8 @@ tweb.factory('ServerPushPoll', function () {
 		registerBasicPollEvents: _registerBasicPollEvents,
 		goNextQuestion: _goNextQuestion,
 		vote: _vote,
-		registerLiveVoteResults: _registerLiveVoteResults
+		registerLiveVoteResults: _registerLiveVoteResults,
+		catchUp: _catchUp
 	}
 });
 
@@ -365,11 +372,15 @@ tweb.controller('pollspeaker', function($scope, $location, UserDataFactory, Serv
 											   var timeout = question.timeout;
 		
 											   $scope.timerRemaining = timeout;
-											   $scope.startTimer();
-		
-											   // Next question
-											   $scope.votingIsAllowed = true;
 											   
+											   if (timeout > 0) {
+													$scope.startTimer();
+													
+													// Next question
+													$scope.votingIsAllowed = true;
+													$scope.goNextQuestionAllowed = false;
+											   }
+
 											   var graphLabels = [];
 											   var graphValues = [];
 											   var answersCount = nextQuestion.answers.length;
@@ -418,6 +429,8 @@ tweb.controller('pollspeaker', function($scope, $location, UserDataFactory, Serv
 											   $scope.data = graphValues;
 											   $scope.$apply();
 										   });
+										   
+	ServerPushPoll.catchUp();
 });
 
 tweb.controller('pollaudience', function($scope, $location, UserDataFactory, ServerPushPoll) {
@@ -457,12 +470,16 @@ tweb.controller('pollaudience', function($scope, $location, UserDataFactory, Ser
 											   var timeout = question.timeout;
 		
 											   $scope.timerRemaining = timeout;
-											   $scope.startTimer();
-		
-											   // Next question
 											   $scope.voteCountOnThisQuestion = question.voted;
+		
+											   if (timeout > 0) {
+													$scope.startTimer();
+													$scope.votingIsAllowed = $scope.voteCountOnThisQuestion < nextQuestion.maxVote;
+											   } else {
+												   $scope.votingIsAllowed = false;
+											   }
+
 											   $scope.voteRegistered = false;
-											   $scope.votingIsAllowed = true;
 											   $scope.currentQuestion = nextQuestion;
 											   $scope.displayQuestion = true;
 											   $scope.$apply();
@@ -499,7 +516,9 @@ tweb.controller('pollaudience', function($scope, $location, UserDataFactory, Ser
 											   } else {
 												   alert('Cannot vote: ' + voteResult.messages.join());
 											   }
-										   });	
+										   });
+										   
+	ServerPushPoll.catchUp();
 });
 
 
@@ -532,8 +551,8 @@ tweb.controller('polls', function($scope, $http, $location, UserDataFactory, Ser
 	$scope.userSession = UserDataFactory.getSession();
 
 	$scope.createPoll = function() {
-		$location.path("/polldetails");
-	}
+		$location.path("/polldetails").search('mode', 'new');
+	};
 	
 	$scope.joinPoll = function(pollIdToJoin) {
 		socketIOConnectToServer(ServerPushPoll, UserDataFactory.getSession(), pollIdToJoin,
@@ -544,7 +563,7 @@ tweb.controller('polls', function($scope, $http, $location, UserDataFactory, Ser
 								$location.path("/pollaudience");
 								$scope.$apply();
 						   });
-	}
+	};
 	
 	$scope.openPoll = function(pollId) {
 		$http({
@@ -565,6 +584,10 @@ tweb.controller('polls', function($scope, $http, $location, UserDataFactory, Ser
 		}).error(function(data, status, headers, config) {
 			alert("Could not open poll: http error");
 		});
+	};
+	
+	$scope.editPoll = function(pollId) {
+		$location.path("/polldetails").search('mode', 'edit').search('id', pollId);
 	}
 	
 	// User's polls
@@ -666,50 +689,80 @@ tweb.controller('register', function($scope, $http, $location, UserDataFactory) 
 });
 
 tweb.controller('polldetails', function($scope, $location, $http, UserDataFactory) {
-	
+
 	if (UserDataFactory.getSession() == null) {
 		alert("Please login first");
 		$location.path("login");
 	} else {
+		var userSession = UserDataFactory.getSession();
 		
 		var poll = {
-			name: 'SuperPOLL',
-			questions: [
-						{
-							name: 'How is the weather today?',
-							allowAnonymous: false,
-							maxVote: 5,
-							timeout: 30,
-							answers: [
-									{
-									   name: 'Good'
-									},
-									{
-									   name: 'Not bad'
-									},
-									{
-									   name: 'Excellent'
-									},
-									{
-									   name: 'Could be better'
-									}]
-						},
-						{
-							name: 'Yes or no?',
-							allowAnonymous: false,
-							maxVote: 5,
-							timeout: 30,
-							answers: [
-									{
-									   name: 'Yes'
-									},
-									{
-									   name: 'No'
-									}]
-						}]
-		}
+			name: '',
+			questions: []
+		};
 		
-		
+		var mode = $location.search().mode;
+		var editId = (mode == 'edit') ? $location.search().id : null;
+
+		$scope.$on('$viewContentLoaded', function() {
+			if (mode == 'edit') {
+				$http({
+					method: 'GET',
+					url: "/api/v1/poll/" + editId,
+					cache: false,
+					headers: {
+						'Authorization': userSession
+					}
+				})
+				.success(function(data, status, headers, config) {
+					if (data.status == 'ok') {
+						$scope.poll = data.data;
+					} else {
+						alert("Could not retrieve poll: " + data.messages.join());
+					}
+				}).error(function(data, status, headers, config) {
+					alert("Could not retrieve poll: http error");
+				});
+			} else {
+				$scope.poll = {
+					name: 'SuperPOLL',
+					questions: [
+								{
+									name: 'How is the weather today?',
+									allowAnonymous: false,
+									maxVote: 5,
+									timeout: 30,
+									answers: [
+											{
+											   name: 'Good'
+											},
+											{
+											   name: 'Not bad'
+											},
+											{
+											   name: 'Excellent'
+											},
+											{
+											   name: 'Could be better'
+											}]
+								},
+								{
+									name: 'Yes or no?',
+									allowAnonymous: false,
+									maxVote: 5,
+									timeout: 30,
+									answers: [
+											{
+											   name: 'Yes'
+											},
+											{
+											   name: 'No'
+											}]
+								}]
+				};
+			}
+		});
+
 		$scope.addAnswer = function(pos) {
 			$scope.poll.questions[pos].answers.push({
 				name: 'New answer'
@@ -831,8 +884,6 @@ tweb.controller('polldetails', function($scope, $location, $http, UserDataFactor
 			}
 			
 			if (errors.length == 0) {
-				var userSession = UserDataFactory.getSession();
-
 				$http({
 					method: 'PUT',
 					url: "/api/v1/poll",
@@ -844,12 +895,29 @@ tweb.controller('polldetails', function($scope, $location, $http, UserDataFactor
 				})
 				.success(function(data, status, headers, config) {
 					if (data.status == 'ok') {
-						alert('Poll created.');
+						
+						if (mode == 'edit') {
+							alert('Poll edited.');
+						} else {
+							alert('Poll created.');
+						}
+						
+						$location.path("/polls");
+						
 					} else {
-						alert("Could not create poll: " + data.messages.join());
+						if (mode == 'edit') {
+							alert("Could not edit poll: " + data.messages.join());
+						} else {
+							alert("Could not create poll: " + data.messages.join());
+						}
 					}
 				}).error(function(data, status, headers, config) {
-					alert("Could not create poll: http error");
+					
+					if (mode == 'edit') {
+						alert("Could not edit poll: http error");
+					} else {
+						alert("Could not create poll: http error");
+					}
 				});
 			} else {
 				alert(errors.join());
