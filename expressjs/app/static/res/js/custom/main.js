@@ -189,7 +189,6 @@ tweb.factory('ServerPushPoll', function () {
 			//alert('Socket connected');
 			_sio.emit('authAndJoin', { 'session': session, 'poll': pollIdToJoin });
 		});
-		
 	};
 
 	return {
