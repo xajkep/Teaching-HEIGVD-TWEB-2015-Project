@@ -80,8 +80,8 @@ tweb.factory('ServerPushPoll', function () {
 		_sio.emit('goNextQuestion');
 	};
 	
-	var _vote = function(answerIndex) {
-		_sio.emit('vote', answerIndex);
+	var _vote = function(answerIndex, voteAsAnonymous) {
+		_sio.emit('vote', { 'answerIndex': answerIndex, 'voteAsAnonymous': voteAsAnonymous});
 	};
 
 	var _connect = function(host, port, session, pollIdToJoin, cbJoinedAsSpeaker, cbJoinedAsAudience) {
@@ -146,9 +146,11 @@ tweb.factory('ServerPushPoll', function () {
 			
 			//alert('nextQuestion received');
 			
+			var assign = nextQuestion.allowAnonymous ? null : false;
+			
 			var usersCount = _connectedUsers.length;
 			for (var i=0; i < usersCount; i++) {
-				_connectedUsers[i].voted = false;
+				_connectedUsers[i].voted = assign;
 			}
 			
 			if (_cbOnNextQuestion != null) {
@@ -176,7 +178,7 @@ tweb.factory('ServerPushPoll', function () {
 		
 		_sio.on('liveVoteResults', function(results) {
 
-			// null if catching up
+			// null if catching up or anonymous vote
 			if (results.whovoted != null) {
 				var usersCount = _connectedUsers.length;
 				for (var i=0; i < usersCount; i++) {
@@ -265,6 +267,10 @@ tweb.config(['$routeProvider',
                     templateUrl: 'res/partials/pollaudience.html',
                     controller: 'pollaudience'
                 }).
+				when('/pollview', {
+                    templateUrl: 'res/partials/pollview.html',
+                    controller: 'pollview'
+                }).
                 otherwise({
                     redirectTo: '/login'
                 });
@@ -309,13 +315,20 @@ tweb.controller('login', function($scope, $http, $location, UserDataFactory) {
 tweb.controller('pollspeaker', function($scope, $location, UserDataFactory, ServerPushPoll) {
 	$scope.userSession = UserDataFactory.getSession();
 	
+	var pollId = $location.search().id;
+	
+	$scope.currentQuestionNumber = 0;
+	$scope.totalQuestions = 0;
+	
 	$scope.connected = ServerPushPoll.connectedUsers;
 	$scope.currentQuestion = {};
 	$scope.displayQuestion = false;
 	$scope.votingIsAllowed = false;
 	$scope.goNextQuestionAllowed = true;
+	$scope.hasPollEnded = false;
 	$scope.timerHdl = null;
 	$scope.timerRemaining = 0;
+	$scope.votingAsAnonymousIsAllowed = false;
 	
 	$scope.startTimer = function() {
 		$scope.timerHdl = setInterval(function() {
@@ -338,6 +351,10 @@ tweb.controller('pollspeaker', function($scope, $location, UserDataFactory, Serv
 	$scope.goNextQuestion = function() {
 		$scope.goNextQuestionAllowed = false;
 		ServerPushPoll.goNextQuestion();
+	};
+	
+	$scope.viewPollResults = function() {
+		$location.path("/pollview").search({ 'id': pollId });
 	};
 
 	$scope.labels = [];
@@ -375,9 +392,12 @@ tweb.controller('pollspeaker', function($scope, $location, UserDataFactory, Serv
 											   
 											   if (timeout > 0) {
 													$scope.startTimer();
+													$scope.currentQuestionNumber = question.current;
+													$scope.totalQuestions = question.total;
 													
 													// Next question
 													$scope.votingIsAllowed = true;
+													$scope.votingAsAnonymousIsAllowed = nextQuestion.allowAnonymous;
 													$scope.goNextQuestionAllowed = false;
 											   }
 
@@ -400,6 +420,7 @@ tweb.controller('pollspeaker', function($scope, $location, UserDataFactory, Serv
 										   },
 										   function() {
 											   // Poll completed
+											   $scope.hasPollEnded = true;
 											   $scope.votingIsAllowed = false;
 											   $scope.goNextQuestionAllowed = false;
 											   $scope.stopTimer();
@@ -436,11 +457,14 @@ tweb.controller('pollspeaker', function($scope, $location, UserDataFactory, Serv
 tweb.controller('pollaudience', function($scope, $location, UserDataFactory, ServerPushPoll) {
 	$scope.userSession = UserDataFactory.getSession();
 
+	var pollId = $location.search().id;
+	
 	$scope.currentQuestion = {};
 	$scope.displayQuestion = false;
 	$scope.votingIsAllowed = false;
 	$scope.voteRegistered = false;
 	$scope.voteCountOnThisQuestion = 0;
+	$scope.votingAsAnonymousIsAllowed = false;
 	
 	$scope.startTimer = function() {
 		$scope.timerHdl = setInterval(function() {
@@ -460,9 +484,9 @@ tweb.controller('pollaudience', function($scope, $location, UserDataFactory, Ser
 		}
 	};
 	
-	$scope.vote = function(answerIndex) {
+	$scope.vote = function(answerIndex, voteAsAnonymous) {
 		$scope.currentQuestion.answers[answerIndex].voted = true;
-		ServerPushPoll.vote(answerIndex);
+		ServerPushPoll.vote(answerIndex, voteAsAnonymous);
 	}
 	
 	ServerPushPoll.registerBasicPollEvents(function(question) {
@@ -475,6 +499,7 @@ tweb.controller('pollaudience', function($scope, $location, UserDataFactory, Ser
 											   if (timeout > 0) {
 													$scope.startTimer();
 													$scope.votingIsAllowed = $scope.voteCountOnThisQuestion < nextQuestion.maxVote;
+													$scope.votingAsAnonymousIsAllowed = nextQuestion.allowAnonymous;
 											   } else {
 												   $scope.votingIsAllowed = false;
 											   }
@@ -531,10 +556,10 @@ tweb.controller('polljoin', function($scope, $location, UserDataFactory, ServerP
 	                        UserDataFactory.getSession(),
 	                        pollIdToJoin,
 							function() {
-							   $location.path("/pollspeaker");
+							   $location.path("/pollspeaker").search({ 'id': pollIdToJoin });
 							   $scope.$apply();
 						   }, function() {
-								$location.path("/pollaudience");
+								$location.path("/pollaudience").search({ 'id': pollIdToJoin });
 								$scope.$apply();
 						   }
 	);
@@ -547,11 +572,102 @@ function socketIOConnectToServer(spp, session, pollIdToJoin, cbAsSpeaker, cbAsAu
 	            cbAsSpeaker, cbAsAudience);
 }
 
+
+tweb.controller('pollview', function($scope, $http, $location, UserDataFactory) {
+	$scope.userSession = UserDataFactory.getSession();
+	
+	var pollId = $location.search().id;
+	
+	$scope.graphOptions = { animationSteps: 10 };
+	
+	var poll = {
+		name: '',
+		questions: []
+	}; 
+
+	$scope.$on('$viewContentLoaded', function() {
+		$http({
+			method: 'GET',
+			url: "/api/v1/poll/" + pollId,
+			cache: false,
+			headers: {
+				'Authorization': $scope.userSession
+			}
+		})
+		.success(function(data, status, headers, config) {
+			if (data.status == 'ok') {
+				var poll = data.data;
+
+				// Building data for plotting
+				var questionsCount = poll.questions.length;
+				for (var i=0; i<questionsCount;i++) {
+					var graphLabels = [];
+					var graphValues = [];
+					var currentQuestion = poll.questions[i];
+					
+					var answersCount = currentQuestion.answers.length;
+					for (var y=0; y<answersCount;y++) {
+						var currentAnswer = currentQuestion.answers[y];
+						var anonymousAnswersCount = 0;
+						var distinctUsersIds = [];
+						var distinctUsers = [];
+						
+						graphLabels.push(currentAnswer.name);
+						graphValues.push(currentAnswer.users.length);
+						
+						for (var k=0;k<currentAnswer.users.length;k++) {
+							var currentUser = currentAnswer.users[k];
+							if (currentUser.anonymous) {
+								anonymousAnswersCount = anonymousAnswersCount + 1;
+							} else {
+								var userId = currentUser.user._id;
+								
+								if (distinctUsersIds.indexOf(userId) < 0) {
+									currentUser.user.voted = 1;
+									
+									distinctUsersIds.push(userId);
+									distinctUsers.push(currentUser.user);
+								} else {
+									for (var z=0;z<distinctUsers.length;z++) {
+										if (distinctUsers[z]._id == userId) {
+											distinctUsers[z].voted++;
+										}
+									}
+								}
+							}
+						}
+
+						
+						currentAnswer.anonymousAnswersCount = anonymousAnswersCount;
+						currentAnswer.distinctUsers = distinctUsers;
+					}
+					
+					currentQuestion.graph = {
+						'labels': graphLabels,
+						'values': graphValues
+					};
+				}
+
+				$scope.poll = poll;
+			} else {
+				alert("Could not retrieve poll: " + data.messages.join());
+			}
+		}).error(function(data, status, headers, config) {
+			alert("Could not retrieve poll: http error");
+		});
+	});
+
+});
+
 tweb.controller('polls', function($scope, $http, $location, UserDataFactory, ServerPushPoll) {
 	$scope.userSession = UserDataFactory.getSession();
 
 	$scope.createPoll = function() {
 		$location.path("/polldetails").search('mode', 'new');
+	};
+	
+	$scope.viewPollResults = function(pollId) {
+		$location.path("/pollview").search({ 'id': pollId });
 	};
 	
 	$scope.joinPoll = function(pollIdToJoin) {

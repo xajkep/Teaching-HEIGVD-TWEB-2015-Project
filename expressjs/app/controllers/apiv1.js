@@ -2,6 +2,7 @@
 var sessionSecret = 'VlL_LGgy5yu89-nW+7U6f7u0TbIlmP.z';
 var socketIOPort = 8090;
 
+
 var express = require('express');
 var crypto = require('crypto');
 var router = express.Router();
@@ -32,14 +33,17 @@ sio.sockets.on('connection', function (socket) {
 	socket.on('catchUp', function() {
 		if (socket.isAuthenticated === true) {
 			
-			if (socket.isSpeaker === true) {
+			// false = error | null = poll not started | obj = current question
+			var currentQuestion = globals.getCurrentQuestion(socket.pollId, socket.userId);
+			
+			if (currentQuestion !== null && currentQuestion !== false && socket.isSpeaker === true) {
 				var audienceInRoom = [];
 				
 				// Speaker re-join
 				for (var socketId in sio.nsps['/'].adapter.rooms['poll_' + socket.pollId + '_audience']){
 					var socketInRoom = sio.sockets.connected[socketId];
 					
-					audienceInRoom.push({ '_id': socketInRoom.userId, 'firstName': socketInRoom.firstName, 'lastName': socketInRoom.lastName, 'email': socketInRoom.email, 'voted': socketInRoom.voted });
+					audienceInRoom.push({ '_id': socketInRoom.userId, 'firstName': socketInRoom.firstName, 'lastName': socketInRoom.lastName, 'email': socketInRoom.email, 'voted': (currentQuestion.question.allowAnonymous ? null : socketInRoom.voted) });
 				}
 
 				console.log('audienceList=');
@@ -47,8 +51,7 @@ sio.sockets.on('connection', function (socket) {
 				socket.emit('audienceList', audienceInRoom);
 			}
 
-			// false = error | null = poll not started | obj = current question
-			var currentQuestion = globals.getCurrentQuestion(socket.pollId, socket.userId);
+			
 
 			// If the poll has started, catching up
 			if (currentQuestion !== null) {
@@ -63,8 +66,23 @@ sio.sockets.on('connection', function (socket) {
 				
 				socket.emit('liveVoteResults', { 'results': liveResults, 'whovoted': null });
 			} else {
+				
+				var voted = null;
+				
+				if (currentQuestion == null || currentQuestion == false) {
+					voted = false;
+				} else {
+					console.log('currentQuestion.allowAnonymous=' + currentQuestion.question.allowAnonymous);
+					
+					if (!currentQuestion.question.allowAnonymous) {
+						voted = socket.voted;
+					}
+				}
+				
+				console.log('voted=' + voted);
+				
 				sio.to('poll_' + socket.pollId + '_speaker').emit('userConnect',
-																  { '_id': socket.userId, 'firstName': socket.firstName, 'lastName': socket.lastName, 'email': socket.email, 'voted': socket.voted });
+																  { '_id': socket.userId, 'firstName': socket.firstName, 'lastName': socket.lastName, 'email': socket.email, 'voted': voted });
 			}
 			
 			socket.join('poll_' + socket.pollId + '_' + (socket.isSpeaker === true ? 'speaker' : 'audience'));
@@ -120,15 +138,16 @@ sio.sockets.on('connection', function (socket) {
 			}
 			
 			globals.goNextQuestion(socket.pollId,
-			                       function(nextQuestion, timeout) {
+			                       function(nextQuestion, timeout, number, total) {
 									   // Next question (timer is running)
-									   sio.to('poll_' + socket.pollId).emit('nextQuestion', { 'question': nextQuestion, 'voted': 0, 'timeout': timeout });
+									   sio.to('poll_' + socket.pollId).emit('nextQuestion', { 'question': nextQuestion, 'voted': 0, 'timeout': timeout, 'current': (number + 1), 'total': total });
 									   console.log('Notified clients: next question data');
 								   },
-								   function() {
+								   function(cb) {
 									   // Poll completed
 									   sio.to('poll_' + socket.pollId).emit('pollCompleted');
 									   console.log('Notified clients: poll completed');
+									   cb();
 								   },
 								   function() {
 									   // Question timeout
@@ -143,11 +162,14 @@ sio.sockets.on('connection', function (socket) {
 		}
 	});
 	
-	socket.on('vote', function(answerIndex) {
+	socket.on('vote', function(data) {
+		var answerIndex = data.answerIndex;
+		var voteAsAnonymous = data.voteAsAnonymous;
+		
 		console.log('Processing vote');
 
 		if (socket.isAuthenticated === true && socket.isSpeaker !== true) {
-			if (globals.vote(socket.pollId, answerIndex, socket.userId)) {
+			if (globals.vote(socket.pollId, answerIndex, socket.userId, voteAsAnonymous)) {
 				console.log('Vote registered');
 				socket.voted = true;
 				socket.emit('voteResult', {'status': 'ok'});
@@ -155,7 +177,10 @@ sio.sockets.on('connection', function (socket) {
 				var liveResults = globals.getLiveResults(socket.pollId);
 				console.log('Live vote results: ' + liveResults);
 				
-				sio.to('poll_' + socket.pollId + '_speaker').emit('liveVoteResults', { 'results': liveResults, 'whovoted': socket.userId });
+				
+				var whoVoted = voteAsAnonymous ? null : socket.userId;
+				
+				sio.to('poll_' + socket.pollId + '_speaker').emit('liveVoteResults', { 'results': liveResults, 'whovoted': whoVoted });
 				
 			} else {
 				socket.emit('voteResult', {'status': 'ko', 'messages': ['Invalid data or request']});
@@ -165,6 +190,16 @@ sio.sockets.on('connection', function (socket) {
 		}
 	});
 });
+
+function toDoWhenPollIsClosed(pollId) {
+	console.log('Poll is closed. Disconnecting sockets.');
+	
+	for (var socketId in sio.nsps['/'].adapter.rooms['poll_' + pollId]){
+		var socketInRoom = sio.sockets.connected[socketId];
+		
+		socketInRoom.disconnect();
+	}
+}
 
 // Open a poll
 router.post('/poll/:id', function (req, res) {
@@ -176,16 +211,19 @@ router.post('/poll/:id', function (req, res) {
 	var dataRespondToClient = {};
 	var respondCallback = function () { respondToUser(res, errors, dataRespondToClient); };
 
+
 	checkAndExtractFromSessionToken(authorizationHeader,
 									function(userId) {
 										Poll.findOne({ '_id': pollIdToOpen }, function (err, poll) {
-										  if (err) {
+										  if (err || poll == null) {
 											  errors.push('Invalid poll id provided');
 										  } else {
 											 if (checkStringTimeConst(poll.created_by, userId)) {
 												if (poll.state == 'pending') {
 													
-													if (!globals.loadPollInMemory(poll)) {
+													if (!globals.loadPollInMemory(poll, function() {
+														toDoWhenPollIsClosed(poll._id);
+													})) {
 														errors.push('Cannot load poll in memory');
 													}
 
@@ -296,13 +334,42 @@ router.get('/poll/:id', function (req, res) {
 	checkAndExtractFromSessionToken(authorizationHeader,
 									function(userId) {
 										// populate() will resolve "foreign keys"
-										Poll.findOne({ _id: pollIdToRetrieve }).populate('questions.answers.users').exec(function (err, poll){
-										  if (err) {
+										Poll.findOne({ '_id': pollIdToRetrieve }).populate('questions.answers.users.user', '_id email firstname lastname').exec(function (err, poll){
+										  if (err || poll == null) {
+											  console.log('User ' + userId + ' requested the non existing poll: ' + pollIdToRetrieve + ' err: ' + err);
 											  errors.push('Invalid poll id provided');
 										  } else {
 											 if (checkStringTimeConst(poll.created_by, userId)) {
-												dataRespondToClient = poll;
+												 
+												var filteredPoll = poll.toObject();
+												 
+												console.log('Responding with poll: ' + poll._id);
+												
+												var questionsCount = filteredPoll.questions.length;
+												for (var i=0; i<questionsCount;i++) {
+													var currentQuestion = filteredPoll.questions[i];
+													var answersCount = currentQuestion.answers.length;
+													for (var y=0; y<answersCount;y++) {
+														var currentAnswer = currentQuestion.answers[y];
+	
+														var usersCount = currentAnswer.users.length;
+														for (var z=0;z<usersCount;z++) {
+															var currentUser = currentAnswer.users[z];
+															
+															console.log('deleting currentUser._id: ' + currentUser._id);
+															delete currentUser._id;
+															
+															if (currentUser.anonymous) {
+																console.log('deleting currentUser.user: ' + currentUser.user);
+																delete currentUser.user;
+															}
+														}
+													}
+												}
+
+												dataRespondToClient = filteredPoll;
 											 } else {
+												 console.log('Refused: user ' + userId + ' requested poll ' + pollIdToRetrieve);
 												 errors.push('You did not create this poll');
 											 }
 											 

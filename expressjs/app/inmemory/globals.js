@@ -1,5 +1,6 @@
 var HashMap = require('hashmap');
 var polls = new HashMap();
+var pollHardTimeout = 3600 * 6;
 
 var mongoose = require('mongoose');
 var Poll = mongoose.model('Poll');
@@ -15,7 +16,7 @@ var countAlreadyVoted = function(poll, userId) {
 		var usersLength = answer.users.length;
 		
 		for (var i = 0; i < usersLength; ++i) {
-			if (answer.users[i] == userId) {
+			if (answer.users[i].user == userId) {
 				alreadyVotedCount = alreadyVotedCount + 1;
 			}
 		}
@@ -24,8 +25,22 @@ var countAlreadyVoted = function(poll, userId) {
 	return alreadyVotedCount;
 };
 
+var unloadPoll = function(poll, pollCompleted, cbWhenPollIsClosed) {
+	clearTimeout(poll.timeoutHardUnloadHdl);
+	poll.timeoutHardUnloadHdl = null;
+	
+	polls.remove(poll._id);
+
+	var updateAs = pollCompleted ? 'completed' : 'closed';
+	
+	Poll.update({'_id': poll._id }, {'state': updateAs}, function(err, numAffected) {
+		cbWhenPollIsClosed(poll.id);
+	});
+}
+
 module.exports = {
-	loadPollInMemory: function(poll) {
+
+	loadPollInMemory: function(poll, cbWhenPollIsClosed) {
 		console.log('Loading poll in memory: ' + poll._id);
 		
 		if (polls.has(poll._id)) {
@@ -39,10 +54,14 @@ module.exports = {
 		polls.set(poll._id, poll);
 		console.log('Poll added in memory');
 		
+		poll.timeoutHardUnloadHdl = setTimeout(function() {
+				       unloadPoll(poll, false, cbWhenPollIsClosed);
+				  }, pollHardTimeout * 1000);
+		
 		return true;
 	},
 	
-	vote: function(pollId, answerIndex, userId) {
+	vote: function(pollId, answerIndex, userId, voteAsAnonymous) {
 		if (!polls.has(pollId)) {
 			return false;
 		}
@@ -68,7 +87,7 @@ module.exports = {
 		}
 
 		var answer = question.answers[answerIndex];
-		answer.users.push(userId);
+		answer.users.push({ 'user': userId, 'anonymous': voteAsAnonymous });
 		
 		return true;
 	},
@@ -115,7 +134,7 @@ module.exports = {
 		var remainingTimeToVote = currentTime >= poll.timeoutAt ? 0 : Math.floor((poll.timeoutAt - currentTime) / 1000);
 		
 		console.log('alreadyVotedCount=' + alreadyVotedCount);
-		return { 'question': poll.questions[poll.currentQuestion], 'voted': alreadyVotedCount, 'timeout': remainingTimeToVote };
+		return { 'question': poll.questions[poll.currentQuestion], 'voted': alreadyVotedCount, 'timeout': remainingTimeToVote, 'current': (poll.currentQuestion + 1), 'total': poll.questions.length  };
 	},
 
 	goNextQuestion: function(pollId, cbWhenMovedToNextQuestion, cbWhenPollCompleted, cbWhenQuestionTimeout, cbErrorMoveNextQuestion) {
@@ -145,22 +164,26 @@ module.exports = {
 													  })
 									  };
 			
-			var executeWhenQuestionTimeout = function() {
+			var executeWhenQuestionTimeout = function(poll) {
 												poll.voteAllowed = false;
 												moveVotesToDatabase(poll);
 												cbWhenQuestionTimeout();
+												
+												if (poll.currentQuestion + 1 >= poll.questions.length) {
+													cbWhenPollCompleted(function() {
+														unloadPoll(poll, true, function() {});
+													});
+													
+													
+												}
 											 };
 
-			
-			
-			
 			console.log('Questions count: ' + poll.questions.length);					 
 			console.log('Current question index: ' + poll.currentQuestion);					 
 			
 			if (poll.currentQuestion + 1 >= poll.questions.length) {
 				console.log('Poll completed');
-				executeWhenQuestionTimeout();
-				cbWhenPollCompleted();
+				executeWhenQuestionTimeout(poll);
 			} else {
 				if (poll.currentQuestion > -1) {
 					poll.questions[poll.currentQuestion] = {}; // freeing memory
@@ -176,8 +199,10 @@ module.exports = {
 				timeoutTime.setSeconds(timeoutTime.getSeconds() + currentQuestion.timeout);
 				poll.timeoutAt = timeoutTime;
 				
-				poll.cancelTimeout = setTimeout(executeWhenQuestionTimeout, currentQuestion.timeout * 1000);
-				cbWhenMovedToNextQuestion(currentQuestion, currentQuestion.timeout);
+				poll.cancelTimeout = setTimeout(function() {
+					executeWhenQuestionTimeout(poll);
+				}, currentQuestion.timeout * 1000);
+				cbWhenMovedToNextQuestion(currentQuestion, currentQuestion.timeout, poll.currentQuestion, poll.questions.length);
 			}
 		}
 	},

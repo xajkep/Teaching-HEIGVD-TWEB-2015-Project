@@ -26,7 +26,7 @@ var PollSchema = new Schema({
 							   {
 								   _id: String,
 								   name: String,
-								   users: [ { type: String, ref: 'User' } ]
+								   users: [ { user: { type: String, ref: 'User' }, anonymous: Boolean } ]
 							   }
 						   ]
 				} ]

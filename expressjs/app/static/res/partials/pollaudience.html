@@ -7,7 +7,7 @@
 <div ng-if="displayQuestion">
 	<h4>{{currentQuestion.name}}</h4>
 	<ul ng-repeat="answer in currentQuestion.answers track by $index">
-		<li><span ng-if="answer.voted === true">VOTED</span><a href="" class="btn btn-default" role="button" ng-click="vote($index)" ng-if="votingIsAllowed">Vote</a> {{answer.name}}</li>
+		<li><span ng-if="answer.voted === true">VOTED</span><a href="" class="btn btn-default" role="button" ng-click="vote($index, false)" ng-if="votingIsAllowed">Vote</a> <a href="" class="btn btn-default" role="button" ng-click="vote($index, true)" ng-if="votingIsAllowed && votingAsAnonymousIsAllowed">Vote as anonymous</a> {{answer.name}}</li>
 	</ul>
 	
 	<p>Voices: {{voteCountOnThisQuestion}}/{{currentQuestion.maxVote}}</p>

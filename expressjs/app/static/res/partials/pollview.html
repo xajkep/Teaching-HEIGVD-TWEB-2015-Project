@@ -1,0 +1,49 @@
+<h1>{{poll.name}}</h1>
+
+<div ng-repeat="question in poll.questions track by $index">
+	<data ng-init="parentIndex=$index"/>
+
+	<div class="container">
+	
+		<div class="row">
+			<div class="col-md-7">
+				<h3>{{parentIndex + 1}}. {{question.name}}</h3>
+			</div>
+		</div>
+	
+		<div class="row">
+			<div class="col-md-7">
+				<table class="table">
+					<thead>
+						<tr>
+							<th>Answer</th>
+							<th>Votes</th>
+							<th>Users</th>
+							<th ng-if="question.allowAnonymous">Anonymous votes</th>
+							<th>Who</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr ng-repeat="answer in question.answers">
+							<td>{{answer.name}}</td>
+							<td>{{answer.users.length}}</td>
+							<td>{{answer.distinctUsers.length}}<span ng-if="question.allowAnonymous"> (+ ?)</span></td>
+							<td ng-if="question.allowAnonymous">{{answer.anonymousAnswersCount}}</td>
+							<td>
+								<ul>
+									<li ng-repeat="user in answer.distinctUsers">
+									x{{user.voted}} : {{user.firstname}} {{user.lastname}} - {{user.email}}
+									</li>
+								</ul>
+							</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+			
+			<div class="col-md-4">
+				<canvas class="chart chart-doughnut" chart-options="graphOptions" chart-data="question.graph.values" chart-labels="question.graph.labels"></canvas> 
+			</div>
+		</div>
+	</div>
+</div>
