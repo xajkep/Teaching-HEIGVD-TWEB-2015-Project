@@ -103,6 +103,35 @@ E_INVALID_REQUEST : In case of missing attributes
 E_INVALID_ACCOUNT : The email is incoreect
 E_BAD_PASSWORD : The password is incorrect
 
+### View stats
+
+GET data
+
+route: BASE/stats
+
+~~~json
+{
+  'usersCount': Number,
+  'pollsCount': Number,
+  'openPollsCount': Number
+}
+~~~
+
+Returns basic information about the app.
+
+* usersCount: Number of users
+* pollsCount: Number of polls created by our users
+* openPollsCount: Number of currently opened polls
+
+Example:
+~~~json
+{
+  'usersCount': 2,
+  'pollsCount': 1,
+  'openPollsCount': 1
+}
+~~~
+
 ### Edit password
 
 POST data
