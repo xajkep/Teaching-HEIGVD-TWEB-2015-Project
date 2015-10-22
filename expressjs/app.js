@@ -4,8 +4,8 @@ var mongoose = require('mongoose');
 var bodyParser = require('body-parser');
 
 
-var mongoDBConfig = 'mongodb://localhost/tweb';
-var appListenOnPortConfig = 8080;
+var mongoDBConfig = 'mongodb://tweb:dwmrqi5y@ds043694.mongolab.com:43694/tweb'; // 'mongodb://localhost/tweb';
+var appListenOnPortConfig = process.env.PORT || 8080;
 var sessionSecret = 'iV3yS6w9FBSPMkvLY89OwAUWHvZM0iH6';
 
 mongoose.connect(mongoDBConfig);
@@ -25,14 +25,23 @@ app.use(bodyParser.json());
 app.set('views', __dirname + '/app/views');
 app.set('view engine', 'jade');
 
+var server = app.listen(appListenOnPortConfig, function () {
+  console.log('Express server listening on port ' + appListenOnPortConfig);
+});
+
+var sio = require('socket.io').listen(server);
+
+module.exports = {
+	'sio': sio
+};
+
+
 var controllers = glob.sync(__dirname + '/app/controllers/*.js');
 controllers.forEach(function (controller) {
 	require(controller)(app);
 });
 
-app.listen(appListenOnPortConfig, function () {
-  console.log('Express server listening on port ' + appListenOnPortConfig);
-});
-
 // Static pages (such as angularjs, css and client-side js) are statically served
 app.use('/static', express.static(__dirname + '/app/static'));
+
+

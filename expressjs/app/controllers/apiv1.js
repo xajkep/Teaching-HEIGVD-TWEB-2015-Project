@@ -1,16 +1,14 @@
 // HMAC secret used to secure pseudo-sessions against tampering
 var sessionSecret = 'VlL_LGgy5yu89-nW+7U6f7u0TbIlmP.z';
-var socketIOPort = 8090;
-
 
 var express = require('express');
 var crypto = require('crypto');
 var router = express.Router();
 var mongoose = require('mongoose');
-var url = require('url');
 var jwt = require('jsonwebtoken');
 var globals = require(__dirname + '/../inmemory/globals.js'); // Our globals.js file
-var sio = require('socket.io').listen(socketIOPort);
+var appjs = require(__dirname + '/../../app.js');
+var sio = appjs.sio;
 
 // Mongoose schemas
 var User = mongoose.model('User');

@@ -85,8 +85,12 @@ tweb.factory('ServerPushPoll', function () {
 	};
 
 	var _connect = function(host, port, session, pollIdToJoin, cbJoinedAsSpeaker, cbJoinedAsAudience) {
-		_sio = io.connect(host + ':' + port);
-
+		if (host == null || port == null) {
+			_sio = io.connect(); // same host
+		} else {
+			_sio = io.connect(host + ':' + port);
+		}
+		
 		_sio.on('authAndJoinResult', function(authAndJoinResult) {
 			if (authAndJoinResult.status == 'ok') {
 				//alert('Join poll success, as: ' + authAndJoinResult.data);
@@ -587,8 +591,7 @@ tweb.controller('polljoin', function($scope, $location, UserDataFactory, ServerP
 });
 
 function socketIOConnectToServer(spp, session, pollIdToJoin, cbAsSpeaker, cbAsAudience) {
-	var socketIOPort = 8090;
-	spp.connect('http://localhost', socketIOPort, session, pollIdToJoin,
+	spp.connect(null, null, session, pollIdToJoin,
 	            cbAsSpeaker, cbAsAudience);
 }
 
