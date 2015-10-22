@@ -87,7 +87,9 @@ module.exports = {
 		}
 
 		var answer = question.answers[answerIndex];
-		answer.users.push({ 'user': userId, 'anonymous': voteAsAnonymous });
+		var voteAsAnonymousRegister = question.allowAnonymous ? voteAsAnonymous : false;
+		
+		answer.users.push({ 'user': userId, 'anonymous': voteAsAnonymousRegister });
 		
 		return true;
 	},

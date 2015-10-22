@@ -26,8 +26,7 @@ sio.sockets.on('connection', function (socket) {
 	
 	socket.on('disconnect', function() {
 		console.log("User disconnected");
-		sio.to('poll_' + socket.pollId + '_speaker').emit('userDisconnect',
-													   	  { '_id': socket.userId, 'firstName': socket.firstName, 'lastName': socket.lastName, 'email': socket.email });
+		sio.to('poll_' + socket.pollId + '_speaker').emit('userDisconnect', socket.userId);
 	});
 	
 	socket.on('catchUp', function() {
@@ -444,16 +443,21 @@ router.put('/poll', function (req, res) {
 	checkAndExtractFromSessionToken(authorizationHeader,
 									function(userId) {
 									
+										var pollName;
+									
 										if (!req.body.hasOwnProperty("name")) {
 											errors.push("Poll name not supplied");
+										} else {
+											pollName = req.body.name;
+											
+											if (pollName.length < 3 || pollName.length > 30) {
+												errors.push("Poll name is invalid");
+											}
 										}
 
 										if (!req.body.hasOwnProperty("questions")) {
 											errors.push("Poll questions not supplied");
 										} else {
-											
-											var pollName = req.body.name;
-										
 											newPollDTO.name = pollName;
 											newPollDTO.questions = [];
 											
@@ -506,6 +510,10 @@ router.put('/poll', function (req, res) {
 												console.log(" allowAnonymous: " + currentQuestionDTO.allowAnonymous);
 												console.log(" maxVote: " + currentQuestionDTO.maxVote);
 												console.log(" timeout: " + currentQuestionDTO.timeout);
+												
+												if (currentQuestionDTO.name.length < 5 || currentQuestionDTO.name.length > 30) {
+													errors.push("Question name is invalid");
+												}
 												
 												if (currentQuestionDTO.allowAnonymous !== true && currentQuestionDTO.allowAnonymous !== false) {
 													errors.push("AllowAnonymous is invalid");

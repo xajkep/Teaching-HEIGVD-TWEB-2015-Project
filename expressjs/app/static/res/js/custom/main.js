@@ -112,14 +112,14 @@ tweb.factory('ServerPushPoll', function () {
 			}
 		});
 		
-		_sio.on('userDisconnect', function(user) {
+		_sio.on('userDisconnect', function(userId) {
 
 			//alert('userDisconnect received');
 		
 			var newList = [];
 			var usersCount = _connectedUsers.length;
 			for (var i=0; i < usersCount; i++) {
-				if (_connectedUsers[i]._id != user._id) {
+				if (_connectedUsers[i]._id != userId) {
 					newList.push(_connectedUsers[i]);
 				}
 			}

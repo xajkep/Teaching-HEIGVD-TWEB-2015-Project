@@ -2,7 +2,7 @@
 <p>Session: {{ userSession }}</p>
 
 <div>
-	<input type="text" ng-model="searchText" />
+	Enter an email address: <input type="text" ng-model="searchText" />
 	<div ng-show="search.users.length > 0">
 		<div ng-repeat="user in search.users">
 			<h4>{{ user.email }}</h4>
