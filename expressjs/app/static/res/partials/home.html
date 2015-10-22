@@ -1,6 +1,17 @@
-<h1>HOME.HTML</h1>
-<p>{{ message }}</p>
-<a href="#/login">Go to login</a><br />
-<a href="#/register">Go to register</a><br />
-<a href="#/polldetails">Go to new poll</a><br />
-<a href="#/polldetails">Go to my polls</a><br />
+<div class="container">
+	<div class="row">
+		<h1>QuickPoll</h1>
+	
+		<p>
+			<a href="#/login">Login</a><br />
+			<a href="#/register">Register a new account</a><br />
+		</p>
+
+		<p>
+			<p>{{usersCount}} users registered</p>
+			<p>{{pollsCount}} polls created</p>
+			<p>{{openPollsCount}} polls created</p>
+		</p>
+	</div>
+</div>
+

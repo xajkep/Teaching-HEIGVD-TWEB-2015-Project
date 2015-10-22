@@ -265,6 +265,21 @@ router.get('/polls', function (req, res) {
 									});
 });
 
+// Stats
+router.get('/stats', function (req, res) {
+	User.count({}, function(err, usersCount){
+		Poll.count({}, function(err, pollsCount) {
+			Poll.count({'state': 'opened'}, function(err, pollsCountOpened) {
+				res.format({
+					'application/json': function() {
+					  res.send({'usersCount': usersCount, 'pollsCount': pollsCount, 'openPollsCount': pollsCountOpened});
+					}
+				});
+			});
+		});
+	})
+});
+
 // Search users by email
 router.get('/users/email/:id', function (req, res) {
 	var emailToSearch = req.params.id;
@@ -290,7 +305,7 @@ router.get('/users/email/:id', function (req, res) {
 														'polls': []
 													};
 
-													Poll.find({ 'created_by': users[i]._id }).select('_id created_by name creation_date').exec(function (err, polls) {
+													Poll.find({ 'created_by': users[i]._id, 'state': 'opened' }).select('_id created_by name creation_date').exec(function (err, polls) {
 														
 														if (polls.length > 0) {
 															currentUsers[polls[0].created_by].polls = polls;

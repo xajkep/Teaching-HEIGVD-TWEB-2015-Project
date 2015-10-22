@@ -54,6 +54,9 @@ module.exports = {
 		polls.set(poll._id, poll);
 		console.log('Poll added in memory');
 		
+		Poll.update({'_id': poll._id }, {'state': 'opened'}, function(err, numAffected) {
+		});
+		
 		poll.timeoutHardUnloadHdl = setTimeout(function() {
 				       unloadPoll(poll, false, cbWhenPollIsClosed);
 				  }, pollHardTimeout * 1000);
