@@ -1,5 +1,7 @@
 TWEB - Project
 
+The app is available here: https://shrouded-falls-6875.herokuapp.com
+
 Description of the product
 ========================================
 QuickPoll is a web based application which allows customers to create, join, manage and partitipate to different polls. It is an ideal product for classrooms and education.
@@ -103,7 +105,7 @@ page.
 Exception:
 
 * When the poll is not finished 6 hours after it is opened, it is automatically closed. At that point, the results are lost.
-* The application must be robust enough to cope with any user disconnection (including the speaker) 
+* The application must be robust enough to cope with any user disconnection (including the speaker)
 
 High level architecture
 =======================================
