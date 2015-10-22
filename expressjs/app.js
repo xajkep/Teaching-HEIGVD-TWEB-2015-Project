@@ -42,6 +42,6 @@ controllers.forEach(function (controller) {
 });
 
 // Static pages (such as angularjs, css and client-side js) are statically served
-app.use('/static', express.static(__dirname + '/app/static'));
+app.use('/', express.static(__dirname + '/app/static'));
 
 
