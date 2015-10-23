@@ -64,29 +64,33 @@ module.exports = {
 		return true;
 	},
 	
-	vote: function(pollId, answerIndex, userId, voteAsAnonymous) {
+	vote: function(pollId, answerIndex, userId, voteAsAnonymous, cbWhenOK, cbWhenKO) {
 		if (!polls.has(pollId)) {
-			return false;
+			cbWhenKO();
+			return;
 		}
 		
 		var poll = polls.get(pollId);
 		
 		if (poll.voteAllowed !== true) {
-			return false;
+			cbWhenKO();
+			return;
 		}
 		
 		var question = poll.questions[poll.currentQuestion];
 		var answersCount = question.answers.length;
 		
 		if (answerIndex < 0 || answerIndex >= answersCount) {
-			return false;
+			cbWhenKO();
+			return;
 		}
 		
 
 		var alreadyVotedCount = countAlreadyVoted(poll, userId);
 		
 		if (alreadyVotedCount >= poll.maxVote) {
-			return false;
+			cbWhenKO();
+			return;
 		}
 
 		var answer = question.answers[answerIndex];
@@ -94,7 +98,12 @@ module.exports = {
 		
 		answer.users.push({ 'user': userId, 'anonymous': voteAsAnonymousRegister });
 		
-		return true;
+		var currentTime = new Date();
+		var deltaT = currentTime - question.started;
+		
+		console.log('deltaT=' + deltaT);
+		
+		cbWhenOK(deltaT);
 	},
 	
 	getLiveResults: function(pollId) {
@@ -200,6 +209,7 @@ module.exports = {
 				
 				var currentQuestion = poll.questions[poll.currentQuestion];
 
+				currentQuestion.started = new Date();
 				var timeoutTime = new Date();
 				timeoutTime.setSeconds(timeoutTime.getSeconds() + currentQuestion.timeout);
 				poll.timeoutAt = timeoutTime;

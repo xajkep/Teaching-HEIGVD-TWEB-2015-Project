@@ -285,7 +285,7 @@ tweb.controller('home', function($scope, $http) {
 	$scope.usersCount = 0;
 	$scope.pollsCount = 0;
 	$scope.openPollsCount = 0;
-	
+
 	$scope.$on('$viewContentLoaded', function() {
 		$http({
 			method: 'GET',
@@ -300,8 +300,6 @@ tweb.controller('home', function($scope, $http) {
 			alert("Could not retrieve stats: http error");
 		});
 	});
-	
-	
 });
 
 tweb.controller('login', function($scope, $http, $location, UserDataFactory) {
@@ -312,7 +310,6 @@ tweb.controller('login', function($scope, $http, $location, UserDataFactory) {
 	};
 	
 	$scope.login = function() {
-
 		var submittedEmail = $scope.user.email;
 		var submittedPassword = $scope.user.password;
 
@@ -353,6 +350,18 @@ tweb.controller('pollspeaker', function($scope, $location, UserDataFactory, Serv
 	$scope.timerHdl = null;
 	$scope.timerRemaining = 0;
 	$scope.votingAsAnonymousIsAllowed = false;
+	
+	$scope.totalVotesCount = 0;
+	var chartVotingActivity;
+	var chartVotingActivityData = [
+			{
+				label: 'Votes',
+				strokeColor: '#A31515',
+				data: [{
+					x: 0,
+					y: 0
+				}]
+			}];
 	
 	$scope.startTimer = function() {
 		$scope.timerHdl = setInterval(function() {
@@ -439,6 +448,9 @@ tweb.controller('pollspeaker', function($scope, $location, UserDataFactory, Serv
 											   
 											   $scope.currentQuestion = nextQuestion;
 											   $scope.displayQuestion = true;
+
+											   $scope.totalVotesCount = 0;
+											   $scope.createPartitipationGraph();
 											   
 											   $scope.$apply();
 										   },
@@ -463,6 +475,7 @@ tweb.controller('pollspeaker', function($scope, $location, UserDataFactory, Serv
 										   });
 
 	ServerPushPoll.registerLiveVoteResults(function(results) {
+											   var timing = results.timing;
 											   var resultsCount = results.results.length;
 											   var graphValues = [];
 											   for (var i = 0; i < resultsCount; i++) {
@@ -472,10 +485,39 @@ tweb.controller('pollspeaker', function($scope, $location, UserDataFactory, Serv
 											   }
 											   
 											   $scope.data = graphValues;
+											  
+											   
+											   $scope.totalVotesCount = $scope.totalVotesCount + 1;
+											   
+											   // null when catching up
+											   if (timing != null) {
+												   chartVotingActivity.datasets[0].addPoint(timing, $scope.totalVotesCount);
+												   chartVotingActivity.update();
+											   }
+											   
 											   $scope.$apply();
 										   });
 										   
-	ServerPushPoll.catchUp();
+	
+	$scope.createPartitipationGraph = function() {
+		var ctx3 = document.getElementById("votingactivity").getContext("2d");
+		chartVotingActivity = new Chart(ctx3).Scatter(chartVotingActivityData, {
+			bezierCurve: false,
+			showTooltips: false,
+			scaleShowHorizontalLines: true,
+			scaleShowLabels: false,
+			scaleBeginAtZero : true,
+			scaleType: "number",
+			scaleShowVerticalLines: false,
+			scaleLabel: "<%=value%> votes"
+		});
+	};
+	
+	$scope.$on('$viewContentLoaded', function() {
+		$scope.createPartitipationGraph();
+
+		ServerPushPoll.catchUp();
+	});
 });
 
 tweb.controller('pollaudience', function($scope, $location, UserDataFactory, ServerPushPoll) {

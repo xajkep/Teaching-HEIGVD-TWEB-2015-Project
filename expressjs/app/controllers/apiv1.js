@@ -61,7 +61,7 @@ sio.sockets.on('connection', function (socket) {
 				var liveResults = globals.getLiveResults(socket.pollId);
 				console.log('Live vote results: ' + liveResults);
 				
-				socket.emit('liveVoteResults', { 'results': liveResults, 'whovoted': null });
+				socket.emit('liveVoteResults', { 'results': liveResults, 'whovoted': null, 'timing': null });
 			} else {
 				
 				var voted = null;
@@ -166,22 +166,23 @@ sio.sockets.on('connection', function (socket) {
 		console.log('Processing vote');
 
 		if (socket.isAuthenticated === true && socket.isSpeaker !== true) {
-			if (globals.vote(socket.pollId, answerIndex, socket.userId, voteAsAnonymous)) {
-				console.log('Vote registered');
-				socket.voted = true;
-				socket.emit('voteResult', {'status': 'ok'});
-				
-				var liveResults = globals.getLiveResults(socket.pollId);
-				console.log('Live vote results: ' + liveResults);
-				
-				
-				var whoVoted = voteAsAnonymous ? null : socket.userId;
-				
-				sio.to('poll_' + socket.pollId + '_speaker').emit('liveVoteResults', { 'results': liveResults, 'whovoted': whoVoted });
-				
-			} else {
-				socket.emit('voteResult', {'status': 'ko', 'messages': ['Invalid data or request']});
-			}
+			
+			globals.vote(socket.pollId, answerIndex, socket.userId, voteAsAnonymous,
+						function(timing) {
+							console.log('Vote registered');
+							socket.voted = true;
+							socket.emit('voteResult', {'status': 'ok'});
+							
+							var liveResults = globals.getLiveResults(socket.pollId);
+							console.log('Live vote results: ' + liveResults);
+							
+							
+							var whoVoted = voteAsAnonymous ? null : socket.userId;
+							
+							sio.to('poll_' + socket.pollId + '_speaker').emit('liveVoteResults', { 'results': liveResults, 'whovoted': whoVoted, 'timing': timing });
+						}, function() {
+							socket.emit('voteResult', {'status': 'ko', 'messages': ['Invalid data or request']});
+						});
 		} else {
 			socket.emit('voteResult', {'status': 'ko', 'messages': ['Unauthorized']});
 		}
