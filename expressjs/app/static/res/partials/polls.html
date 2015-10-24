@@ -7,7 +7,7 @@
 		<div ng-repeat="user in search.users">
 			<h4>{{ user.email }}</h4>
 			<ul ng-repeat="poll in user.polls">
-				<li><a href="" class="btn btn-info" role="button" ng-click="joinPoll(poll._id)">Join</a> {{ poll.name }} ({{ poll.creation_date }})</li>
+				<li><a href="" class="btn btn-info" role="button" ng-click="joinPoll(poll._id)">Join</a> {{ poll.name }} ({{ poll.creation_date | date:'yyyy-MM-dd HH:mm' }})</li>
 			</ul>
 		</div>
     </div>
@@ -33,11 +33,8 @@
 				<a href="" class="btn btn-info" role="button" ng-click="viewPollResults(poll._id)" ng-if="poll.state == 'completed'">View results</a>
 			</td>
 			<td>{{poll.name}}</td>
-			<td>{{poll.creation_date}}</td>
+			<td>{{poll.creation_date | date:'yyyy-MM-dd HH:mm'}}</td>
 			<td>{{poll.state}}</td>
 		</tr>
 	</tbody>
 </table>
-
-
-<a href="#/">Go to home</a>

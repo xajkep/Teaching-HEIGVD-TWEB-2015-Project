@@ -581,7 +581,8 @@ tweb.controller('pollaudience', function($scope, $location, UserDataFactory, Ser
 											   $scope.stopTimer();
 											   $scope.votingIsAllowed = false;
 											   $scope.$apply();
-											   alert('Poll completed');
+											   
+											   $location.path("/polls");
 										   },
 										   function() {
 											   // Question timeout
@@ -643,7 +644,7 @@ tweb.controller('pollview', function($scope, $http, $location, $timeout, UserDat
 	
 	var pollId = $location.search().id;
 	
-	$scope.graphOptions = { animationSteps: 10 };
+	$scope.graphOptions = { animationSteps: 40 };
 	
 	$scope.createPartitipationGraph = function(element, data) {
 		var ctx3 = document.getElementById(element).getContext("2d");
@@ -726,7 +727,9 @@ tweb.controller('pollview', function($scope, $http, $location, $timeout, UserDat
 						currentAnswer.distinctUsers = distinctUsers;
 					}
 					
-					allTimings.sort();
+					allTimings.sort(function(a, b) {
+										return a - b;
+									});
 					
 					var timing = 0;
 					var votesCount = 0;
@@ -738,7 +741,7 @@ tweb.controller('pollview', function($scope, $http, $location, $timeout, UserDat
 						votesCount = votesCount + 1;
 						chartVotingActivityOnlyData.push({'x': allTimings[participation], 'y': votesCount });
 					}
-					
+
 					currentQuestion.chartVotingActivityData = [
 																{
 																	'label': 'Votes',
