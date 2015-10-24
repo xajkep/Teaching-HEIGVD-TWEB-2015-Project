@@ -316,8 +316,7 @@ router.get('/users/email/:id', function (req, res) {
 																dataRespondToClient.push(currentUsers[k]);
 															}
 															
-															
-															console.log(dataRespondToClient);
+
 															respondCallback();
 														}
 													});
@@ -382,8 +381,8 @@ router.get('/poll/:id', function (req, res) {
 
 												dataRespondToClient = filteredPoll;
 											 } else {
-												 console.log('Refused: user ' + userId + ' requested poll ' + pollIdToRetrieve);
-												 errors.push('You did not create this poll');
+												console.log('Refused: user ' + userId + ' requested poll ' + pollIdToRetrieve);
+												errors.push('You did not create this poll');
 											 }
 											 
 											 respondCallback();

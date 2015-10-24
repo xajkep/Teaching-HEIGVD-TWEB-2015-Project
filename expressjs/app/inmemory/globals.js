@@ -95,12 +95,12 @@ module.exports = {
 
 		var answer = question.answers[answerIndex];
 		var voteAsAnonymousRegister = question.allowAnonymous ? voteAsAnonymous : false;
-		
-		answer.users.push({ 'user': userId, 'anonymous': voteAsAnonymousRegister });
-		
+
 		var currentTime = new Date();
 		var deltaT = currentTime - question.started;
 		
+		
+		answer.users.push({ 'user': userId, 'anonymous': voteAsAnonymousRegister, 'timing': deltaT });
 		console.log('deltaT=' + deltaT);
 		
 		cbWhenOK(deltaT);

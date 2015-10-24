@@ -638,13 +638,27 @@ function socketIOConnectToServer(spp, session, pollIdToJoin, cbAsSpeaker, cbAsAu
 }
 
 
-tweb.controller('pollview', function($scope, $http, $location, UserDataFactory) {
+tweb.controller('pollview', function($scope, $http, $location, $timeout, UserDataFactory) {
 	$scope.userSession = UserDataFactory.getSession();
 	
 	var pollId = $location.search().id;
 	
 	$scope.graphOptions = { animationSteps: 10 };
 	
+	$scope.createPartitipationGraph = function(element, data) {
+		var ctx3 = document.getElementById(element).getContext("2d");
+		var chartVotingActivity = new Chart(ctx3).Scatter(data, {
+			bezierCurve: false,
+			showTooltips: false,
+			scaleShowHorizontalLines: true,
+			scaleShowLabels: false,
+			scaleBeginAtZero : true,
+			scaleType: "number",
+			scaleShowVerticalLines: false,
+			scaleLabel: "<%=value%> votes"
+		});
+	};
+
 	var poll = {
 		name: '',
 		questions: []
@@ -668,8 +682,11 @@ tweb.controller('pollview', function($scope, $http, $location, UserDataFactory) 
 				for (var i=0; i<questionsCount;i++) {
 					var graphLabels = [];
 					var graphValues = [];
-					var currentQuestion = poll.questions[i];
+					var currentQuestion = poll.questions[i];							
 					
+					
+					var allTimings = [];
+
 					var answersCount = currentQuestion.answers.length;
 					for (var y=0; y<answersCount;y++) {
 						var currentAnswer = currentQuestion.answers[y];
@@ -682,6 +699,9 @@ tweb.controller('pollview', function($scope, $http, $location, UserDataFactory) 
 						
 						for (var k=0;k<currentAnswer.users.length;k++) {
 							var currentUser = currentAnswer.users[k];
+							
+							allTimings.push(currentUser.timing);
+							
 							if (currentUser.anonymous) {
 								anonymousAnswersCount = anonymousAnswersCount + 1;
 							} else {
@@ -702,11 +722,30 @@ tweb.controller('pollview', function($scope, $http, $location, UserDataFactory) 
 							}
 						}
 
-						
 						currentAnswer.anonymousAnswersCount = anonymousAnswersCount;
 						currentAnswer.distinctUsers = distinctUsers;
 					}
 					
+					allTimings.sort();
+					
+					var timing = 0;
+					var votesCount = 0;
+					var chartVotingActivityOnlyData = [];
+					
+					chartVotingActivityOnlyData.push({'x': 0, 'y': 0 });
+					
+					for (var participation = 0; participation < allTimings.length; participation++) {
+						votesCount = votesCount + 1;
+						chartVotingActivityOnlyData.push({'x': allTimings[participation], 'y': votesCount });
+					}
+					
+					currentQuestion.chartVotingActivityData = [
+																{
+																	'label': 'Votes',
+																	'strokeColor': '#A31515',
+																	'data': chartVotingActivityOnlyData
+																}];
+	
 					currentQuestion.graph = {
 						'labels': graphLabels,
 						'values': graphValues
@@ -714,6 +753,12 @@ tweb.controller('pollview', function($scope, $http, $location, UserDataFactory) 
 				}
 
 				$scope.poll = poll;
+				
+				$timeout(function () {
+					for (var i=0;i<$scope.poll.questions.length;i++) {
+						$scope.createPartitipationGraph('participationchart' + i, $scope.poll.questions[i].chartVotingActivityData);
+					}
+				});
 			} else {
 				alert("Could not retrieve poll: " + data.messages.join());
 			}

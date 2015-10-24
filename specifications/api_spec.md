@@ -312,6 +312,7 @@ When the poll is completed, the following response is provided:
         'name': String
 		'users': [ {
 		              'anonymous': Boolean,
+                  'timing': Number,
 					  'user': {
 					             '_id': String,
 								 'email': String,
@@ -323,6 +324,8 @@ When the poll is completed, the following response is provided:
     }]
 }
 ~~~
+
+questions.users.timing: Delta(timeWhenVoteReceived, timeWhenQuestionStarted) in milliseconds
 
 Note: when questions.answers.users.anonymous is set to True, the questions.answers.users.user attribute is not included.
 
@@ -819,12 +822,14 @@ This message is used to cast a vote.
 ~~~json
 {
   'answerIndex': Number,
-  'voteAsAnonymous': Boolean
+  'voteAsAnonymous': Boolean,
+  'timing': Number
 }
 ~~~
 
 answerIndex: the index of the question to cast a vote for.
 voteAsAnonymous: true will keep your vote private (if the question allows anonymous voting only) - your name will not be displayed. Specify any value when the current question does not accept anonymous voting.
+timing: Delta(timeWhenVoteReceived, timeWhenQuestionStarted) in milliseconds
 
 If this vote is accepted, a liveVoteResults message is then issued to the speakers.
 
