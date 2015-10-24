@@ -555,6 +555,10 @@ tweb.controller('pollaudience', function($scope, $location, UserDataFactory, Ser
 		ServerPushPoll.vote(answerIndex, voteAsAnonymous);
 	}
 	
+	var redirectToPolls = function() {
+		$location.path("/polls");
+	};
+	
 	ServerPushPoll.registerBasicPollEvents(function(question) {
 											   var nextQuestion = question.question;
 											   var timeout = question.timeout;
@@ -580,9 +584,10 @@ tweb.controller('pollaudience', function($scope, $location, UserDataFactory, Ser
 											   // Poll completed
 											   $scope.stopTimer();
 											   $scope.votingIsAllowed = false;
-											   $scope.$apply();
+
+											   redirectToPolls();
 											   
-											   $location.path("/polls");
+											   $scope.$apply();
 										   },
 										   function() {
 											   // Question timeout
