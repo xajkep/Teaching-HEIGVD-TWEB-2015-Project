@@ -1118,41 +1118,48 @@ tweb.controller('polldetails', function($scope, $location, $http, UserDataFactor
 			}
 			
 			if (errors.length == 0) {
-				$http({
-					method: 'PUT',
-					url: "/api/v1/poll",
-					data: $scope.poll,
-					cache: false,
-					headers: {
-						'Authorization': userSession
-					}
-				})
-				.success(function(data, status, headers, config) {
-					if (data.status == 'ok') {
-						
-						if (mode == 'edit') {
-							alert('Poll edited.');
-						} else {
-							alert('Poll created.');
+				if (mode == 'edit') {
+					$http({
+						method: 'PUT',
+						url: "/api/v1/poll/" + $scope.poll._id,
+						data: $scope.poll,
+						cache: false,
+						headers: {
+							'Authorization': userSession
 						}
-						
-						$location.path("/polls");
-						
-					} else {
-						if (mode == 'edit') {
+					})
+					.success(function(data, status, headers, config) {
+						if (data.status == 'ok') {
+							alert('Poll edited.');
+							$location.path("/polls");
+						} else {
 							alert("Could not edit poll: " + data.messages.join());
+						}
+					}).error(function(data, status, headers, config) {
+						alert("Could not edit poll: http error");
+					});
+				} else {
+					$http({
+						method: 'POST',
+						url: "/api/v1/poll",
+						data: $scope.poll,
+						cache: false,
+						headers: {
+							'Authorization': userSession
+						}
+					})
+					.success(function(data, status, headers, config) {
+						if (data.status == 'ok') {
+							alert('Poll created.');
+							$location.path("/polls");
+							
 						} else {
 							alert("Could not create poll: " + data.messages.join());
 						}
-					}
-				}).error(function(data, status, headers, config) {
-					
-					if (mode == 'edit') {
-						alert("Could not edit poll: http error");
-					} else {
+					}).error(function(data, status, headers, config) {
 						alert("Could not create poll: http error");
-					}
-				});
+					});
+				}
 			} else {
 				alert(errors.join());
 			}

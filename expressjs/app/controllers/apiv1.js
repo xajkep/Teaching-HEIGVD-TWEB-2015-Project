@@ -441,8 +441,207 @@ router.delete('/poll/:id', function (req, res) {
 									});
 });
 
+// Edit a poll
+router.put('/poll/:id', function (req, res) {
+	var pollIdToEdit = req.params.id;
+	
+		// TO-DO: check duplicate name
+	
+	var authorizationHeader = req.headers['authorization'];
+	console.log('Authorization header provided: ' + authorizationHeader);
+	
+	var errors = [];
+	var respondCallback = function () { respondToUser(res, errors, {}); };
+	
+	checkAndExtractFromSessionToken(authorizationHeader,
+									function(userId) {
+										
+										checkPoll(req.body, function(newPollDTO) {
+
+											console.log('Editing existing poll');
+											
+											// TO-DO: factor that code
+											var newPoll = new Poll({ '_id': pollIdToEdit,
+																	 'state': 'pending',
+																	 'created_by': userId,
+																	 'creation_date': new Date(),
+																	 'name': newPollDTO.name });
+																	 
+											newPoll.questions = [];
+
+											for (var indexQuestion = 0 ; indexQuestion < newPollDTO.questions.length; indexQuestion++) {
+												var currentQuestion = newPollDTO.questions[indexQuestion];
+												var currentQuestionToAdd = { '_id': pollIdToEdit + '-' + indexQuestion,
+																			 'name': currentQuestion.name,
+																			 'maxVote': currentQuestion.maxVote,
+																			 'allowAnonymous': currentQuestion.allowAnonymous,
+																			 'timeout': currentQuestion.timeout,
+																			 'answers': []
+																			};
+												
+												for (var indexAnswer = 0 ; indexAnswer < currentQuestion.answers.length; indexAnswer++) {
+													var currentAnswer = currentQuestion.answers[indexAnswer];
+													currentQuestionToAdd.answers.push({'_id': pollIdToEdit + '-' + indexQuestion + '-' + indexAnswer,
+																					   'name': currentAnswer.name,
+																					   'users': []});
+												}
+												
+												newPoll.questions.push(currentQuestionToAdd);
+											}
+
+											
+											Poll.update({ '_id': pollIdToEdit }, newPoll, function(err) {
+												if (err) {
+													console.log(err);
+													errors.push('Cannot edit poll');
+												} else {
+													console.log('Poll edited');
+												}
+												
+												respondCallback();
+											});
+											
+										}, function(errs) {
+											errors = errs;
+											respondCallback();
+										});
+									},
+									function() {
+										errors.push('Invalid or no session provided');
+										respondCallback();
+									});
+	
+});
+
+function checkPoll(poll, cbWhenOK, cbWhenKO) {
+	var pollName;
+	var errors = [];
+	var newPollDTO = [];
+
+	if (!poll.hasOwnProperty("name")) {
+		errors.push("Poll name not supplied");
+	} else {
+		pollName = poll.name;
+		
+		if (pollName.length < 3 || pollName.length > 30) {
+			errors.push("Poll name is invalid");
+		}
+	}
+
+	if (!poll.hasOwnProperty("questions")) {
+		errors.push("Poll questions not supplied");
+	} else {
+		newPollDTO.name = pollName;
+		newPollDTO.questions = [];
+		
+		if (poll.questions.length < 1) {
+			errors.push("At least one question must be specified");
+		}
+		
+		for (var questionIndex = 0; questionIndex < poll.questions.length ; questionIndex++) {
+			var currentQuestionDTO = {};
+			var currentQuestion = poll.questions[questionIndex];
+			
+			if (!currentQuestion.hasOwnProperty("name")) {
+				errors.push("Question has no name");
+				break;
+			}
+
+			if (!currentQuestion.hasOwnProperty("allowAnonymous")) {
+				errors.push("Question has no allowAnonymous");
+				break;
+			}
+			
+			if (!currentQuestion.hasOwnProperty("maxVote")) {
+				errors.push("Question has no maxVote");
+				break;
+			}
+			
+			if (!currentQuestion.hasOwnProperty("answers")) {
+				errors.push("Question has no answers");
+				break;
+			}
+			
+			if (!currentQuestion.hasOwnProperty("timeout")) {
+				errors.push("Question has no timeout");
+				break;
+			}
+			
+			var currentQuestionName = currentQuestion.name;
+			var currentQuestionAllowAnonymous = currentQuestion.allowAnonymous;
+			var currentQuestionMaxVotes = currentQuestion.maxVote;
+			var currentQuestionTimeout = currentQuestion.timeout;
+			var currentQuestionAnswers = currentQuestion.answers;
+			
+			currentQuestionDTO.name = currentQuestionName;
+			currentQuestionDTO.allowAnonymous = currentQuestionAllowAnonymous;
+			currentQuestionDTO.maxVote = currentQuestionMaxVotes;
+			currentQuestionDTO.timeout = currentQuestionTimeout;
+			currentQuestionDTO.answers = [];
+
+			console.log("Question: " + currentQuestionName);
+			console.log(" allowAnonymous: " + currentQuestionDTO.allowAnonymous);
+			console.log(" maxVote: " + currentQuestionDTO.maxVote);
+			console.log(" timeout: " + currentQuestionDTO.timeout);
+			
+			if (currentQuestionDTO.name.length < 5 || currentQuestionDTO.name.length > 30) {
+				errors.push("Question name is invalid");
+			}
+			
+			if (currentQuestionDTO.allowAnonymous !== true && currentQuestionDTO.allowAnonymous !== false) {
+				errors.push("AllowAnonymous is invalid");
+			}
+			
+			if (currentQuestionDTO.maxVote < 1 || currentQuestionDTO.maxVote > 10) {
+				errors.push("MaxVote is invalid");
+			}
+			
+			if (currentQuestionDTO.timeout < 15 || currentQuestionDTO.timeout > 600) {
+				errors.push("Timeout is invalid");
+			}
+			
+			if (currentQuestionAnswers.length < 2) {
+				errors.push("At least two answers must be specified");
+			}
+			
+			console.log("  Answers:");
+			
+			for (var answerIndex = 0; answerIndex < currentQuestionAnswers.length ; answerIndex++) {
+				var currentAnswerDTO = {};
+				var currentAnswer = currentQuestionAnswers[answerIndex];
+				
+				if (!currentQuestion.hasOwnProperty("name")) {
+					errors.push("Answer has no name");
+					break;
+				}
+				
+				var currentAnswerName = currentAnswer.name;
+				currentAnswerDTO.name = currentAnswerName;
+				
+				console.log("    Answer: " + currentAnswerName);
+				
+				currentQuestionDTO.answers.push(currentAnswerDTO);
+			}
+			
+			newPollDTO.questions.push(currentQuestionDTO);
+			
+			if (errors.length > 0) {
+				break;
+			}
+		}
+		
+		//console.log("newPollDTO: %j", newPollDTO);
+	}
+	
+	if (errors.length != 0) {
+		cbWhenKO(errors);
+	} else {
+		cbWhenOK(newPollDTO);
+	}
+}
+
 // Create new poll
-router.put('/poll', function (req, res) {
+router.post('/poll', function (req, res) {
 	
 	// TO-DO: check duplicate name
 	
@@ -450,137 +649,16 @@ router.put('/poll', function (req, res) {
 	console.log('Authorization header provided: ' + authorizationHeader);
 	
 	var errors = [];
-	var newPollDTO = {};
 	var respondCallback = function () { respondToUser(res, errors, {}); };
 	
 	checkAndExtractFromSessionToken(authorizationHeader,
 									function(userId) {
-									
-										var pollName;
-									
-										if (!req.body.hasOwnProperty("name")) {
-											errors.push("Poll name not supplied");
-										} else {
-											pollName = req.body.name;
-											
-											if (pollName.length < 3 || pollName.length > 30) {
-												errors.push("Poll name is invalid");
-											}
-										}
-
-										if (!req.body.hasOwnProperty("questions")) {
-											errors.push("Poll questions not supplied");
-										} else {
-											newPollDTO.name = pollName;
-											newPollDTO.questions = [];
-											
-											if (req.body.questions.length < 1) {
-												errors.push("At least one question must be specified");
-											}
-											
-											for (var questionIndex = 0; questionIndex < req.body.questions.length ; questionIndex++) {
-												var currentQuestionDTO = {};
-												var currentQuestion = req.body.questions[questionIndex];
-												
-												if (!currentQuestion.hasOwnProperty("name")) {
-													errors.push("Question has no name");
-													break;
-												}
-
-												if (!currentQuestion.hasOwnProperty("allowAnonymous")) {
-													errors.push("Question has no allowAnonymous");
-													break;
-												}
-												
-												if (!currentQuestion.hasOwnProperty("maxVote")) {
-													errors.push("Question has no maxVote");
-													break;
-												}
-												
-												if (!currentQuestion.hasOwnProperty("answers")) {
-													errors.push("Question has no answers");
-													break;
-												}
-												
-												if (!currentQuestion.hasOwnProperty("timeout")) {
-													errors.push("Question has no timeout");
-													break;
-												}
-												
-												var currentQuestionName = currentQuestion.name;
-												var currentQuestionAllowAnonymous = currentQuestion.allowAnonymous;
-												var currentQuestionMaxVotes = currentQuestion.maxVote;
-												var currentQuestionTimeout = currentQuestion.timeout;
-												var currentQuestionAnswers = currentQuestion.answers;
-												
-												currentQuestionDTO.name = currentQuestionName;
-												currentQuestionDTO.allowAnonymous = currentQuestionAllowAnonymous;
-												currentQuestionDTO.maxVote = currentQuestionMaxVotes;
-												currentQuestionDTO.timeout = currentQuestionTimeout;
-												currentQuestionDTO.answers = [];
-
-												console.log("Question: " + currentQuestionName);
-												console.log(" allowAnonymous: " + currentQuestionDTO.allowAnonymous);
-												console.log(" maxVote: " + currentQuestionDTO.maxVote);
-												console.log(" timeout: " + currentQuestionDTO.timeout);
-												
-												if (currentQuestionDTO.name.length < 5 || currentQuestionDTO.name.length > 30) {
-													errors.push("Question name is invalid");
-												}
-												
-												if (currentQuestionDTO.allowAnonymous !== true && currentQuestionDTO.allowAnonymous !== false) {
-													errors.push("AllowAnonymous is invalid");
-												}
-												
-												if (currentQuestionDTO.maxVote < 1 || currentQuestionDTO.maxVote > 10) {
-													errors.push("MaxVote is invalid");
-												}
-												
-												if (currentQuestionDTO.timeout < 15 || currentQuestionDTO.timeout > 600) {
-													errors.push("Timeout is invalid");
-												}
-												
-												if (currentQuestionAnswers.length < 2) {
-													errors.push("At least two answers must be specified");
-												}
-												
-												console.log("  Answers:");
-												
-												for (var answerIndex = 0; answerIndex < currentQuestionAnswers.length ; answerIndex++) {
-													var currentAnswerDTO = {};
-													var currentAnswer = currentQuestionAnswers[answerIndex];
-													
-													if (!currentQuestion.hasOwnProperty("name")) {
-														errors.push("Answer has no name");
-														break;
-													}
-													
-													var currentAnswerName = currentAnswer.name;
-													currentAnswerDTO.name = currentAnswerName;
-													
-													console.log("    Answer: " + currentAnswerName);
-													
-													currentQuestionDTO.answers.push(currentAnswerDTO);
-												}
-												
-												newPollDTO.questions.push(currentQuestionDTO);
-												
-												if (errors.length > 0) {
-													break;
-												}
-											}
-											
-											//console.log("newPollDTO: %j", newPollDTO);
-										}
 										
-										if (errors.length == 0) {
-											
-											var editId = req.body.hasOwnProperty("_id") ? req.body._id : null;
-											
-											
-											var insertPoll = function(pollId, mode) {
+										checkPoll(req.body, function(newPollDTO) {
+											var insertPoll = function(pollId) {
 												console.log('Adding new poll');
 												
+												// TO-DO: factor that code
 												var newPoll = new Poll({ '_id': pollId,
 																		 'state': 'pending',
 																		 'created_by': userId,
@@ -608,65 +686,35 @@ router.put('/poll', function (req, res) {
 													
 													newPoll.questions.push(currentQuestionToAdd);
 												}
-					   
-					   
-												if (mode == 'add') {
-													newPoll.save(function (err, newPollInserted) {
-														if (err) {
-															console.log(err);
-															errors.push('Cannot add poll');
-														} else {
-															console.log('Poll added');
-														}
-														
-														respondCallback();
-													});
-												} else {
-													Poll.update({ '_id': pollId }, newPoll, function(err) {
-														if (err) {
-															console.log(err);
-															errors.push('Cannot edit poll');
-														} else {
-															console.log('Poll edited');
-														}
-														
-														respondCallback();
-													});
-												}
-												
+
+
+												newPoll.save(function (err, newPollInserted) {
+													if (err) {
+														console.log(err);
+														errors.push('Cannot add poll');
+													} else {
+														console.log('Poll added');
+													}
+													
+													respondCallback();
+												});
 											};
 											
-											if (editId == null) {
-												console.log('Adding poll');
-												
-												generateId(function(generatedPollId) {
-													insertPoll(generatedPollId, 'add');
-												});
-											} else {
-												console.log('Updating poll: ' + editId);
-												
-												Poll.findOne({'_id': editId}, 'created_by', function(err, poll) {
-													if (poll != null && checkStringTimeConst(poll.created_by, userId)) {
-														insertPoll(editId, 'edit');
-													} else {
-														errors.push('You did not create this poll');
-														respondCallback();
-													}
-												});
-											}
+											generateId(function(generatedPollId) {
+												insertPoll(generatedPollId);
+											});
 											
-										} else {
+										}, function(errs) {
+											errors = errs;
 											respondCallback();
-										}
+										});
 									},
 									function() {
 										errors.push('Invalid or no session provided');
 										respondCallback();
 									});
 
-	
 });
-
 
 // New user account
 router.put('/register', function (req, res) {
