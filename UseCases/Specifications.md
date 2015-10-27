@@ -1,5 +1,8 @@
 TWEB - Project
 
+The app is available here: https://shrouded-falls-6875.herokuapp.com
+Our presentation website is available here: http://julienamacher.github.io/twebpres/
+
 Description of the product
 ========================================
 QuickPoll is a web based application which allows customers to create, join, manage and partitipate to different polls. It is an ideal product for classrooms and education.
@@ -103,7 +106,7 @@ page.
 Exception:
 
 * When the poll is not finished 6 hours after it is opened, it is automatically closed. At that point, the results are lost.
-* The application must be robust enough to cope with any user disconnection (including the speaker) 
+* The application must be robust enough to cope with any user disconnection (including the speaker)
 
 High level architecture
 =======================================
@@ -116,6 +119,7 @@ The server is composed of the following components:
 
 * The REST API : used to create, modify and delete various features
 * NodeJS : used to serve and process HTPP requests to our application
+* Socket.IO : our foundation for async communication when the poll is open
 * MongoDB : storage engine used to store our business objects
 * Mongoose : layer of abstraction used between the application and the storage model
 * Jade : template engine used for the presentation aspect

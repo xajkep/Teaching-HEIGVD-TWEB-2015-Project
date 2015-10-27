@@ -62,8 +62,8 @@ Response:
 }
 ~~~
 
-Errors:
-E_INVALID_REQUEST : In case of missing attributes
+Errors:<br />
+E_INVALID_REQUEST : In case of missing attributes<br />
 E_BAD_PASSWORD : The password is too weak
 
 ### Login
@@ -98,10 +98,10 @@ Response, in case of failure:
 }
 ~~~
 
-Errors:
-E_INVALID_REQUEST : In case of missing attributes
-E_INVALID_ACCOUNT : The email is incoreect
-E_BAD_PASSWORD : The password is incorrect
+Errors:<br />
+E_INVALID_REQUEST : In case of missing attributes<br />
+E_INVALID_ACCOUNT : The email is incoreect<br />
+E_BAD_PASSWORD : The password is incorrect<br />
 
 ### View stats
 
@@ -146,12 +146,12 @@ route: BASE/account/password
 
 _password_ must be at least 8 characters in length.
 
-Errors:
+Errors:<br />
 E_BAD_PASSWORD : The password is too weak
 
 ### Create a new poll
 
-PUT request
+POST request
 
 route: BASE/poll
 
@@ -217,8 +217,8 @@ Example:
 ~~~
 
 Errors:
-E_INVALID_REQUEST : In case of missing attributes
-E_AT_LEAST_ONE_QUESTION : There must be at least one question
+E_INVALID_REQUEST : In case of missing attributes<br />
+E_AT_LEAST_ONE_QUESTION : There must be at least one question<br />
 E_AT_LEAST_TWO_ANSWERS : For each question, there must be at least two answers
 
 
@@ -226,11 +226,10 @@ E_AT_LEAST_TWO_ANSWERS : For each question, there must be at least two answers
 
 PUT request
 
-route: BASE/poll
+route: BASE/poll/$id
 
 ~~~json
 {
-  _id: String,
   'name': String,
   'questions': [{
     'name': String,
@@ -244,13 +243,21 @@ route: BASE/poll
 }
 ~~~
 
-The \_id attribute identifies the poll to be modified.
+Errors:
+E_INVALID_REQUEST : In case of missing attributes or invalid id specified<br />
+E_AT_LEAST_ONE_QUESTION : There must be at least one question<br />
+E_AT_LEAST_TWO_ANSWERS : For each question, there must be at least two answers<br />
+E_INVALID_STATE: The poll cannot be edited because it is either completed, closed or opened
 
 ### Delete an existing poll
 
 DELETE request
 
 route: BASE/poll/$id
+
+Errors:
+E_INVALID_REQUEST : In case of missing attributes or invalid id specified<br />
+E_INVALID_STATE: The poll cannot be edited because it is in the opened state
 
 ### Open a poll
 
@@ -266,8 +273,8 @@ A poll is automatically closed 6 hours after it is opened. In that case, it will
 In normal circumstances, when the poll is successfully completed, it will be assigned the completed state.
 
 Errors:
-E_UNAUTHORIZED: You can only open a poll you have created
-E_INVALID_IDENTIFIER: The specified poll does not exist
+E_UNAUTHORIZED: You can only open a poll you have created<br />
+E_INVALID_IDENTIFIER: The specified poll does not exist<br />
 E_CANNOT_OPEN: This poll is either completed, already opened or has expired.
 
 ### View poll
@@ -312,6 +319,7 @@ When the poll is completed, the following response is provided:
         'name': String
 		'users': [ {
 		              'anonymous': Boolean,
+                  'timing': Number,
 					  'user': {
 					             '_id': String,
 								 'email': String,
@@ -323,6 +331,8 @@ When the poll is completed, the following response is provided:
     }]
 }
 ~~~
+
+questions.users.timing: Delta(timeWhenVoteReceived, timeWhenQuestionStarted) in milliseconds
 
 Note: when questions.answers.users.anonymous is set to True, the questions.answers.users.user attribute is not included.
 
@@ -561,6 +571,9 @@ Example:
 }
 ~~~
 
+Errors:
+E_INVALID_STATE: The poll cannot be viewed because it is either in the opened or closed state
+
 ### List my polls
 
 GET request
@@ -608,7 +621,7 @@ Socket.io is used once a poll is opened and until it is closed or completed. You
 * Receive live results
 * Be notified of the next question
 
-The endpoint is the same server as the Web server, port 8090. Encoding it UTF-8.
+The endpoint is the same server as the Web server. Encoding it UTF-8.
 One connected, start by sending the authAndJoin message.
 
 ## Server => client messages
@@ -776,8 +789,7 @@ Example, in case of error:
 Errors:
 E_UNAUTHORIZED: You are not allowed to join this poll
 E_INVALID_IDENTIFIER: The specified poll does not exist
-E_NOT_OPENED: The specified poll is not open
-
+E_INVALID_STATE: The specified poll is not open
 
 ### pollCompleted
 Issued when the poll is completed.
@@ -790,6 +802,21 @@ Issued when the timeout of the current question reached 0. The server will not a
 No payload.
 
 ## Client => server messages
+
+## authAndJoin
+This message is the first to be issued to the server.
+
+~~~json
+{
+  'session': String,
+  'poll': String
+}
+~~~
+
+session: same session id obtained using the REST API
+poll: poll id you want to join
+
+The server will then issue an authAndJoinResponse message.
 
 ## catchUp
 This message is issued after a successful authAndJoin
@@ -819,12 +846,14 @@ This message is used to cast a vote.
 ~~~json
 {
   'answerIndex': Number,
-  'voteAsAnonymous': Boolean
+  'voteAsAnonymous': Boolean,
+  'timing': Number
 }
 ~~~
 
 answerIndex: the index of the question to cast a vote for.
 voteAsAnonymous: true will keep your vote private (if the question allows anonymous voting only) - your name will not be displayed. Specify any value when the current question does not accept anonymous voting.
+timing: Delta(timeWhenVoteReceived, timeWhenQuestionStarted) in milliseconds
 
 If this vote is accepted, a liveVoteResults message is then issued to the speakers.
 
