@@ -82,31 +82,31 @@ scenario.step('login with previous info', function(response){
 // User1 créé un poll
 
 scenario.step('create a poll', function(response){
-  return this.put({
+  return this.post({
     url:'/poll',
     body: {
       'name': "Poll test 1",
       'questions':[{
-        'name': "Question test 1 Quel est l'animal le plus cool ?",
+        'name': "Question test 1 What is the coolest animal ?",
         'allowAnonymous': false,
         'maxVote': 5,
         'timeout': 45,
         'answers': [{
-          'name': "Le chat"
+          'name': "The cat"
         },{
-          'name': "Le chien"
+          'name': "The dog"
         }]
       },{
-        'name': "Question test 2 C'est quoi le plus doux ?",
+        'name': "Question test 2 what is the sweetest ?",
         'allowAnonymous': false,
         'maxVote': 5,
         'timeout': 45,
         'answers': [{
-          'name': "du papier"
+          'name': "paper"
         },{
-          'name': "de la soie"
+          'name': "silk"
         },{
-          'name': "de la laine de hamster"
+          'name': "hamster wool"
         }]
       }]
     }
@@ -115,6 +115,9 @@ scenario.step('create a poll', function(response){
 
 // Modifier le poll
 // Ouvrir le poll (par user1)
+
+scenario.step
+
 // Ajouter des utilisateurs au poll
 
 
