@@ -7,7 +7,7 @@ var bodyParser = require('body-parser');
 
 
 
-var mongoDBConfig = 'mongodb://tweb:dwmrqi5y@ds043694.mongolab.com:43694/tweb'; // 'mongodb://localhost/tweb' 'mongodb://tweb:dwmrqi5y@ds043694.mongolab.com:43694/tweb';
+var mongoDBConfig = 'mongodb://localhost/tweb' // 'mongodb://localhost/tweb' 'mongodb://tweb:dwmrqi5y@ds043694.mongolab.com:43694/tweb';
 var appListenOnPortConfig = process.env.PORT || 8080;
 var sessionSecret = 'iV3yS6w9FBSPMkvLY89OwAUWHvZM0iH6';
 

@@ -64,11 +64,7 @@ scenario.step('register a user', function(response) {
   });
 });
 
-
-
-// each step gets the result from the previous step
-
-scenario.step('login with previous info', function(response){
+scenario.step('login with user1', function(response){
   return this.post({
     url:'/account',
     body: {
@@ -79,11 +75,30 @@ scenario.step('login with previous info', function(response){
   });
 });
 
+scenario.step('expecing session token in response body', function(response){
+	if (!response.hasOwnProperty('status')) {
+		return this.fail('No status attribute in response');
+	}
+  
+	if (!response.hasOwnProperty('data')) {
+		return this.fail('No data attribute in response');
+	}
+	
+	if (!response.data.hasOwnProperty('session')) {
+		return this.fail('No session attribute in response.data');
+	}
+	
+	return { 'sessionToken': response.session.data };
+});
+
 // User1 créé un poll
 
-scenario.step('create a poll', function(response){
+scenario.step('create a poll', function(session){
   return this.post({
     url:'/poll',
+	headers: {
+		'Authorization': session.sessionToken
+	},
     body: {
       'name': "Poll test 1",
       'questions':[{
@@ -112,16 +127,6 @@ scenario.step('create a poll', function(response){
     }
   });
 });
-
-// Modifier le poll
-// Ouvrir le poll (par user1)
-
-scenario.step
-
-// Ajouter des utilisateurs au poll
-
-
-
 
 // Export the scenario for API Copilot to use
 module.exports = scenario;
