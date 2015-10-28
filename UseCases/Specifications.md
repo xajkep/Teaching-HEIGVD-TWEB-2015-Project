@@ -131,8 +131,9 @@ The application will serve HTTP pages and listen for Socket.IO clients on the po
 Testing procedure
 =======================================
 
-API Copilot is the tool we used to validate our application.
-execute api-copilot run in the expressjs folder. It must execute without any problem.
+API Copilot is the tool we used to validate our application.<br />
+To install it, first run npm install in the expressjs and then execute npm install -g api-copilot-cli
+execute api-copilot run in the expressjs folder. It must execute without any problem.<br />
 
 Note: all tests must be run on an empty database.<br />
 Note: all test steps are done in sequence. If any step fails, the rest of the steps cannot be validated.
