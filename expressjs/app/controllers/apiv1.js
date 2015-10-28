@@ -1,6 +1,6 @@
-// HMAC secret used to secure pseudo-sessions against tampering
-var sessionSecret = 'VlL_LGgy5yu89-nW+7U6f7u0TbIlmP.z';
-
+/*
+This file contains all REST and Socket.IO v1 APIs
+*/
 var express = require('express');
 var crypto = require('crypto');
 var router = express.Router();
@@ -9,6 +9,8 @@ var jwt = require('jsonwebtoken');
 var globals = require(__dirname + '/../inmemory/globals.js'); // Our globals.js file
 var appjs = require(__dirname + '/../../app.js');
 var sio = appjs.sio;
+var sessionSecret = appjs.sessionSecret;
+var validator = require('validator');
 
 // Mongoose schemas
 var User = mongoose.model('User');
@@ -18,13 +20,17 @@ module.exports = function (app) {
   app.use('/api/v1', router);
 };
 
+// Socket.IO endpoint
 sio.sockets.on('connection', function (socket) {
 	socket.isAuthenticated = false;
 	console.log('New socket.io connection');
 	
 	socket.on('disconnect', function() {
 		console.log("User disconnected");
-		sio.to('poll_' + socket.pollId + '_speaker').emit('userDisconnect', socket.userId);
+		
+		if (socket.isAuthenticated === true) {
+			sio.to('poll_' + socket.pollId + '_speaker').emit('userDisconnect', socket.userId);
+		}
 	});
 	
 	socket.on('catchUp', function() {
@@ -33,10 +39,10 @@ sio.sockets.on('connection', function (socket) {
 			// false = error | null = poll not started | obj = current question
 			var currentQuestion = globals.getCurrentQuestion(socket.pollId, socket.userId);
 			
+			// On speaker re-join, we send him the list of the audience
 			if (currentQuestion !== null && currentQuestion !== false && socket.isSpeaker === true) {
 				var audienceInRoom = [];
 				
-				// Speaker re-join
 				for (var socketId in sio.nsps['/'].adapter.rooms['poll_' + socket.pollId + '_audience']){
 					var socketInRoom = sio.sockets.connected[socketId];
 					
@@ -57,6 +63,7 @@ sio.sockets.on('connection', function (socket) {
 				socket.emit('nextQuestion', currentQuestion);
 			}
 
+			// On speaker re-join, we send him the current live voting results
 			if (socket.isSpeaker === true) {
 				var liveResults = globals.getLiveResults(socket.pollId);
 				console.log('Live vote results: ' + liveResults);
@@ -69,27 +76,28 @@ sio.sockets.on('connection', function (socket) {
 				if (currentQuestion == null || currentQuestion == false) {
 					voted = false;
 				} else {
-					console.log('currentQuestion.allowAnonymous=' + currentQuestion.question.allowAnonymous);
-					
 					if (!currentQuestion.question.allowAnonymous) {
 						voted = socket.voted;
 					}
 				}
-				
-				console.log('voted=' + voted);
-				
+
 				sio.to('poll_' + socket.pollId + '_speaker').emit('userConnect',
 																  { '_id': socket.userId, 'firstName': socket.firstName, 'lastName': socket.lastName, 'email': socket.email, 'voted': voted });
 			}
 			
+			// Joining either the speaker or the audience room
 			socket.join('poll_' + socket.pollId + '_' + (socket.isSpeaker === true ? 'speaker' : 'audience'));
 		}
 	});
 	
 	socket.on('authAndJoin', function(authData) {
 		console.log('Processing authAndJoin');
+		
+		// Validating the submitted session token
 		checkAndExtractFromSessionToken(authData.session,
 										function(userId) {
+											
+											// userJoinPoll returns false if the join failed. Otherwise either 'speaker' or 'audience'
 											var joinPollResult = globals.userJoinPoll(authData.poll, userId);
 		
 											if (joinPollResult === false) {
@@ -98,8 +106,10 @@ sio.sockets.on('connection', function (socket) {
 											} else {
 												console.log('Socket.io authentication success');
 												
+												// TO-DO: check if user is already connected. If so, disconnect all other sessions.
+												
 												User.findOne({ '_id': userId }, function (err, user) {
-												  if (err) {
+												  if (err || user == null) {
 													  console.log('Invalid user id provided');
 												  } else {
 														socket.isAuthenticated = true;
@@ -111,10 +121,10 @@ sio.sockets.on('connection', function (socket) {
 														socket.isSpeaker = (joinPollResult == 'speaker');
 														socket.voted = false;
 														
-														// Poll room
+														// Joining the common room
 														socket.join('poll_' + authData.poll);
 
-														// joinPollResult = 'speaker|audience'
+														// Joining the type specific room. joinPollResult = 'speaker|audience'
 														socket.emit('authAndJoinResult', {'status': 'ok', 'data': joinPollResult});
 												  }
 												});
@@ -165,22 +175,26 @@ sio.sockets.on('connection', function (socket) {
 		
 		console.log('Processing vote');
 
+		// Must be authenticated. Speakers cannot cast a vote.
 		if (socket.isAuthenticated === true && socket.isSpeaker !== true) {
 			
+			// Registering the vote
 			globals.vote(socket.pollId, answerIndex, socket.userId, voteAsAnonymous,
-						function(timing) {
+						function(timing, voteRegisteredAsAnonymous) {
+							// Vote registered
 							console.log('Vote registered');
 							socket.voted = true;
 							socket.emit('voteResult', {'status': 'ok'});
 							
+							// Retrieving live voting results to send to speakers
 							var liveResults = globals.getLiveResults(socket.pollId);
-							console.log('Live vote results: ' + liveResults);
 							
-							
-							var whoVoted = voteAsAnonymous ? null : socket.userId;
+							// Hiding the user id if the vote was registered as anonymous
+							var whoVoted = voteRegisteredAsAnonymous ? null : socket.userId;
 							
 							sio.to('poll_' + socket.pollId + '_speaker').emit('liveVoteResults', { 'results': liveResults, 'whovoted': whoVoted, 'timing': timing });
 						}, function() {
+							// An error occured during the vote registration
 							socket.emit('voteResult', {'status': 'ko', 'messages': ['Invalid data or request']});
 						});
 		} else {
@@ -189,6 +203,10 @@ sio.sockets.on('connection', function (socket) {
 	});
 });
 
+/*
+Function called when a poll has just been closed.
+Since the poll is not closed, every socket.io instance is disconnected
+*/
 function toDoWhenPollIsClosed(pollId) {
 	console.log('Poll is closed. Disconnecting sockets.');
 	
@@ -200,36 +218,38 @@ function toDoWhenPollIsClosed(pollId) {
 }
 
 // Open a poll
-router.post('/poll/:id', function (req, res) {
+router.post('/poll/opened/:id', function (req, res) {
 	var pollIdToOpen = req.params.id;
 	var authorizationHeader = req.headers['authorization'];
-	console.log('Authorization header provided: ' + authorizationHeader);
 	
 	var errors = [];
 	var dataRespondToClient = {};
 	var respondCallback = function () { respondToUser(res, errors, dataRespondToClient); };
 
-
 	checkAndExtractFromSessionToken(authorizationHeader,
 									function(userId) {
+										// First, check that the requested poll exists
 										Poll.findOne({ '_id': pollIdToOpen }, function (err, poll) {
 										  if (err || poll == null) {
-											  errors.push('Invalid poll id provided');
+											  errors.push(erro('E_INVALID_IDENTIFIER', 'Poll not found'));
 										  } else {
+											 // Only the user who created the poll can open it
 											 if (checkStringTimeConst(poll.created_by, userId)) {
+												// The poll can only be opened in the pending state
 												if (poll.state == 'pending') {
 													
+													// This call will set state=opened in the database
 													if (!globals.loadPollInMemory(poll, function() {
 														toDoWhenPollIsClosed(poll._id);
 													})) {
-														errors.push('Cannot load poll in memory');
+														errors.push(error('E_GENERIC_ERROR', 'Cannot load poll in memory'));
 													}
 
 												} else {
-													errors.push('Poll cannot be opened');
+													errors.push(erro('E_INVALID_STATE', 'The poll is not in pending state'));
 												}
 											 } else {
-												 errors.push('You did not create this poll');
+												 errors.push(erro('E_UNAUTHORIZED', 'You did not create this poll'));
 											 }
 										  }
 										  
@@ -242,10 +262,9 @@ router.post('/poll/:id', function (req, res) {
 									});
 });
 
-// View my polls
+// Retrieve my polls
 router.get('/polls', function (req, res) {
 	var authorizationHeader = req.headers['authorization'];
-	console.log('Authorization header provided: ' + authorizationHeader);
 	
 	var errors = [];
 	var dataRespondToClient = {};
@@ -253,13 +272,15 @@ router.get('/polls', function (req, res) {
 	
 	checkAndExtractFromSessionToken(authorizationHeader,
 									function(userId) {
+										
+										// Selecting all polls created by the user requesting his polls
 										Poll.find({ created_by: userId }, '_id state creation_date name', function (err, userPolls){
 											dataRespondToClient = userPolls;
 											respondCallback();
 										});
 									},
 									function() {
-										errors.push('Invalid or no session provided');
+										errors.push(error('E_INVALID_SESSION', 'Invalid or no session provided'));
 										respondCallback();
 									});
 });
@@ -276,14 +297,15 @@ router.get('/stats', function (req, res) {
 				});
 			});
 		});
-	})
+	});
 });
 
 // Search users by email
-router.get('/users/email/:id', function (req, res) {
-	var emailToSearch = req.params.id;
+router.get('/users/email/:email', function (req, res) {
+	
+	// The email to search for
+	var emailToSearch = req.params.email;
 	var authorizationHeader = req.headers['authorization'];
-	console.log('Authorization header provided: ' + authorizationHeader);
 	
 	var errors = [];
 	var dataRespondToClient = [];
@@ -293,7 +315,7 @@ router.get('/users/email/:id', function (req, res) {
 									function(userId) {
 										if (emailToSearch.length >= 3) {
 											// email LIKE 'emailToSearch%'
-											User.find({ email: new RegExp('^' + emailToSearch, 'i') }).select('_id email').limit(5).exec(function (err, users) {
+											User.find({ email: new RegExp('^' + emailToSearch, 'i') }).select('_id email').limit(15).exec(function (err, users) {
 												
 												var retrieved = 0;
 												var usersCount = users.length;
@@ -307,7 +329,14 @@ router.get('/users/email/:id', function (req, res) {
 													Poll.find({ 'created_by': users[i]._id, 'state': 'opened' }).select('_id created_by name creation_date').exec(function (err, polls) {
 														
 														if (polls.length > 0) {
-															currentUsers[polls[0].created_by].polls = polls;
+															
+															var pollsToAdd = polld.toObject();
+															
+															for (var z=0;z<pollsToAdd.length;z++) {
+																delete pollsToAdd[i].created_by;
+															}
+															
+															currentUsers[polls[0].created_by].polls = pollsToAdd;
 														}
 														
 														if (++retrieved == users.length) {
@@ -316,19 +345,18 @@ router.get('/users/email/:id', function (req, res) {
 																dataRespondToClient.push(currentUsers[k]);
 															}
 															
-
 															respondCallback();
 														}
 													});
 												}
 											});
 										} else {
-											errors.push('Email is too short');
+											errors.push(erro('E_INVALID_REQUEST', 'Email is too short'));
 											respondCallback();
 										}
 									},
 									function() {
-										errors.push('Invalid or no session provided');
+										errors.push(erro('E_INVALID_SESSION', 'Invalid or no session provided'));
 										respondCallback();
 									});
 });
@@ -337,7 +365,6 @@ router.get('/users/email/:id', function (req, res) {
 router.get('/poll/:id', function (req, res) {
 	var pollIdToRetrieve = req.params.id;
 	var authorizationHeader = req.headers['authorization'];
-	console.log('Authorization header provided: ' + authorizationHeader);
 	
 	var errors = [];
 	var dataRespondToClient = {};
@@ -349,40 +376,48 @@ router.get('/poll/:id', function (req, res) {
 										Poll.findOne({ '_id': pollIdToRetrieve }).populate('questions.answers.users.user', '_id email firstname lastname').exec(function (err, poll){
 										  if (err || poll == null) {
 											  console.log('User ' + userId + ' requested the non existing poll: ' + pollIdToRetrieve + ' err: ' + err);
-											  errors.push('Invalid poll id provided');
+											  errors.push(erro('E_INVALID_IDENTIFIER', 'Poll not found'));
 										  } else {
+											 // Only the owner of a poll can request it
 											 if (checkStringTimeConst(poll.created_by, userId)) {
-												 
-												var filteredPoll = poll.toObject();
-												 
-												console.log('Responding with poll: ' + poll._id);
-												
-												var questionsCount = filteredPoll.questions.length;
-												for (var i=0; i<questionsCount;i++) {
-													var currentQuestion = filteredPoll.questions[i];
-													var answersCount = currentQuestion.answers.length;
-													for (var y=0; y<answersCount;y++) {
-														var currentAnswer = currentQuestion.answers[y];
-	
-														var usersCount = currentAnswer.users.length;
-														for (var z=0;z<usersCount;z++) {
-															var currentUser = currentAnswer.users[z];
-															
-															console.log('deleting currentUser._id: ' + currentUser._id);
-															delete currentUser._id;
-															
-															if (currentUser.anonymous) {
-																console.log('deleting currentUser.user: ' + currentUser.user);
-																delete currentUser.user;
+												// The poll cannot be viewed if it is already finished or currently opened
+												if (poll.state == 'opened' || poll.state == 'closed') {
+													errors.push(erro('E_INVALID_STATE', 'The state is not opened or closed'));
+												} else {
+													// We then return only selected fields to the user
+													var filteredPoll = poll.toObject();
+													 
+													console.log('Responding with poll: ' + poll._id);
+													
+													var questionsCount = filteredPoll.questions.length;
+													for (var i=0; i<questionsCount;i++) {
+														var currentQuestion = filteredPoll.questions[i];
+														var answersCount = currentQuestion.answers.length;
+														for (var y=0; y<answersCount;y++) {
+															var currentAnswer = currentQuestion.answers[y];
+		
+															var usersCount = currentAnswer.users.length;
+															for (var z=0;z<usersCount;z++) {
+																var currentUser = currentAnswer.users[z];
+																
+																// Since mongoose did a join, the _id whould be a duplicate. It is removed once.
+																console.log('deleting currentUser._id: ' + currentUser._id);
+																delete currentUser._id;
+																
+																// If the user voted anonymously, his id is removed from the response
+																if (currentUser.anonymous) {
+																	console.log('deleting currentUser.user: ' + currentUser.user);
+																	delete currentUser.user;
+																}
 															}
 														}
 													}
-												}
 
-												dataRespondToClient = filteredPoll;
+													dataRespondToClient = filteredPoll;
+												}
 											 } else {
 												console.log('Refused: user ' + userId + ' requested poll ' + pollIdToRetrieve);
-												errors.push('You did not create this poll');
+												errors.push(erro('E_UNAUTHORIZED', 'You did not create this poll'));
 											 }
 											 
 											 respondCallback();
@@ -390,7 +425,7 @@ router.get('/poll/:id', function (req, res) {
 										});
 									},
 									function() {
-										errors.push('Invalid or no session provided');
+										errors.push(erro('E_INVALID_SESSION', 'Invalid or no session provided'));
 										respondCallback();
 									});
 });
@@ -398,13 +433,10 @@ router.get('/poll/:id', function (req, res) {
 // Delete a poll
 router.delete('/poll/:id', function (req, res) {
 	
-	// TO-DO: check if poll is opened. In that case no deletion is possible
-	// TO-DO: delete poll in memory, if necessary
-	
+	// The poll to delete is a parameter
 	var pollIdToDelete = req.params.id;
 	
 	var authorizationHeader = req.headers['authorization'];
-	console.log('Authorization header provided: ' + authorizationHeader);
 	
 	var errors = [];
 	var newPollDTO = {};
@@ -412,43 +444,51 @@ router.delete('/poll/:id', function (req, res) {
 	
 	checkAndExtractFromSessionToken(authorizationHeader,
 									function(userId) {
-										Poll.findOne({ _id: pollIdToDelete }, 'created_by', function (err, poll){
+										Poll.findOne({ _id: pollIdToDelete }, 'state created_by', function (err, poll){
 										  if (poll == null) {
-											  errors.push('Invalid poll id provided');
+											  errors.push(erro('E_INVALID_IDENTIFIER', 'Poll not found'));
 											  respondCallback();
 										  } else {
+											 // Only the owner of a poll can delete it
 											 if (checkStringTimeConst(poll.created_by, userId)) {
-												Poll.remove({ _id: pollIdToDelete }, function(err) {
-													if (err) {
-														errors.push('Cannot delete poll');
-													}
-													else {
-														// TO-DO
-													}
-													
+
+												// If the poll is currently opened, it must be closed by either:
+												// - finishing it by responding to all of its questions
+												// - wait for the hard timeout, which will close it automatically
+												if (poll.state == 'opened') {
+													errors.push(erro('E_INVALID_STATE', 'The poll is currently opened'));
 													respondCallback();
-												});
+												} else {
+													// Removing the poll
+													Poll.remove({ _id: pollIdToDelete }, function(err) {
+														
+														if (err) {
+															errors.push(erro('E_GENERIC_ERROR', 'Cannot delete poll'));
+														}
+														
+														respondCallback();
+													});
+												}
 											 } else {
-												 errors.push('You did not create this poll');
-												 respondCallback();
+												errors.push(erro('E_UNAUTHORIZED', 'You did not create this poll'));
+												respondCallback();
 											 }
 										  }
 										});
 									},
 									function() {
-										errors.push('Invalid or no session provided');
+										errors.push(erro('E_INVALID_SESSION', 'Invalid or no session provided'));
 										respondCallback();
 									});
 });
 
 // Edit a poll
 router.put('/poll/:id', function (req, res) {
+	
+	// The poll to edit is specified as query string parameter
 	var pollIdToEdit = req.params.id;
-	
-		// TO-DO: check duplicate name
-	
+
 	var authorizationHeader = req.headers['authorization'];
-	console.log('Authorization header provided: ' + authorizationHeader);
 	
 	var errors = [];
 	var respondCallback = function () { respondToUser(res, errors, {}); };
@@ -456,86 +496,115 @@ router.put('/poll/:id', function (req, res) {
 	checkAndExtractFromSessionToken(authorizationHeader,
 									function(userId) {
 										
-										checkPoll(req.body, function(newPollDTO) {
-
-											console.log('Editing existing poll');
-											
-											// TO-DO: factor that code
-											var newPoll = new Poll({ '_id': pollIdToEdit,
-																	 'state': 'pending',
-																	 'created_by': userId,
-																	 'creation_date': new Date(),
-																	 'name': newPollDTO.name });
-																	 
-											newPoll.questions = [];
-
-											for (var indexQuestion = 0 ; indexQuestion < newPollDTO.questions.length; indexQuestion++) {
-												var currentQuestion = newPollDTO.questions[indexQuestion];
-												var currentQuestionToAdd = { '_id': pollIdToEdit + '-' + indexQuestion,
-																			 'name': currentQuestion.name,
-																			 'maxVote': currentQuestion.maxVote,
-																			 'allowAnonymous': currentQuestion.allowAnonymous,
-																			 'timeout': currentQuestion.timeout,
-																			 'answers': []
-																			};
-												
-												for (var indexAnswer = 0 ; indexAnswer < currentQuestion.answers.length; indexAnswer++) {
-													var currentAnswer = currentQuestion.answers[indexAnswer];
-													currentQuestionToAdd.answers.push({'_id': pollIdToEdit + '-' + indexQuestion + '-' + indexAnswer,
-																					   'name': currentAnswer.name,
-																					   'users': []});
-												}
-												
-												newPoll.questions.push(currentQuestionToAdd);
-											}
-
-											
-											Poll.update({ '_id': pollIdToEdit }, newPoll, function(err) {
-												if (err) {
-													console.log(err);
-													errors.push('Cannot edit poll');
-												} else {
-													console.log('Poll edited');
-												}
-												
+										// First, we check if the requested poll exists
+										Poll.findOne({ '_id': pollIdToEdit }, 'state created_by', function(err, poll) {
+											if (err || poll == null) {
+												console.log(err);
+												errors.push(erro('E_INVALID_IDENTIFIER', 'Poll not found'));
 												respondCallback();
-											});
-											
-										}, function(errs) {
-											errors = errs;
-											respondCallback();
+											} else {
+												// We check the owner of the poll, which must be the id doing the request
+												if (!checkStringTimeConst(poll.created_by, userId)) {
+													errors.push(erro('E_UNAUTHORIZED', 'You did not create this poll'));
+												} else {
+													// A poll can only be edited in the pending state. Any other state and the edit is denied.
+													if (poll.state != "pending") {
+														errors.push(erro('E_INVALID_STATE', 'Poll is not in the pending state'));
+														respondCallback();
+													} else {
+														// The poll's parameters and required values are checked
+														checkPoll(req.body, function(newPollDTO) {
+															console.log('Editing existing poll');
+															
+															// TO-DO: factor that code
+															var newPoll = new Poll({ '_id': pollIdToEdit,
+																					 'state': 'pending',
+																					 'created_by': userId,
+																					 'creation_date': new Date(),
+																					 'name': newPollDTO.name });
+																					 
+															newPoll.questions = [];
+
+															for (var indexQuestion = 0 ; indexQuestion < newPollDTO.questions.length; indexQuestion++) {
+																var currentQuestion = newPollDTO.questions[indexQuestion];
+																var currentQuestionToAdd = { '_id': pollIdToEdit + '-' + indexQuestion,
+																							 'name': currentQuestion.name,
+																							 'maxVote': currentQuestion.maxVote,
+																							 'allowAnonymous': currentQuestion.allowAnonymous,
+																							 'timeout': currentQuestion.timeout,
+																							 'answers': []
+																							};
+																
+																for (var indexAnswer = 0 ; indexAnswer < currentQuestion.answers.length; indexAnswer++) {
+																	var currentAnswer = currentQuestion.answers[indexAnswer];
+																	currentQuestionToAdd.answers.push({'_id': pollIdToEdit + '-' + indexQuestion + '-' + indexAnswer,
+																									   'name': currentAnswer.name,
+																									   'users': []});
+																}
+																
+																newPoll.questions.push(currentQuestionToAdd);
+															}
+
+															// Updating the poll in database
+															Poll.update({ '_id': pollIdToEdit }, newPoll, function(err) {
+																if (err) {
+																	console.log(err);
+																	errors.push(erro('E_GENERIC_ERROR', 'Cannot edit poll'));
+																} else {
+																	console.log('Poll edited');
+																}
+																
+																respondCallback();
+															});
+															
+														}, function(errs) {
+															errors = errs;
+															respondCallback();
+														});
+														
+													}
+												}
+											}
 										});
 									},
 									function() {
-										errors.push('Invalid or no session provided');
+										errors.push(erro('E_INVALID_SESSION', 'Invalid or no session provided'));
 										respondCallback();
 									});
 	
 });
 
+/*
+This function will check the poll:
+- all required fields must be present
+- all fields must conform to their constraints (see REST documentation)
+
+If the supplied form is conform, the cbWhenOK callback is called without parameter
+If there is one or more errors, the cbWhenKO callback is called, and an array of errors is received as parameter
+*/
 function checkPoll(poll, cbWhenOK, cbWhenKO) {
 	var pollName;
 	var errors = [];
 	var newPollDTO = [];
 
 	if (!poll.hasOwnProperty("name")) {
-		errors.push("Poll name not supplied");
+		errors.push(erro('E_INVALID_REQUEST', "Poll name not supplied"));
 	} else {
 		pollName = poll.name;
 		
 		if (pollName.length < 3 || pollName.length > 30) {
-			errors.push("Poll name is invalid");
+			errors.push(erro('E_INVALID_REQUEST', "Poll name is invalid"));
 		}
 	}
 
 	if (!poll.hasOwnProperty("questions")) {
-		errors.push("Poll questions not supplied");
+		errors.push(erro('E_INVALID_REQUEST', "Poll questions not supplied"));
 	} else {
 		newPollDTO.name = pollName;
 		newPollDTO.questions = [];
 		
 		if (poll.questions.length < 1) {
-			errors.push("At least one question must be specified");
+			errors.push(erro('E_INVALID_REQUEST', "At least one question must be specified"));
 		}
 		
 		for (var questionIndex = 0; questionIndex < poll.questions.length ; questionIndex++) {
@@ -543,27 +612,27 @@ function checkPoll(poll, cbWhenOK, cbWhenKO) {
 			var currentQuestion = poll.questions[questionIndex];
 			
 			if (!currentQuestion.hasOwnProperty("name")) {
-				errors.push("Question has no name");
+				errors.push(erro('E_INVALID_REQUEST', "Question has no name"));
 				break;
 			}
 
 			if (!currentQuestion.hasOwnProperty("allowAnonymous")) {
-				errors.push("Question has no allowAnonymous");
+				errors.push(erro('E_INVALID_REQUEST', "Question has no allowAnonymous"));
 				break;
 			}
 			
 			if (!currentQuestion.hasOwnProperty("maxVote")) {
-				errors.push("Question has no maxVote");
+				errors.push(erro('E_INVALID_REQUEST', "Question has no maxVote"));
 				break;
 			}
 			
 			if (!currentQuestion.hasOwnProperty("answers")) {
-				errors.push("Question has no answers");
+				errors.push(erro('E_INVALID_REQUEST', "Question has no answers"));
 				break;
 			}
 			
 			if (!currentQuestion.hasOwnProperty("timeout")) {
-				errors.push("Question has no timeout");
+				errors.push(erro('E_INVALID_REQUEST', "Question has no timeout"));
 				break;
 			}
 			
@@ -584,24 +653,24 @@ function checkPoll(poll, cbWhenOK, cbWhenKO) {
 			console.log(" maxVote: " + currentQuestionDTO.maxVote);
 			console.log(" timeout: " + currentQuestionDTO.timeout);
 			
-			if (currentQuestionDTO.name.length < 5 || currentQuestionDTO.name.length > 30) {
-				errors.push("Question name is invalid");
+			if (currentQuestionDTO.name.length < 5 || currentQuestionDTO.name.length > 50) {
+				errors.push(erro('E_INVALID_REQUEST', "Question name is invalid"));
 			}
 			
 			if (currentQuestionDTO.allowAnonymous !== true && currentQuestionDTO.allowAnonymous !== false) {
-				errors.push("AllowAnonymous is invalid");
+				errors.push(erro('E_INVALID_REQUEST', "AllowAnonymous is invalid"));
 			}
 			
 			if (currentQuestionDTO.maxVote < 1 || currentQuestionDTO.maxVote > 10) {
-				errors.push("MaxVote is invalid");
+				errors.push(erro('E_INVALID_REQUEST', "MaxVote is invalid"));
 			}
 			
 			if (currentQuestionDTO.timeout < 15 || currentQuestionDTO.timeout > 600) {
-				errors.push("Timeout is invalid");
+				errors.push(erro('E_INVALID_REQUEST', "Timeout is invalid"));
 			}
 			
 			if (currentQuestionAnswers.length < 2) {
-				errors.push("At least two answers must be specified");
+				errors.push(erro('E_INVALID_REQUEST', "At least two answers must be specified"));
 			}
 			
 			console.log("  Answers:");
@@ -611,7 +680,7 @@ function checkPoll(poll, cbWhenOK, cbWhenKO) {
 				var currentAnswer = currentQuestionAnswers[answerIndex];
 				
 				if (!currentQuestion.hasOwnProperty("name")) {
-					errors.push("Answer has no name");
+					errors.push(erro('E_INVALID_REQUEST', "Answer has no name"));
 					break;
 				}
 				
@@ -642,18 +711,15 @@ function checkPoll(poll, cbWhenOK, cbWhenKO) {
 
 // Create new poll
 router.post('/poll', function (req, res) {
-	
-	// TO-DO: check duplicate name
-	
+
 	var authorizationHeader = req.headers['authorization'];
-	console.log('Authorization header provided: ' + authorizationHeader);
 	
 	var errors = [];
 	var respondCallback = function () { respondToUser(res, errors, {}); };
 	
 	checkAndExtractFromSessionToken(authorizationHeader,
 									function(userId) {
-										
+										// First, we make sure the submitted form is acceptable
 										checkPoll(req.body, function(newPollDTO) {
 											var insertPoll = function(pollId) {
 												console.log('Adding new poll');
@@ -688,10 +754,11 @@ router.post('/poll', function (req, res) {
 												}
 
 
+												// The new poll is saved in the database
 												newPoll.save(function (err, newPollInserted) {
 													if (err) {
 														console.log(err);
-														errors.push('Cannot add poll');
+														errors.push(erro('E_GENERIC_ERROR', 'Cannot add poll'));
 													} else {
 														console.log('Poll added');
 													}
@@ -700,6 +767,7 @@ router.post('/poll', function (req, res) {
 												});
 											};
 											
+											// We then generate a hopefully random identifier, which will identify the new poll
 											generateId(function(generatedPollId) {
 												insertPoll(generatedPollId);
 											});
@@ -710,56 +778,116 @@ router.post('/poll', function (req, res) {
 										});
 									},
 									function() {
-										errors.push('Invalid or no session provided');
+										errors.push(erro('E_INVALID_SESSION', 'Invalid or no session provided'));
 										respondCallback();
 									});
 
 });
 
-// New user account
-router.put('/register', function (req, res) {
+/*
+This function receives two parameters:
+- An error identifier
+- A short explanation of the error
+
+and returns an error object (as explained in the REST documentation), ready to be put in an array and returned to the client
+*/
+function erro(error, description) {
+	return { 'error': error, 'description': description}
+}
+
+/*
+This function will check the supplied password.
+It must be conform to all security requirements.
+
+There requirements are:
+- The length of the password must be at least 8 characterSet
+
+Returns an array of error messages. An empty array mean the provided password is conform to the policy.
+*/
+function checkPasswordAgainstPolicy(password) {
 	var errors = [];
+	var minPasswordLength = 8;
+	
+	if (password.length < minPasswordLength) {
+		errors.push(erro('E_BAD_PASSWORD', 'Password must be at least ' + minPasswordLength + ' chars in length'));
+	}
+	
+	return errors;
+}
+
+// New user account
+router.post('/register', function (req, res) {
+	var errors = [];
+	
+	// Checking that all required attributes have been submitted
 
 	if (!req.body.hasOwnProperty("email")) {
-		errors.push("Email not supplied");
+		errors.push(erro("E_INVALID_REQUEST", "Email not supplied"));
+	} else {
+		var emailLen = req.body.email.length;
+		if (emailLen < 5 || emailLen > 70) {
+			errors.push(erro("E_INVALID_REQUEST", "Email length is invalid"));
+		} else {
+			if (!validator.isEmail(req.body.email)) {
+				errors.push(erro("E_INVALID_REQUEST", "Invalid email format"));
+			}
+		}
 	}
 	
 	if (!req.body.hasOwnProperty("firstname")) {
-		errors.push("Firstname not supplied");
+		errors.push(erro("E_INVALID_REQUEST", "Firstname not supplied"));
+	} else {
+		var firstNameLen = req.body.firstname.length;
+		if (firstNameLen < 2 || firstNameLen > 70) {
+			errors.push(erro("E_INVALID_REQUEST", "Firstname length is invalid"));
+		}
 	}
 	
 	if (!req.body.hasOwnProperty("lastname")) {
-		errors.push("Lastname not supplied");
+		errors.push(erro("E_INVALID_REQUEST", "Lastname not supplied"));
+	} else {
+		var firstNameLen = req.body.lastname.length;
+		if (firstNameLen < 2 || firstNameLen > 70) {
+			errors.push(erro("E_INVALID_REQUEST", "Lastname length is invalid"));
+		}
 	}
-	
+
+	// Checking the password against the security policy
 	if (!req.body.hasOwnProperty("password")) {
-		errors.push("Password not supplied");
+		errors.push(erro("E_INVALID_REQUEST", "Password not supplied"));
+	} else {
+		var passwordPolicyErrors = checkPasswordAgainstPolicy(req.body.password);
+		
+		for (var i=0;i<passwordPolicyErrors.length;i++) {
+			errors.push(passwordPolicyErrors[i]);
+		}
 	}
-	
+
 	if (errors.length == 0) {
+		// We check that the email address is not already in the database
 		User.findOne({ email: req.body.email }, function (err, user){
 		  if (user != null) {
 			  // Email already registered
-			  errors.push("Email already registered");
+			  errors.push(erro("E_EMAIL_ALREADY_REGISTERED", "Email already registered"));
 			  respondToUser(res, errors, null);
 		  } else {
+			// If the email is not in the database, an identifier is generated, which will uniquely identify our new user
 			generateId(function(generatedId) {
+				// A salt is generated as well. This is used to hash the user's password
 				generateSalt(function(generatedSalt) {
+					// Password is then hashed
 					hashPassword(generatedSalt, req.body.password, function(encryptedPassword) {
-						console.log("Inserting user: " + generatedId);
-						console.log("Salt: " + generatedSalt);
-						console.log("Encrypted password: " + encryptedPassword);
-					
 						var newUser = new User({ _id: generatedId,
 												 email: req.body.email,
 												 salt: generatedSalt,
 												 encrypted_password: encryptedPassword,
 												 firstname: req.body.firstname,
 												 lastname: req.body.lastname });
-												   
+						
+						// Our new user is then inserted in the database						
 						newUser.save(function (err, newUser) {
 							if (err) {
-								errors.push("Cannot insert into database");
+								errors.push(erro("E_GENERIC_ERROR", "Cannot insert into database"));
 								console.error(err);
 							} else {
 								console.log('User added ' + newUser);
@@ -777,6 +905,10 @@ router.put('/register', function (req, res) {
 	}
 });
 
+/*
+This function generates a random hex string made of 20 random bytes
+Once generated, the provided callback is called and received the generated id as parameter
+*/
 function generateId(callback) {
 	require('crypto').randomBytes(20, function(ex, buf) {
 		var generatedId = buf.toString('hex');
@@ -784,6 +916,10 @@ function generateId(callback) {
 	}); 
 }
 
+/*
+This function generates a random hex salt made of 20 random bytes
+Once generated, the provided callback is called and received the generated salt as parameter
+*/
 function generateSalt(callback) {
 	require('crypto').randomBytes(20, function(ex, buf) {
 		var generatedSalt = buf.toString('hex');
@@ -791,24 +927,43 @@ function generateSalt(callback) {
 	}); 
 }
 
+/*
+This function will hash the supplied password. It is salted before being hashed to improve resilience against
+targeted and non targeted brute force attacks.
+
+salt: String used to salt the password. Must be unique per user in order to be effective.
+clearPassword: password to hash
+callback: Once the password is hashed, the callback function is called and receives the encrypted password as parameter
+*/
 function hashPassword(salt, clearPassword, callback) {
 	var hashPassword = crypto.createHash('sha256').update(clearPassword).digest('hex');
 	var encryptedPassword = crypto.createHash('sha256').update(hashPassword + salt).digest('hex');
 	callback(encryptedPassword);
 }
 
+/*
+This function will check the provided session token
+
+If it is deemed valid (not expired, genuine and not tampered with), the callbackIfTokenIsValid callback is executed ; the user id is passed as parameter
+In case the token is deemed invalid, the callbackIfTokenIsInvalid callback is called (without parameter)
+*/
 function checkAndExtractFromSessionToken(token, callbackIfTokenIsValid, callbackIfTokenIsInvalid) {
 	jwt.verify(token, sessionSecret, function(err, decoded) {
       if (err) {
-		console.log('Session is invalid');
         callbackIfTokenIsInvalid();
       } else {
-		console.log('Session is valid. Retrieved from token: userId=' + decoded.userId);
         callbackIfTokenIsValid(decoded.userId);
       }
     });
 }
 
+/*
+This function is used to respond to a client, as per the generic answer in the REST documentation
+
+res: Client to respond to
+errors: Array of error messages (as described in the documentation). If no error is present, must be an empty array.
+data: Specific answer to pass to the user (when there is none, any value is accepted)
+*/
 function respondToUser(res, errors, data) {
 	var responseObject =
 	{
@@ -826,6 +981,9 @@ function respondToUser(res, errors, data) {
 
 /*
 Check two string for equality. Constant time to prevent timing attacks.
+
+Returns true if val1 (String) is equals to val2 (String)
+Otherwise returns false
 */
 function checkStringTimeConst(val1, val2) {
   return crypto.createHash('sha256').update(val1).digest('hex') == crypto.createHash('sha256').update(val2).digest('hex');
@@ -835,7 +993,7 @@ function checkStringTimeConst(val1, val2) {
 router.post('/account', function (req, res) {
 
 	var errors = [];
-	var dataToSendToClient = {}
+	var dataToSendToClient = {};
 
 	if (!req.body.hasOwnProperty("email")) {
 		errors.push("Email not supplied");
@@ -848,26 +1006,25 @@ router.post('/account', function (req, res) {
 	var respondCallback = function () { respondToUser(res, errors, dataToSendToClient); };
 
 	if (errors.length == 0) {
+		// The spcified user must exist
 		User.findOne({ 'email': req.body.email }, '_id salt encrypted_password', function (err, userFound) {
 			if (userFound == null) {
-				errors.push("User not found");
+				errors.push(erro('E_INVALID_ACCOUNT', "User not found"));
 			} else {
+				// The submitted password is hashed using the salt of the specified user
 				hashPassword(userFound.salt, req.body.password, function(encryptedPasswordComputed) {
 					if (checkStringTimeConst(encryptedPasswordComputed, userFound.encrypted_password)) {
-						// User provided correct password
-						//req.session.cookie.userId = userFound._id;
-						//res.header('Authorization', req.sessionID);
-						console.log('User authenticated ' + req.body.email);
 						
+						// Generating a new token for the authenticated user
 						var userSessionToken = jwt.sign({ userId: userFound._id }, sessionSecret, {
 														   expiresIn: 3600
 														});
 						
 						dataToSendToClient = { 'session': userSessionToken };
 						
-						console.log('User authenticated: ' + req.body.email + " session: " + dataToSendToClient);
+						//console.log('User authenticated: ' + req.body.email + " session: " + dataToSendToClient);
 					} else {
-						errors.push("Incorrect password");
+						errors.push(erro('E_BAD_PASSWORD', "Incorrect password"));
 					}
 				});
 			}
@@ -889,31 +1046,34 @@ router.post('/account/password', function (req, res) {
 	}
 	
 	var respondCallback = function () { respondToUser(res, errors, null); };
-	
-	
-	var pollIdToDelete = req.params.id;
-	
+
 	var authorizationHeader = req.headers['authorization'];
-	console.log('Authorization header provided: ' + authorizationHeader);
-	
+
 	var errors = [];
 	var newPollDTO = {};
 	var respondCallback = function () { respondToUser(res, errors, {}); };
 	
 	checkAndExtractFromSessionToken(authorizationHeader,
 									function(userId) {
+										
+										// The submitted password is checked against the password policy
+										var passwordPolicyErrors = checkPasswordAgainstPolicy(req.body.password);
+		
+										for (var i=0;i<passwordPolicyErrors.length;i++) {
+											errors.push(passwordPolicyErrors[i]);
+										}
+										
 										if (errors.length == 0) {
 											console.log('Updating password for user ' + userId);
 											
+											// The user's salt is regenerated, for added safety
 											generateSalt(function(generatedSalt) {
 												hashPassword(generatedSalt, req.body.password, function(encryptedPassword) {
-													
-													console.log('New salt ' + generatedSalt);
-													console.log('New encrypted password ' + encryptedPassword);
-													
+
+													// The user is updated in the database
 													User.findOneAndUpdate({ '_id': userId }, { 'salt': generatedSalt, 'encrypted_password': encryptedPassword }, function (err, person) {
 														if (err) {
-															errors.push("Cannot update database");
+															errors.push(erro('E_GENERIC_ERROR', "Cannot update database"));
 														} else {
 															console.log('Password updated');
 														}
@@ -927,13 +1087,10 @@ router.post('/account/password', function (req, res) {
 										}
 									},
 									function() {
-										errors.push('Invalid or no session provided');
+										errors.push(erro('E_INVALID_SESSION', 'Invalid or no session provided'));
 										respondCallback();
 									});
 	
 	
 	
-});
-
-router.post('/', function(req, res) {
 });

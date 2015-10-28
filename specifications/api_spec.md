@@ -12,23 +12,25 @@ Note: set the Authorization header with your session
 ~~~json
 {
   'status': ('ok'|'ko'),
-  'messages': [String],
+  'messages': [ {'error': String,
+                 'description': String }
+			  ],
   'data': {}
 }
 ~~~
 
-status: _ko_ when one or more errors occured (see _messages_ for more details) or _ok_ when the request is successful.
-
-data: when data is expected, this attribute is populated occordingly.
+status: _ko_ when one or more errors occured (see _messages_ for more details) or _ok_ when the request is successful.<br />
+messages: array of error messages, empty when there is no error. _error_ specifies the error identifier (documented in each method) and _description_ contains a short explanation of the error<br />
+data: when data is expected, this attribute is populated occordingly. Has no meaning when an error is returned.
 
 
 ## Requests
 
 ### Register
 
-PUT data
+POST data
 
-route: BASE/account
+route: BASE/register
 
 ~~~json
 {
@@ -63,8 +65,10 @@ Response:
 ~~~
 
 Errors:<br />
+E_EMAIL_ALREADY_REGISTERED : The supplied email address is already registered<br />
 E_INVALID_REQUEST : In case of missing attributes<br />
-E_BAD_PASSWORD : The password is too weak
+E_BAD_PASSWORD : The password is too weak<br />
+E_GENERIC_ERROR : An internal error as occured
 
 ### Login
 
@@ -100,7 +104,7 @@ Response, in case of failure:
 
 Errors:<br />
 E_INVALID_REQUEST : In case of missing attributes<br />
-E_INVALID_ACCOUNT : The email is incoreect<br />
+E_INVALID_ACCOUNT : The email is incorrect<br />
 E_BAD_PASSWORD : The password is incorrect<br />
 
 ### View stats
@@ -147,7 +151,9 @@ route: BASE/account/password
 _password_ must be at least 8 characters in length.
 
 Errors:<br />
-E_BAD_PASSWORD : The password is too weak
+E_BAD_PASSWORD : The password is too weak<br />
+E_INVALID_SESSION: No session provided or the provided session is invalid<br />
+E_GENERIC_ERROR : An internal error as occured
 
 ### Create a new poll
 
@@ -173,17 +179,17 @@ route: BASE/poll
 name: Must be between 3 and 30 characters in length
 questions: Is an array of questions. At least one must be provided.
 
-For each question:
-	name: This is the question that will be displayed. Must be between 5 ans 30 characters is length.
-	allowAnonymous: When set to _true_, your audience and yourself will not be able to see who voted. When anonymous vote is allowed, exepect less details in the poll report.
-	maxVote: Maximum number of votes each person can cast. Must be between 1 and 10.
-	timeout: Number of seconds during which the question will be shown. Once expired, voting on the question is no more allowed.
+For each question (each poll must contain at least one question):
+	name: This is the question that will be displayed. Must be between 5 and 50 characters is length.
+	allowAnonymous: When set to _true_, your audience and yourself will not be able to see who voted. When anonymous vote is allowed, expect less details in the poll report.
+	maxVote: Maximum number of votes each person can cast on the question. Must be between 1 and 10.
+	timeout: Number of seconds during which the question will be shown. Once expired, voting on the question is no more allowed. Must be between 15 and 600 seconds.
 	answers : array of possible answers for this question
 
-	For each answer:
-	name: Name of the displayed vote option
+	For each answer (each question must contain at least 2 answers):
+		name: Name of the displayed vote option
 
-Once created, the poll is in pending state. You are then free to open it.
+Once created, the poll is in pending state. You are then free to open it. If you want to edit it, you can do so before it is opened.
 
 Example:
 
@@ -216,11 +222,11 @@ Example:
 }
 ~~~
 
-Errors:
-E_INVALID_REQUEST : In case of missing attributes<br />
+Errors:<br />
+E_INVALID_REQUEST : In case of missing or invalid attributes<br />
 E_AT_LEAST_ONE_QUESTION : There must be at least one question<br />
-E_AT_LEAST_TWO_ANSWERS : For each question, there must be at least two answers
-
+E_AT_LEAST_TWO_ANSWERS : For each question, there must be at least two answers<br />
+E_GENERIC_ERROR : An internal error as occured
 
 ### Edit an existing poll
 
@@ -243,11 +249,15 @@ route: BASE/poll/$id
 }
 ~~~
 
-Errors:
+Errors:<br />
+E_INVALID_SESSION: No session provided or the provided session is invalid<br />
 E_INVALID_REQUEST : In case of missing attributes or invalid id specified<br />
 E_AT_LEAST_ONE_QUESTION : There must be at least one question<br />
 E_AT_LEAST_TWO_ANSWERS : For each question, there must be at least two answers<br />
-E_INVALID_STATE: The poll cannot be edited because it is either completed, closed or opened
+E_INVALID_STATE: The poll cannot be edited because it is either completed, closed or opened<br />
+E_INVALID_IDENTIFIER: The specified id is invalid<br />
+E_UNAUTHORIZED: You are not the poll owner<br />
+E_GENERIC_ERROR : An internal error as occured
 
 ### Delete an existing poll
 
@@ -255,9 +265,14 @@ DELETE request
 
 route: BASE/poll/$id
 
-Errors:
+You can only delete your own polls and they must be in one of these states: pending, closed, completed
+
+Errors:<br />
+E_INVALID_SESSION: No session provided or the provided session is invalid<br />
 E_INVALID_REQUEST : In case of missing attributes or invalid id specified<br />
-E_INVALID_STATE: The poll cannot be edited because it is in the opened state
+E_INVALID_STATE: The poll cannot be deleted because it is currently opened<br />
+E_UNAUTHORIZED: You are not the poll owner<br />
+E_GENERIC_ERROR : An internal error as occured
 
 ### Open a poll
 
@@ -267,15 +282,44 @@ route: BASE/poll/opened/$id
 Opening a poll is the process of accepting new clients who will be able to vote.
 A poll can only be opened when it is in the pending state, and only once.
 
-Once opened, a poll can be joined using a socket.io client. Refer to the socket.io section.
+Once opened, a poll can be joined using a socket.io client. Refer to the socket.io section for more details.
+
 A poll is automatically closed 6 hours after it is opened. In that case, it will be assigned the closed state.
 
-In normal circumstances, when the poll is successfully completed, it will be assigned the completed state.
+In normal circumstances, when the poll is successfully completed, it will be assigned the completed state. You will then be able to view the completed poll.
 
-Errors:
+Errors:<br />
+E_INVALID_SESSION: No session provided or the provided session is invalid<br />
 E_UNAUTHORIZED: You can only open a poll you have created<br />
 E_INVALID_IDENTIFIER: The specified poll does not exist<br />
-E_CANNOT_OPEN: This poll is either completed, already opened or has expired.
+E_INVALID_STATE: This poll is either completed, already opened or has expired.<br />
+E_GENERIC_ERROR: The poll could not be updated because of an internal error
+
+### Search users by email
+
+GET data
+route: BASE/users/email/$email
+
+This method allows you to search users by their email address.
+A maximum of 15 users having their email address starting with $email will be returned and, for each, a list of their opened polls is provided.
+
+Example:
+
+~~~json
+[{
+  'email': String,
+  'polls': [{ '_id': String,
+			   'name' String,
+			   'creation_date': Date
+			}]
+}]
+~~~
+
+The supplied email address must be at least 3 characters in length.
+
+Errors:<br />
+E_INVALID_SESSION: No session provided or the provided session is invalid<br />
+E_INVALID_REQUEST : When the supplied email address is too short<br />
 
 ### View poll
 
@@ -571,8 +615,11 @@ Example:
 }
 ~~~
 
-Errors:
-E_INVALID_STATE: The poll cannot be viewed because it is either in the opened or closed state
+Errors:<br />
+E_INVALID_SESSION: No session provided or the provided session is invalid<br />
+E_INVALID_IDENTIFIER: The specified id is invalid<br />
+E_INVALID_STATE: The poll cannot be viewed because it is either in the opened or closed state<br />
+E_UNAUTHORIZED: You are not the poll owner<br />
 
 ### List my polls
 
@@ -613,6 +660,9 @@ Example:
 }
 ~~~
 
+Errors:<br />
+E_INVALID_SESSION: No session provided or the provided session is invalid<br />
+
 # Socket.io
 
 Socket.io is used once a poll is opened and until it is closed or completed. You will use it to :
@@ -641,15 +691,17 @@ Payload:
   'firstName': String,
   'lastName': String,
   'email': String,
-  'voted': Boolean,
+  'voted': Boolean | Null,
 }
 ~~~
-voted: Is always null when the current question allows anonymous voting. Otherwise indicates if the user already casted at least one vote on the current question.
+voted: Is always null when the current question allows anonymous voting. It is set to false when the poll has not yet started or is closed. Otherwise indicates if the user already casted at least one (non-anonymous) vote on the current question.
+
+
 
 
 ### audienceList
 Issued to the speaker just after reception of the catchUp message.
-This message contains a list of all people connected to the poll.
+This message contains a list of all people connected to the poll (exception: speakers are not listed)
 
 Payload: Array
 ~~~json
@@ -664,7 +716,7 @@ Payload: Array
 ]
 ~~~
 
-voted: Is always null when the current question allows anonymous voting. Otherwise indicates if the user already casted at least one vote on the current question.
+voted: Is always null when the current question allows anonymous voting. Otherwise indicates if the user already casted at least one vote on the current question (values: true or false)
 
 Example:
 
@@ -752,7 +804,10 @@ Issued to the speaker when someone sends a vote or when the speaker reconnects t
 ~~~
 
 results: contains for each answer the number of votes casted. In the example above 5 votes were casted for the first answer, and 7 for the second answer.
-whovoted is null when catching up or when the question allows anonymous voting and the person who just voted did choose to vote anonymously. When not null, it contains the id of the person who voted.
+whovoted:
+* is null when catching up or when the question allows anonymous voting and the person who just voted did choose to vote anonymously.
+* is false if the poll is now closed or has not yet begun.
+* When not null, it contains the id of the person who voted.
 
 
 ### authAndJoinResult
@@ -786,9 +841,9 @@ Example, in case of error:
 }
 ~~~
 
-Errors:
-E_UNAUTHORIZED: You are not allowed to join this poll
-E_INVALID_IDENTIFIER: The specified poll does not exist
+Errors:<br />
+E_UNAUTHORIZED: You are not allowed to join this poll<br />
+E_INVALID_IDENTIFIER: The specified poll does not exist<br />
 E_INVALID_STATE: The specified poll is not open
 
 ### pollCompleted
@@ -872,6 +927,6 @@ Response in case of error:
 }
 ~~~
 
-Errors:
-E_UNAUTHORIZED : You are not authorized
-E_INVALID_REQUEST : Generic error. Either you casted your maximum number of votes, or the poll is not open anymore.
+Errors:<br />
+E_UNAUTHORIZED : You are not authorized<br />
+E_INVALID_REQUEST : Generic error. Either you casted your maximum number of votes, or the poll is not open anymore.<br />

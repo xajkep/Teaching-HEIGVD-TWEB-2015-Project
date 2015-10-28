@@ -1,8 +1,5 @@
 TWEB - Project
 
-The app is available here: https://shrouded-falls-6875.herokuapp.com
-Our presentation website is available here: http://julienamacher.github.io/twebpres/
-
 Description of the product
 ========================================
 QuickPoll is a web based application which allows customers to create, join, manage and partitipate to different polls. It is an ideal product for classrooms and education.
@@ -122,5 +119,39 @@ The server is composed of the following components:
 * Socket.IO : our foundation for async communication when the poll is open
 * MongoDB : storage engine used to store our business objects
 * Mongoose : layer of abstraction used between the application and the storage model
-* Jade : template engine used for the presentation aspect
+* Jade : template engine used for the presentation aspect of the home page
 * AngularJS is used as a client side presentation and business framework. It allows us to create a single page application more easily
+
+Deploy the application
+=======================================
+
+The application requires a handful of third party modules. These are listed in the package.json file and are installed by executing npm install in the expressjs folder.
+The application will serve HTTP pages and listen for Socket.IO clients on the port 8080. This port might be different depending on which ports are available on Heroku servers during deployment.
+
+Testing procedure
+=======================================
+
+API Copilot is the tool we used to validate our application.
+execute api-copilot run in the expressjs folder. It must execute without any problem.
+
+Note: all tests must be run on an empty database.<br />
+Note: all test steps are done in sequence. If any step fails, the rest of the steps cannot be validated.
+
+The following tests are performed:
+* First, the app's stats are retrieved
+* Three users are created
+* A request is then sent in order to create a 4th user (whose email is already registered). This should be refused by the server.
+* A new poll is created by one of the new users
+* A list of polls is retrieved. It must contain the poll just created
+* We then retrieve the specific poll we created.
+* A check asserting the equality of the created poll vs the poll we wanted to create is performed.
+* A poll modification request is sent to the server
+* The (now modified) poll is retrieved and we check that is has really been updated
+* The poll is then opened (meaning people can now join it)
+* We then try to open it again. This should fail (because it is already opened)
+* We then retrieve the app's stats once again
+* The just retrieved app stats must contain 3 more users and one more poll than what was returned when we retrieved the stats at the start of the tests
+
+All tests must pass in order to declare the app as working.
+
+2015-10-28: Tests passed

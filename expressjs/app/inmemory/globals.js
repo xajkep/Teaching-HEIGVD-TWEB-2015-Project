@@ -1,3 +1,6 @@
+/*
+This file contains all functions related to the lifecycle of a poll (from opening to closing)
+*/
 var HashMap = require('hashmap');
 var polls = new HashMap();
 var pollHardTimeout = 3600 * 6;
@@ -5,6 +8,13 @@ var pollHardTimeout = 3600 * 6;
 var mongoose = require('mongoose');
 var Poll = mongoose.model('Poll');
 
+/*
+Returns the number of times (>=0) the specified user already casted a vote on the current question in the specified poll
+
+Parameters:
+poll: Object describing the poll
+userId: Id of the user
+*/
 var countAlreadyVoted = function(poll, userId) {
 	var alreadyVotedCount = 0;
 	
@@ -25,6 +35,22 @@ var countAlreadyVoted = function(poll, userId) {
 	return alreadyVotedCount;
 };
 
+/*
+This function closes a specific poll.
+Closing is done when:
+- The poll just finished (each answer has been displayed on screen) or
+- The hard timeout just kicked in. This means the poll was opened for too long.
+
+Closing a poll means:
+- Unloading it from memory
+- Updating the database to mark it as completed (when each answer has been displayed on screen) or
+closed (when the hard timeout kicked in). This is a parameter.
+
+Parameters:
+poll: Object describing the poll
+pollCompleted: true if hard timeout did NOT kick it
+cbWhenPollIsClosed: callback executed when the poll is closed. The poll's id is received as parameter
+*/
 var unloadPoll = function(poll, pollCompleted, cbWhenPollIsClosed) {
 	clearTimeout(poll.timeoutHardUnloadHdl);
 	poll.timeoutHardUnloadHdl = null;
@@ -40,6 +66,14 @@ var unloadPoll = function(poll, pollCompleted, cbWhenPollIsClosed) {
 
 module.exports = {
 
+	/*
+	This function loads a poll in memory so it can be used for live voting.
+	The field status of the specified poll is updated in the database to: opened
+	
+	Parameters:
+	poll: Object describing the poll
+	cbWhenPollIsClosed: Callback executed when the poll is closed (either manually or automatically). The poll's id is received as parameter
+	*/
 	loadPollInMemory: function(poll, cbWhenPollIsClosed) {
 		console.log('Loading poll in memory: ' + poll._id);
 		
@@ -64,6 +98,17 @@ module.exports = {
 		return true;
 	},
 	
+	/*
+	This function registers a new vote for the active question in the specified poll
+	
+	Parameters:
+	pollId: Id of the poll
+	userId: If of the user who cast a vote
+	answerIndex: Index of the answer to vote for (0 for the first answer, n-1 for the last answer)
+	voteAsAnonymous: true to cast this vote as anonymous, false otherwise (has no effect if the active question does not allow anonymous voting)
+	cbWhenOK: callback executed when the vote has been successfully registered. The amount of time (in ms) since the question was opened and the vote casted is received as first parameter. The second parameter indicates if the vote was registered as anonymous (true) or not (false)
+	cbWhenKO: callback executed when the vote cannot be casted (invalid pollId specified, poll not in memory, voting no more allowed in the poll, the user already casted too many votes, invalid answerIndex specified)
+	*/
 	vote: function(pollId, answerIndex, userId, voteAsAnonymous, cbWhenOK, cbWhenKO) {
 		if (!polls.has(pollId)) {
 			cbWhenKO();
@@ -103,9 +148,33 @@ module.exports = {
 		answer.users.push({ 'user': userId, 'anonymous': voteAsAnonymousRegister, 'timing': deltaT });
 		console.log('deltaT=' + deltaT);
 		
-		cbWhenOK(deltaT);
+		cbWhenOK(deltaT, voteAsAnonymousRegister);
 	},
 	
+	/*
+	This function returns "live voting results" for the active question in the specified poll
+	
+	Parameters:
+	pollId: Id of the poll
+	
+	Returns false in case of error (invalid pollId specified, poll not in memory, voting not started in the poll)
+	        an array of objects otherwise.
+			
+			Example:
+			
+			If the first answer of the active question in the supplied poll id has 32 votes, the second 3 votes and the third 6 votes, the array will be:
+			
+			[ {
+				'count': 32,
+			  },
+			  {
+				'count': 3,
+			  },
+			  {
+				'count': 6,
+			  }
+			]
+	*/
 	getLiveResults: function(pollId) {
 		if (!polls.has(pollId)) {
 			return false;
@@ -131,6 +200,35 @@ module.exports = {
 		return response;
 	},
 
+	/*
+	This function will return the active question in the specified poll. It will decorate it with specific user data.
+	
+	Parameters:
+	pollId: Id of the poll
+	userId: If of the user requesting the data
+	
+	Returns false in case of error (invalid pollId specified, poll not in memory, voting not started in the poll)
+	        object (otherwise) describing the current question and what the user can do
+			
+			Example:
+			
+			Let's admin the active question timeout is set to 15 seconds.
+			The specified user just joined the poll. Of course, he has less time to vote.
+			
+			'question': Current question in natural language
+			'voted': Number of times the specified user already voted on the active question
+			'timeout': Amount of time in seconds the user can vote until the timeout for this question ends
+			'current': Current question in the poll (starts at 1 for the first question)
+			'total': Number of questions in the poll
+			
+			{
+				'question': 'How is the weather today?',
+				'voted': 3,
+				'timeout': 6,
+				'current': 2,
+				'total': 5
+			}
+	*/
 	getCurrentQuestion: function(pollId, userId) {
 		if (!polls.has(pollId)) {
 			return false;
@@ -148,9 +246,32 @@ module.exports = {
 		var remainingTimeToVote = currentTime >= poll.timeoutAt ? 0 : Math.floor((poll.timeoutAt - currentTime) / 1000);
 		
 		console.log('alreadyVotedCount=' + alreadyVotedCount);
-		return { 'question': poll.questions[poll.currentQuestion], 'voted': alreadyVotedCount, 'timeout': remainingTimeToVote, 'current': (poll.currentQuestion + 1), 'total': poll.questions.length  };
+		
+		return { 'question': poll.questions[poll.currentQuestion],
+		         'voted': alreadyVotedCount,
+				 'timeout': remainingTimeToVote,
+				 'current': (poll.currentQuestion + 1),
+				 'total': poll.questions.length  };
 	},
 
+	/*
+	This function is called by the poll's speaker
+	It will move to the next question in the poll
+	
+	cbWhenMovedToNextQuestion: callback executed when the active question is changed. Receives the following parameters:
+								current question: Current active question
+								timeout: Time allowed to vote on this question (voting starts immediately)
+								index of the current question: starts at 0 for the first question
+								number of questions
+								
+	cbWhenPollCompleted: callback executed when the poll is completed (no more questions to show)
+	                     When received, it allows you to free your resources (socket.io sockets for instance).
+						 A callback is passed to this callback which you MUST execute.
+						 
+	cbWhenQuestionTimeout: callback executed when the active question's timer reaches zero (time allowed to vote is exhausted). No parameter is passed.
+	
+	cbErrorMoveNextQuestion: callback executed when it is impossible to go to the next question. For example when the poll is not loaded in memory
+	*/
 	goNextQuestion: function(pollId, cbWhenMovedToNextQuestion, cbWhenPollCompleted, cbWhenQuestionTimeout, cbErrorMoveNextQuestion) {
 		console.log('Moving on to the next question in poll: ' + pollId);
 		
@@ -187,8 +308,6 @@ module.exports = {
 													cbWhenPollCompleted(function() {
 														unloadPoll(poll, true, function() {});
 													});
-													
-													
 												}
 											 };
 
@@ -200,15 +319,17 @@ module.exports = {
 				executeWhenQuestionTimeout(poll);
 			} else {
 				if (poll.currentQuestion > -1) {
-					poll.questions[poll.currentQuestion] = {}; // freeing memory
+					poll.questions[poll.currentQuestion] = {};
+					// freeing memory. The last question is of no more use.
+					// Don't delete poll.questions[poll.currentQuestion] though! since currentQuestion contains the index of the current question in the array.
 				}
 				
+				// Incrementing the active question
 				poll.currentQuestion = poll.currentQuestion + 1;
-				poll.voteAllowed = true;
-				
-				
+
 				var currentQuestion = poll.questions[poll.currentQuestion];
 
+				// Setting the timeout of the current question
 				currentQuestion.started = new Date();
 				var timeoutTime = new Date();
 				timeoutTime.setSeconds(timeoutTime.getSeconds() + currentQuestion.timeout);
@@ -217,11 +338,24 @@ module.exports = {
 				poll.cancelTimeout = setTimeout(function() {
 					executeWhenQuestionTimeout(poll);
 				}, currentQuestion.timeout * 1000);
+				
+				poll.voteAllowed = true;
+				
 				cbWhenMovedToNextQuestion(currentQuestion, currentQuestion.timeout, poll.currentQuestion, poll.questions.length);
 			}
 		}
 	},
 	
+	/*
+	This function is called to determine the role of a user who wants to join the poll.
+	
+	Parameters:
+	pollId: Id of the poll to join
+	userId: Id of the user who wants to join the poll
+	
+	Returns either 'speaker' if the supplied user is the one who created the poll (and therefore must join it with the speaker console)
+	        or 'audience' if the user is not the one who created the poll and therefore must join it as regular audience
+	*/
 	userJoinPoll: function(pollId, userId) {
 		if (!polls.has(pollId)) {
 			return false;

@@ -1,5 +1,15 @@
 extends layout
 
 block content
-  h1= title
-  p Welcome to #{title}
+	h1= title
+  
+	p
+		a(href='/sp/#/login') Login
+		br
+		a(href='/sp/#/register') Register a new account
+		br
+  
+	p
+		p #{usersCount} users registered
+		p #{pollsCount} polls created
+		p #{openPollsCount} polls created

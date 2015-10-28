@@ -14,7 +14,8 @@
     "jsonwebtoken": "^5.4.0",
     "mongoose": "^4.1.9",
     "socket.io": "^1.3.7",
-    "underscore": "^1.8.3"
+    "underscore": "^1.8.3",
+    "validator": "^4.2.1"
   },
   "devDependencies": {},
   "scripts": {

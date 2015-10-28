@@ -1,5 +1,6 @@
 var tweb = angular.module('tweb', ['ngRoute', 'ngAnimate', 'chart.js']);
 
+/*
 tweb.directive("contenteditable", function() {
   return {
     restrict: "A",
@@ -20,6 +21,7 @@ tweb.directive("contenteditable", function() {
     }
   };
 });
+*/
 
 /*
 This factory is used to store data that is shared accross controllers
@@ -37,6 +39,22 @@ tweb.factory('UserDataFactory', function () {
 			userData.session = pSession;
 		}
 	}
+});
+
+/*
+This factory is used as a helper to format error messages received in response from the REST API
+in order to display the returned human readable errors
+*/
+tweb.factory('DisplayErrorMessagesFromAPI', function () {
+    return function(errors) {
+		var errorsDescriptions = [];
+		
+		for (var i=0;i<errors.length;i++) {
+			errorsDescriptions.push(errors[i].description);
+		}
+		
+		return errorsDescriptions.join();
+	};
 });
 
 tweb.factory('ServerPushPoll', function () {
@@ -802,7 +820,7 @@ tweb.controller('polls', function($scope, $http, $location, UserDataFactory, Ser
 	$scope.openPoll = function(pollId) {
 		$http({
 			method: 'POST',
-			url: "/api/v1/poll/" + pollId,
+			url: "/api/v1/poll/opened/" + pollId,
 			cache: false,
 			headers: {
 				'Authorization': $scope.userSession
@@ -884,7 +902,16 @@ tweb.controller('join', function($scope) {
 	$scope.message = 'Page: join';
 });
 
-tweb.controller('register', function($scope, $http, $location, UserDataFactory) {
+tweb.controller('register', function($scope, $http, $location, UserDataFactory, DisplayErrorMessagesFromAPI) {
+	
+	$scope.user = {
+		'firstname': '',
+		'lastname': '',
+		'email': '',
+		'password1': '',
+		'password2': ''
+	};
+	
 	$scope.register = function() {
 
 		if (UserDataFactory.getSession() != null) {
@@ -900,24 +927,32 @@ tweb.controller('register', function($scope, $http, $location, UserDataFactory) 
 			var submittedPassword2 = $scope.user.password2;
 
 			if (submittedPassword1 != submittedPassword2) {
-				errors.push('Password do not match');
-			}
-			
-			$http.put("/api/v1/register", {
-				email: submittedEmail,
-				firstname: submittedFirstname,
-				lastname: submittedLastname,
-				password: submittedPassword1
-			})
-			.success(function(data, status, headers, config) {
-				if (data.status == 'ok') {
-					alert('Registered.');
-					$location.path("/login");
-				} else {
-					alert("Could not register: " + data.messages.join());
+				errors.push('Passwords do not match');
+			} else {
+				if (submittedPassword1.length < 8) {
+					errors.push('Password must be at least 8 characters in length');
 				}
-			}).error(function(data, status, headers, config) {
-			});
+			}
+
+			if (errors.length == 0) {
+				$http.post("/api/v1/register", {
+					email: submittedEmail,
+					firstname: submittedFirstname,
+					lastname: submittedLastname,
+					password: submittedPassword1
+				})
+				.success(function(data, status, headers, config) {
+					if (data.status == 'ok') {
+						alert('Registered.');
+						$location.path("/login");
+					} else {
+						alert("Could not register: " + DisplayErrorMessagesFromAPI(data.messages));
+					}
+				}).error(function(data, status, headers, config) {
+				});
+			} else {
+				alert(errors.join());
+			}
 		}
 	};
 });
