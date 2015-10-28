@@ -132,7 +132,7 @@ Testing procedure
 =======================================
 
 API Copilot is the tool we used to validate our application.<br />
-To install it, first run npm install in the expressjs and then execute npm install -g api-copilot-cli
+To install it, first run npm install in the expressjs folder and then execute npm install -g api-copilot-cli
 execute api-copilot run in the expressjs folder. It must execute without any problem.<br />
 
 Note: all tests must be run on an empty database.<br />
