@@ -87,6 +87,9 @@ sio.sockets.on('connection', function (socket) {
 			
 			// Joining either the speaker or the audience room
 			socket.join('poll_' + socket.pollId + '_' + (socket.isSpeaker === true ? 'speaker' : 'audience'));
+			
+			var pollDetails = globals.getPollDetails(socket.pollId);
+			socket.emit('pollDetails', pollDetails);
 		}
 	});
 	
@@ -97,12 +100,13 @@ sio.sockets.on('connection', function (socket) {
 		checkAndExtractFromSessionToken(authData.session,
 										function(userId) {
 											
-											// userJoinPoll returns false if the join failed. Otherwise either 'speaker' or 'audience'
 											var joinPollResult = globals.userJoinPoll(authData.poll, userId);
 		
 											if (joinPollResult === false) {
 												console.log('ERROR: cannot join poll');
-												socket.emit('authAndJoinResult', {'status': 'ko', 'messages': ['Cannot join poll']});
+												var errors = [];
+												errors.push(erro('E_INVALID_IDENTIFIER', 'The specified poll does not exist or is not opened'));
+												socket.emit('authAndJoinResult', {'status': 'ko', 'messages': errors});
 											} else {
 												console.log('Socket.io authentication success');
 												
@@ -110,6 +114,7 @@ sio.sockets.on('connection', function (socket) {
 												
 												User.findOne({ '_id': userId }, function (err, user) {
 												  if (err || user == null) {
+													  // Should never happen
 													  console.log('Invalid user id provided');
 												  } else {
 														socket.isAuthenticated = true;
@@ -165,7 +170,9 @@ sio.sockets.on('connection', function (socket) {
 									   console.log('ERROR: cannot move to the next question');
 								   });
 		} else {
-			socket.emit('goNextQuestionResult', {'status': 'ko', 'messages': ['Unauthorized']});
+			var errors = [];
+			errors.push(erro('E_UNAUTHORIZED', 'You are either not authenticated or not a speaker'));
+			socket.emit('goNextQuestionResult', {'status': 'ko', 'messages': errors});
 		}
 	});
 	
@@ -195,10 +202,14 @@ sio.sockets.on('connection', function (socket) {
 							sio.to('poll_' + socket.pollId + '_speaker').emit('liveVoteResults', { 'results': liveResults, 'whovoted': whoVoted, 'timing': timing });
 						}, function() {
 							// An error occured during the vote registration
-							socket.emit('voteResult', {'status': 'ko', 'messages': ['Invalid data or request']});
+							var errors = [];
+							errors.push(erro('E_GENERIC_ERROR', 'A generic error occured'));
+							socket.emit('voteResult', {'status': 'ko', 'messages': errors});
 						});
 		} else {
-			socket.emit('voteResult', {'status': 'ko', 'messages': ['Unauthorized']});
+			var errors = [];
+			errors.push(erro('E_UNAUTHORIZED', 'You are not authenticated'));
+			socket.emit('voteResult', {'status': 'ko', 'messages': errors});
 		}
 	});
 });
@@ -330,10 +341,13 @@ router.get('/users/email/:email', function (req, res) {
 														
 														if (polls.length > 0) {
 															
-															var pollsToAdd = polld.toObject();
+															var pollsToAdd = [];
 															
-															for (var z=0;z<pollsToAdd.length;z++) {
-																delete pollsToAdd[i].created_by;
+															for (var z=0;z<polls.length;z++) {
+																var p = polls[z].toObject();
+																delete p.created_by;
+																
+																pollsToAdd.push(p);
 															}
 															
 															currentUsers[polls[0].created_by].polls = pollsToAdd;

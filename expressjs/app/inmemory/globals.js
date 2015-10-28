@@ -362,11 +362,19 @@ module.exports = {
 		}
 		
 		var poll = polls.get(pollId);
-
-		if (poll.created_by == userId) {
-			return 'speaker';
-		} else {
-			return 'audience';
+		
+		return (poll.created_by == userId) ? 'speaker' : 'audience';
+	},
+	
+	getPollDetails: function(pollId) {
+		if (!polls.has(pollId)) {
+			return false;
 		}
+		
+		var poll = polls.get(pollId);
+		
+		return { 
+			     'name': poll.name
+			   };
 	}
 };

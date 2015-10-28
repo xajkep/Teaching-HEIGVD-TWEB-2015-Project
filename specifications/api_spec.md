@@ -680,6 +680,18 @@ One connected, start by sending the authAndJoin message.
 
 ## Server => client messages
 
+### pollDetails
+Issued to the client after a successful authentication (authAndJoin)
+
+Payload:
+~~~json
+{
+  'name': String
+}
+~~~
+
+name: name of the poll
+
 ### userDisconnect
 Issued to the speaker when a previously connected user has disconnected
 
@@ -786,9 +798,8 @@ This message is only sent in case of error.
 }
 ~~~
 
-ERRORS:
-E_UNAUTHORIZED: Only a speaker can issue the goNextQuestion message
-
+Errors:<br />
+E_UNAUTHORIZED: You are either not authenticated or not a speaker
 
 ### liveVoteResults
 Issued to the speaker when someone sends a vote or when the speaker reconnects to the poll.
@@ -813,6 +824,13 @@ whovoted:
 * is false if the poll is now closed or has not yet begun.
 * When not null, it contains the id of the person who voted.
 
+### voteResult
+
+Issued in response to the vote message.
+
+Errors:<br />
+E_UNAUTHORIZED: You are not authenticated
+E_GENERIC_ERROR: A generic error occured (you specified an invalid answer index, the poll is completed or voting has ended)
 
 ### authAndJoinResult
 Issued in response to the authAndJoin message.
@@ -841,14 +859,15 @@ Example, in case of error:
 ~~~json
 {
   'status': 'ko',
-  'messages': ['E_UNAUTHORIZED']
+  'messages': [ { 'error': 'E_INVALID_IDENTIFIER',
+                  'description': 'The specified poll does not exist or is not opened'
+				} ]
 }
 ~~~
 
 Errors:<br />
-E_UNAUTHORIZED: You are not allowed to join this poll<br />
-E_INVALID_IDENTIFIER: The specified poll does not exist<br />
-E_INVALID_STATE: The specified poll is not open
+(E_UNAUTHORIZED: You are not allowed to join this poll)<br />
+E_INVALID_IDENTIFIER: The specified poll does not exist or is not opened<br />
 
 ### pollCompleted
 Issued when the poll is completed.
@@ -872,14 +891,15 @@ This message is the first to be issued to the server.
 }
 ~~~
 
-session: same session id obtained using the REST API
-poll: poll id you want to join
+session: same session id obtained using the REST API<br />
+poll: poll id you want to join. The poll must be opened.
 
 The server will then issue an authAndJoinResponse message.
 
 ## catchUp
 This message is issued after a successful authAndJoin
 It tells the server that you are ready to receive asynchronous messages.
+The server will not respond when a catchUp message is sent from an unauthenticated client.
 
 Once sent, the server will immediately send you these messages, so you can catch up:
 * audienceList (only if you are a speaker)
@@ -891,7 +911,7 @@ When the server receives this message, it will issue a userConnect to the speake
 No payload.
 
 ## goNextQuestion
-This message is sent to go to the next question in the poll.
+This message is sent to go to the next question in the poll. Only a speaker can issue this message.
 
 This will result in either:
 * a nextQuestion message, if the current question is not the last question in the poll.
