@@ -6,7 +6,7 @@ var bodyParser = require('body-parser');
 
 
 // MongoDB connection string
-var mongoDBConfig = 'mongodb://localhost/tweb' // 'mongodb://localhost/tweb' 'mongodb://tweb:dwmrqi5y@ds043694.mongolab.com:43694/tweb';
+var mongoDBConfig = 'mongodb://tweb:dwmrqi5y@ds043694.mongolab.com:43694/tweb'; // 'mongodb://localhost/tweb' 'mongodb://tweb:dwmrqi5y@ds043694.mongolab.com:43694/tweb';
 
 // Listening port. Is the same for the Web server and the Socket.IO server
 var appListenOnPortConfig = process.env.PORT || 8080;

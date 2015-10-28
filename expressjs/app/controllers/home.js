@@ -19,7 +19,7 @@ router.get('/', function(req, res) {
 	User.count({}, function(err, usersCount){
 		Poll.count({}, function(err, pollsCount) {
 			Poll.count({'state': 'opened'}, function(err, pollsCountOpened) {
-				res.render('index', { 'title': 'Home page',
+				res.render('index', { 'title': 'QuickPoll',
 				           'usersCount': usersCount,
 				           'pollsCount': pollsCount,
 				           'openPollsCount': pollsCountOpened });
