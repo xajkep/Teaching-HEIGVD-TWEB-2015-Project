@@ -117,6 +117,18 @@ sio.sockets.on('connection', function (socket) {
 													  // Should never happen
 													  console.log('Invalid user id provided');
 												  } else {
+													  
+														// Disconnecting others sessions the same user might already have
+														for (var socketId in sio.nsps['/'].adapter.rooms['poll_' + authData.poll + '_audience']){
+															var socketInRoom = sio.sockets.connected[socketId];
+															
+															if (socketInRoom.userId == userId) {
+																console.log('Diconnecting duplicate session');
+																socketInRoom.emit('duplicateConnection');
+																socketInRoom.disconnect();
+															}
+														}
+													  
 														socket.isAuthenticated = true;
 														socket.userId = userId;
 														socket.firstName = user.firstname;
@@ -253,7 +265,7 @@ router.post('/poll/opened/:id', function (req, res) {
 													if (!globals.loadPollInMemory(poll, function() {
 														toDoWhenPollIsClosed(poll._id);
 													})) {
-														errors.push(error('E_GENERIC_ERROR', 'Cannot load poll in memory'));
+														errors.push(erro('E_GENERIC_ERROR', 'Cannot load poll in memory'));
 													}
 
 												} else {
@@ -291,7 +303,7 @@ router.get('/polls', function (req, res) {
 										});
 									},
 									function() {
-										errors.push(error('E_INVALID_SESSION', 'Invalid or no session provided'));
+										errors.push(erro('E_INVALID_SESSION', 'Invalid or no session provided'));
 										respondCallback();
 									});
 });
@@ -415,12 +427,12 @@ router.get('/poll/:id', function (req, res) {
 																var currentUser = currentAnswer.users[z];
 																
 																// Since mongoose did a join, the _id whould be a duplicate. It is removed once.
-																console.log('deleting currentUser._id: ' + currentUser._id);
+																//console.log('deleting currentUser._id: ' + currentUser._id);
 																delete currentUser._id;
 																
 																// If the user voted anonymously, his id is removed from the response
 																if (currentUser.anonymous) {
-																	console.log('deleting currentUser.user: ' + currentUser.user);
+																	//console.log('deleting currentUser.user: ' + currentUser.user);
 																	delete currentUser.user;
 																}
 															}

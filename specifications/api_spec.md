@@ -80,6 +80,9 @@ POST data
 
 route: BASE/account
 
+Once single user cannot join the same poll more than once at the same time.<br />
+If this occurs, its others sessions previously connected to this same pool he is trying to join will be issued a duplicateConnection and are then terminated.
+
 ~~~json
 {
   'email': String,
@@ -892,6 +895,12 @@ Errors:<br />
 E_UNAUTHORIZED: You are not allowed to join this poll<br />
 E_INVALID_IDENTIFIER: The specified poll does not exist or is not opened<br />
 
+### duplicateConnection
+
+This message is issued when the same user just connected to the same poll while he was already connected to that one.
+
+No payload.
+
 ### pollCompleted
 Issued when the poll is completed.
 
@@ -937,7 +946,7 @@ No payload.
 ## goNextQuestion
 This message is sent to go to the next question in the poll. Only a speaker can issue this message. It is required to issue this message to display the first question.
 
-This will result in either:
+This will result in either a broadcast (to all connected clients who joined the same poll) of:
 * a nextQuestion message, if the current question is not the last question in the poll.
 * a pollCompleted message, if the current question is the last question in the poll.
 
