@@ -184,11 +184,11 @@ name: Must be between 3 and 30 characters in length
 questions: Is an array of questions. At least one must be provided.
 
 For each question (each poll must contain at least one question):<br />
-	name: This is the question that will be displayed. Must be between 5 and 50 characters is length.<br />
-	allowAnonymous: When set to _true_, your audience and yourself will not be able to see who voted. When anonymous vote is allowed, expect less details in the poll report.<br />
-	maxVote: Maximum number of votes each person can cast on the question. Must be between 1 and 10.<br />
-	timeout: Number of seconds during which the question will be shown. Once expired, voting on the question is no more allowed. Must be between 15 and 600 seconds.<br />
-	answers : array of possible answers for this question<br />
+	* name: This is the question that will be displayed. Must be between 5 and 50 characters is length.<br />
+	* allowAnonymous: When set to _true_, your audience and yourself will not be able to see who voted. When anonymous vote is allowed, expect less details in the poll report.<br />
+	* maxVote: Maximum number of votes each person can cast on the question. Must be between 1 and 10.<br />
+	* timeout: Number of seconds during which the question will be shown. Once expired, voting on the question is no more allowed. Must be between 15 and 600 seconds.<br />
+	* answers : array of possible answers for this question<br />
 
 	For each answer (each question must contain at least 2 answers):
 		name: Name of the displayed vote option
