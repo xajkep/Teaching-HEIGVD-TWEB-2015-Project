@@ -24,7 +24,7 @@ This section provides the first draft of the TWEB's project specifications and u
 ----------------------------------------
 The user starts on the home page of the app where he has two choices:
 	Create an account, which requires providing an e-mail address and a password
-	Login with the credentials (je already has an account)
+	Login with the credentials (he already has an account)
 
 ----------------------------------------
 2) Create Poll
@@ -132,7 +132,7 @@ Testing procedure
 =======================================
 
 API Copilot is the tool we used to validate our application.<br />
-To install it, first run npm install in the expressjs folder and then execute npm install -g api-copilot-cli
+To install it, first run: "npm install" in the expressjs folder and then execute "npm install -g api-copilot-cli"
 execute api-copilot run in the expressjs folder. It must execute without any problem.<br />
 
 Note: all tests must be run on an empty database.<br />
