@@ -897,7 +897,8 @@ E_INVALID_IDENTIFIER: The specified poll does not exist or is not opened<br />
 
 ### duplicateConnection
 
-This message is issued when the same user just connected to the same poll while he was already connected to that one.
+This message is issued when the same user just connected to the same poll while he was already connected to that one.<br />
+The new connection is authorized while all others connected to the same poll receive this message and are then disconnected.
 
 No payload.
 
