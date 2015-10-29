@@ -180,19 +180,21 @@ route: BASE/poll
 }
 ~~~
 
-name: Must be between 3 and 30 characters in length
+name: Must be between 3 and 30 characters in length<br />
 questions: Is an array of questions. At least one must be provided.
 
 For each question (each poll must contain at least one question):<br />
 
-* name: This is the question that will be displayed. Must be between 5 and 50 characters is length.<br /> 
+* name: This is the question that will be displayed. Must be between 5 and 50 characters is length.<br />
 * allowAnonymous: When set to _true_, your audience and yourself will not be able to see who voted. When anonymous vote is allowed, expect less details in the poll report.<br />
-* maxVote: Maximum number of votes each person can cast on the question. Must be between 1 and 10.<br /> 
+* maxVote: Maximum number of votes each person can cast on the question. Must be between 1 and 10.<br />
 * timeout: Number of seconds during which the question will be shown. Once expired, voting on the question is no more allowed. Must be between 15 and 600 seconds.<br />
 * answers : array of possible answers for this question<br />
 
-	For each answer (each question must contain at least 2 answers):
-		name: Name of the displayed vote option
+For each answer (each question must contain at least 2 answers):
+name: Name of the displayed vote option
+
+Each poll can contain a maximum of 50 questions and each question must not contain more than 10 answers.
 
 Once created, the poll is in pending state. You are then free to open it. If you want to edit it, you can do so before it is opened.
 
@@ -238,6 +240,8 @@ E_GENERIC_ERROR : An internal error as occured
 PUT request
 
 route: BASE/poll/$id
+
+Same request format as Create a new poll.
 
 ~~~json
 {
@@ -414,6 +418,7 @@ Example:
             'users':[
               {
                 'anonymous':false,
+                'timing': 1200,
                 'user':{
                   '_id':'86b96d75f851c982204c8707fb62248996462581',
                   'email':'test@test.com2',
@@ -423,6 +428,7 @@ Example:
               },
               {
                 'anonymous':false,
+                'timing': 1231,
                 'user':{
                   '_id':'50760a3f94ff03361a3948c46a13b33fbd9570d2',
                   'email':'test@test.com3',
@@ -445,6 +451,7 @@ Example:
             'users':[
               {
                 'anonymous':false,
+                'timing': 1763,
                 'user':{
                   '_id':'50760a3f94ff03361a3948c46a13b33fbd9570d2',
                   'email':'test@test.com3',
@@ -460,6 +467,7 @@ Example:
             'users':[
               {
                 'anonymous':false,
+                'timing': 3428,
                 'user':{
                   '_id':'86b96d75f851c982204c8707fb62248996462581',
                   'email':'test@test.com2',
@@ -469,6 +477,7 @@ Example:
               },
               {
                 'anonymous':false,
+                'timing': 3988,
                 'user':{
                   '_id':'50760a3f94ff03361a3948c46a13b33fbd9570d2',
                   'email':'test@test.com3',
@@ -493,6 +502,7 @@ Example:
             'users':[
               {
                 'anonymous':false,
+                'timing': 1876,
                 'user':{
                   '_id':'50760a3f94ff03361a3948c46a13b33fbd9570d2',
                   'email':'test@test.com3',
@@ -502,6 +512,7 @@ Example:
               },
               {
                 'anonymous':false,
+                'timing': 6711,
                 'user':{
                   '_id':'86b96d75f851c982204c8707fb62248996462581',
                   'email':'test@test.com2',
@@ -511,6 +522,7 @@ Example:
               },
               {
                 'anonymous':false,
+                'timing': 6900,
                 'user':{
                   '_id':'86b96d75f851c982204c8707fb62248996462581',
                   'email':'test@test.com2',
@@ -520,6 +532,7 @@ Example:
               },
               {
                 'anonymous':false,
+                'timing': 7088,
                 'user':{
                   '_id':'86b96d75f851c982204c8707fb62248996462581',
                   'email':'test@test.com2',
@@ -529,6 +542,7 @@ Example:
               },
               {
                 'anonymous':false,
+                'timing': 8977,
                 'user':{
                   '_id':'86b96d75f851c982204c8707fb62248996462581',
                   'email':'test@test.com2',
@@ -538,6 +552,7 @@ Example:
               },
               {
                 'anonymous':false,
+                'timing': 8977,
                 'user':{
                   '_id':'86b96d75f851c982204c8707fb62248996462581',
                   'email':'test@test.com2',
@@ -547,6 +562,7 @@ Example:
               },
               {
                 'anonymous':false,
+                'timing': 8997,
                 'user':{
                   '_id':'50760a3f94ff03361a3948c46a13b33fbd9570d2',
                   'email':'test@test.com3',
@@ -562,6 +578,7 @@ Example:
             'users':[
               {
                 'anonymous':false,
+                'timing': 9121,
                 'user':{
                   '_id':'50760a3f94ff03361a3948c46a13b33fbd9570d2',
                   'email':'test@test.com3',
@@ -571,6 +588,7 @@ Example:
               },
               {
                 'anonymous':false,
+                'timing': 12345,
                 'user':{
                   '_id':'50760a3f94ff03361a3948c46a13b33fbd9570d2',
                   'email':'test@test.com3',
@@ -594,7 +612,8 @@ Example:
             '_id':'5a39987657e8f45eea39fa32e3b5a85d120eeb8b-2-0',
             'users':[
               {
-                'anonymous':true
+                'anonymous':true,
+                'timing': 4566
               }
             ]
           },
@@ -604,6 +623,7 @@ Example:
             'users':[
               {
                 'anonymous':false,
+                'timing': 22244,
                 'user':{
                   '_id':'86b96d75f851c982204c8707fb62248996462581',
                   'email':'test@test.com2',
@@ -676,7 +696,7 @@ Socket.io is used once a poll is opened and until it is closed or completed. You
 * Receive live results
 * Be notified of the next question
 
-The endpoint is the same server as the Web server. Encoding it UTF-8.
+The endpoint is the same server and port as the Web server. Encoding it UTF-8.
 One connected, start by sending the authAndJoin message.
 
 ## Server => client messages
@@ -691,7 +711,7 @@ Payload:
 }
 ~~~
 
-name: name of the poll
+name: name of the poll you just joined
 
 ### userDisconnect
 Issued to the speaker when a previously connected user has disconnected
@@ -790,12 +810,14 @@ total is the number of questions in the poll
 ### goNextQuestionResult
 Issued in response to the goNextQuestion message.
 
-This message is only sent in case of error.
+This message is only sent in case of error and its format is the same as described in General response.
 
 ~~~json
 {
-	'status': String,
-	'messages': [],
+  'status': ('ok'|'ko'),
+  'messages': [ {'error': String,
+                 'description': String }
+			  ]
 }
 ~~~
 
@@ -867,7 +889,7 @@ Example, in case of error:
 ~~~
 
 Errors:<br />
-(E_UNAUTHORIZED: You are not allowed to join this poll)<br />
+E_UNAUTHORIZED: You are not allowed to join this poll<br />
 E_INVALID_IDENTIFIER: The specified poll does not exist or is not opened<br />
 
 ### pollCompleted
@@ -892,7 +914,7 @@ This message is the first to be issued to the server.
 }
 ~~~
 
-session: same session id obtained using the REST API<br />
+session: same session id obtained using the authenticate REST API method<br />
 poll: poll id you want to join. The poll must be opened.
 
 The server will then issue an authAndJoinResponse message.
@@ -906,13 +928,14 @@ Once sent, the server will immediately send you these messages, so you can catch
 * audienceList (only if you are a speaker)
 * liveVoteResults (only if you are a speaker)
 * nextQuestion (only if a question is displayed)
+* pollDetails
 
-When the server receives this message, it will issue a userConnect to the speakers.
+When the server receives this message, it will issue a userConnect message to the speakers.
 
 No payload.
 
 ## goNextQuestion
-This message is sent to go to the next question in the poll. Only a speaker can issue this message.
+This message is sent to go to the next question in the poll. Only a speaker can issue this message. It is required to issue this message to display the first question.
 
 This will result in either:
 * a nextQuestion message, if the current question is not the last question in the poll.
@@ -940,15 +963,18 @@ If this vote is accepted, a liveVoteResults message is then issued to the speake
 Response when the vote is registered:
 ~~~json
 {
-	'status': 'ok'
+  'status': 'ok',
+  'messages': []
 }
 ~~~
 
 Response in case of error:
 ~~~json
 {
-	'status': 'ko',
-	'messages': ['E_UNAUTHORIZED']
+  'status': 'ko',
+  'messages': [ { 'error': 'E_UNAUTHORIZED',
+                  'description': 'You are not authorized'
+				} ]
 }
 ~~~
 

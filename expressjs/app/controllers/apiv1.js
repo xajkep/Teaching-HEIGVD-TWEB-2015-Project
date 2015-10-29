@@ -617,99 +617,106 @@ function checkPoll(poll, cbWhenOK, cbWhenKO) {
 		newPollDTO.name = pollName;
 		newPollDTO.questions = [];
 		
-		if (poll.questions.length < 1) {
+		var questionsCount = poll.questions.length;
+		if (questionsCount < 1) {
 			errors.push(erro('E_INVALID_REQUEST', "At least one question must be specified"));
-		}
-		
-		for (var questionIndex = 0; questionIndex < poll.questions.length ; questionIndex++) {
-			var currentQuestionDTO = {};
-			var currentQuestion = poll.questions[questionIndex];
+		} else if (questionsCount > 50) {
+			errors.push(erro('E_INVALID_REQUEST', "Too many questions specified"));
+		} else {
 			
-			if (!currentQuestion.hasOwnProperty("name")) {
-				errors.push(erro('E_INVALID_REQUEST', "Question has no name"));
-				break;
-			}
-
-			if (!currentQuestion.hasOwnProperty("allowAnonymous")) {
-				errors.push(erro('E_INVALID_REQUEST', "Question has no allowAnonymous"));
-				break;
-			}
-			
-			if (!currentQuestion.hasOwnProperty("maxVote")) {
-				errors.push(erro('E_INVALID_REQUEST', "Question has no maxVote"));
-				break;
-			}
-			
-			if (!currentQuestion.hasOwnProperty("answers")) {
-				errors.push(erro('E_INVALID_REQUEST', "Question has no answers"));
-				break;
-			}
-			
-			if (!currentQuestion.hasOwnProperty("timeout")) {
-				errors.push(erro('E_INVALID_REQUEST', "Question has no timeout"));
-				break;
-			}
-			
-			var currentQuestionName = currentQuestion.name;
-			var currentQuestionAllowAnonymous = currentQuestion.allowAnonymous;
-			var currentQuestionMaxVotes = currentQuestion.maxVote;
-			var currentQuestionTimeout = currentQuestion.timeout;
-			var currentQuestionAnswers = currentQuestion.answers;
-			
-			currentQuestionDTO.name = currentQuestionName;
-			currentQuestionDTO.allowAnonymous = currentQuestionAllowAnonymous;
-			currentQuestionDTO.maxVote = currentQuestionMaxVotes;
-			currentQuestionDTO.timeout = currentQuestionTimeout;
-			currentQuestionDTO.answers = [];
-
-			console.log("Question: " + currentQuestionName);
-			console.log(" allowAnonymous: " + currentQuestionDTO.allowAnonymous);
-			console.log(" maxVote: " + currentQuestionDTO.maxVote);
-			console.log(" timeout: " + currentQuestionDTO.timeout);
-			
-			if (currentQuestionDTO.name.length < 5 || currentQuestionDTO.name.length > 50) {
-				errors.push(erro('E_INVALID_REQUEST', "Question name is invalid"));
-			}
-			
-			if (currentQuestionDTO.allowAnonymous !== true && currentQuestionDTO.allowAnonymous !== false) {
-				errors.push(erro('E_INVALID_REQUEST', "AllowAnonymous is invalid"));
-			}
-			
-			if (currentQuestionDTO.maxVote < 1 || currentQuestionDTO.maxVote > 10) {
-				errors.push(erro('E_INVALID_REQUEST', "MaxVote is invalid"));
-			}
-			
-			if (currentQuestionDTO.timeout < 15 || currentQuestionDTO.timeout > 600) {
-				errors.push(erro('E_INVALID_REQUEST', "Timeout is invalid"));
-			}
-			
-			if (currentQuestionAnswers.length < 2) {
-				errors.push(erro('E_INVALID_REQUEST', "At least two answers must be specified"));
-			}
-			
-			console.log("  Answers:");
-			
-			for (var answerIndex = 0; answerIndex < currentQuestionAnswers.length ; answerIndex++) {
-				var currentAnswerDTO = {};
-				var currentAnswer = currentQuestionAnswers[answerIndex];
+			for (var questionIndex = 0; questionIndex < poll.questions.length ; questionIndex++) {
+				var currentQuestionDTO = {};
+				var currentQuestion = poll.questions[questionIndex];
 				
 				if (!currentQuestion.hasOwnProperty("name")) {
-					errors.push(erro('E_INVALID_REQUEST', "Answer has no name"));
+					errors.push(erro('E_INVALID_REQUEST', "Question has no name"));
+					break;
+				}
+
+				if (!currentQuestion.hasOwnProperty("allowAnonymous")) {
+					errors.push(erro('E_INVALID_REQUEST', "Question has no allowAnonymous"));
 					break;
 				}
 				
-				var currentAnswerName = currentAnswer.name;
-				currentAnswerDTO.name = currentAnswerName;
+				if (!currentQuestion.hasOwnProperty("maxVote")) {
+					errors.push(erro('E_INVALID_REQUEST', "Question has no maxVote"));
+					break;
+				}
 				
-				console.log("    Answer: " + currentAnswerName);
+				if (!currentQuestion.hasOwnProperty("answers")) {
+					errors.push(erro('E_INVALID_REQUEST', "Question has no answers"));
+					break;
+				}
 				
-				currentQuestionDTO.answers.push(currentAnswerDTO);
-			}
-			
-			newPollDTO.questions.push(currentQuestionDTO);
-			
-			if (errors.length > 0) {
-				break;
+				if (!currentQuestion.hasOwnProperty("timeout")) {
+					errors.push(erro('E_INVALID_REQUEST', "Question has no timeout"));
+					break;
+				}
+				
+				var currentQuestionName = currentQuestion.name;
+				var currentQuestionAllowAnonymous = currentQuestion.allowAnonymous;
+				var currentQuestionMaxVotes = currentQuestion.maxVote;
+				var currentQuestionTimeout = currentQuestion.timeout;
+				var currentQuestionAnswers = currentQuestion.answers;
+				
+				currentQuestionDTO.name = currentQuestionName;
+				currentQuestionDTO.allowAnonymous = currentQuestionAllowAnonymous;
+				currentQuestionDTO.maxVote = currentQuestionMaxVotes;
+				currentQuestionDTO.timeout = currentQuestionTimeout;
+				currentQuestionDTO.answers = [];
+
+				console.log("Question: " + currentQuestionName);
+				console.log(" allowAnonymous: " + currentQuestionDTO.allowAnonymous);
+				console.log(" maxVote: " + currentQuestionDTO.maxVote);
+				console.log(" timeout: " + currentQuestionDTO.timeout);
+				
+				if (currentQuestionDTO.name.length < 5 || currentQuestionDTO.name.length > 50) {
+					errors.push(erro('E_INVALID_REQUEST', "Question name is invalid"));
+				}
+				
+				if (currentQuestionDTO.allowAnonymous !== true && currentQuestionDTO.allowAnonymous !== false) {
+					errors.push(erro('E_INVALID_REQUEST', "AllowAnonymous is invalid"));
+				}
+				
+				if (currentQuestionDTO.maxVote < 1 || currentQuestionDTO.maxVote > 10) {
+					errors.push(erro('E_INVALID_REQUEST', "MaxVote is invalid"));
+				}
+				
+				if (currentQuestionDTO.timeout < 15 || currentQuestionDTO.timeout > 600) {
+					errors.push(erro('E_INVALID_REQUEST', "Timeout is invalid"));
+				}
+				
+				var answersCount = currentQuestionAnswers.length;
+				if (answersCount < 2) {
+					errors.push(erro('E_INVALID_REQUEST', "At least two answers must be specified"));
+				} else if (answersCount > 10) {
+					errors.push(erro('E_INVALID_REQUEST', "Too many answers specified"));
+				} else {
+					console.log("  Answers:");
+					
+					for (var answerIndex = 0; answerIndex < currentQuestionAnswers.length ; answerIndex++) {
+						var currentAnswerDTO = {};
+						var currentAnswer = currentQuestionAnswers[answerIndex];
+						
+						if (!currentQuestion.hasOwnProperty("name")) {
+							errors.push(erro('E_INVALID_REQUEST', "Answer has no name"));
+							break;
+						}
+						
+						var currentAnswerName = currentAnswer.name;
+						currentAnswerDTO.name = currentAnswerName;
+						
+						console.log("    Answer: " + currentAnswerName);
+						
+						currentQuestionDTO.answers.push(currentAnswerDTO);
+					}
+				}
+				
+				newPollDTO.questions.push(currentQuestionDTO);
+				
+				if (errors.length > 0) {
+					break;
+				}
 			}
 		}
 		
