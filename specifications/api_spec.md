@@ -931,9 +931,9 @@ This message is used to cast a vote.
 }
 ~~~
 
-answerIndex: the index of the question to cast a vote for.
-voteAsAnonymous: true will keep your vote private (if the question allows anonymous voting only) - your name will not be displayed. Specify any value when the current question does not accept anonymous voting.
-timing: Delta(timeWhenVoteReceived, timeWhenQuestionStarted) in milliseconds
+* answerIndex: the index of the question to cast a vote for. <br />
+* voteAsAnonymous: true will keep your vote private (if the question allows anonymous voting only) - your name will not be displayed. Specify any value when the current question does not accept anonymous voting.<br />
+* timing: Delta(timeWhenVoteReceived, timeWhenQuestionStarted) in milliseconds. <br />
 
 If this vote is accepted, a liveVoteResults message is then issued to the speakers.
 
