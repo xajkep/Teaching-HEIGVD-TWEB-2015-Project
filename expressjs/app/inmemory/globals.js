@@ -366,6 +366,12 @@ module.exports = {
 		return (poll.created_by == userId) ? 'speaker' : 'audience';
 	},
 	
+	/*
+	This function is called to retrieve basic poll metadata
+	
+	Parameters:
+	pollId: Id of the poll that the user requests to obtain info about
+	*/
 	getPollDetails: function(pollId) {
 		if (!polls.has(pollId)) {
 			return false;
