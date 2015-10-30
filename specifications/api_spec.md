@@ -855,7 +855,7 @@ whovoted:
 Issued in response to the vote message.
 
 Errors:<br />
-E_UNAUTHORIZED: You are not authenticated
+E_UNAUTHORIZED: You are not authenticated<br />
 E_GENERIC_ERROR: A generic error occured (you specified an invalid answer index, the poll is completed or voting has ended)
 
 ### authAndJoinResult
