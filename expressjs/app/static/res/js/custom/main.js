@@ -74,6 +74,8 @@ tweb.factory('ServerPushPoll', function (DisplayErrorMessagesFromAPI) {
 	
 	var _cbOnLiveVoteResults = null;
 	
+	var _cbOnDuplicateConnection = null;
+	
 	var _catchUp = function() {
 		_sio.emit('catchUp');
 	}
@@ -82,7 +84,8 @@ tweb.factory('ServerPushPoll', function (DisplayErrorMessagesFromAPI) {
 		_cbOnLiveVoteResults = cbOnLiveVoteResults
 	}
 	
-	var _registerBasicPollEvents = function(cbOnPollDetails, cbOnNextQuestion, cbOnPollCompleted, cbOnVotingOnThisQuestionEnded, cbOnVoteResult) {
+	var _registerBasicPollEvents = function(cbOnDuplicateConnection, cbOnPollDetails, cbOnNextQuestion, cbOnPollCompleted, cbOnVotingOnThisQuestionEnded, cbOnVoteResult) {
+		_cbOnDuplicateConnection = cbOnDuplicateConnection;
 		_cbOnPollDetails = cbOnPollDetails;
 		_cbOnNextQuestion = cbOnNextQuestion;
 		_cbOnPollCompleted = cbOnPollCompleted;
@@ -220,6 +223,12 @@ tweb.factory('ServerPushPoll', function (DisplayErrorMessagesFromAPI) {
 		_sio.on('pollDetails', function(results) {
 			if (_cbOnPollDetails != null) {
 				_cbOnPollDetails(results);
+			}
+		});
+		
+		_sio.on('duplicateConnection', function(results) {
+			if (_cbOnDuplicateConnection != null) {
+				_cbOnDuplicateConnection();
 			}
 		});
 
@@ -442,7 +451,10 @@ tweb.controller('pollspeaker', function($scope, $location, UserDataFactory, Serv
 																});
 																
 
-	ServerPushPoll.registerBasicPollEvents(function(pollDetails) {
+	ServerPushPoll.registerBasicPollEvents(function() {
+												// Never happens for the speaker
+											},
+											function(pollDetails) {
 												$scope.$apply(function() {
 													$scope.pollName = pollDetails.name;
 												});
@@ -591,7 +603,12 @@ tweb.controller('pollaudience', function($scope, $location, UserDataFactory, Ser
 		$location.path("/polls");
 	};
 	
-	ServerPushPoll.registerBasicPollEvents(function(pollDetails) {
+	ServerPushPoll.registerBasicPollEvents(function() {
+												$scope.votingIsAllowed = false;
+												$scope.$apply();
+												alert('This session has been terminated because you joined the same poll again.');
+											},
+											function(pollDetails) {
 												$scope.$apply(function() {
 													$scope.pollName = pollDetails.name;
 												});

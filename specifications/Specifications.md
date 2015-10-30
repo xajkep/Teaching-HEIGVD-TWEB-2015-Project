@@ -105,6 +105,18 @@ Exception:
 * When the poll is not finished 6 hours after it is opened, it is automatically closed. At that point, the results are lost.
 * The application must be robust enough to cope with any user disconnection (including the speaker)
 
+Poll lifecycle
+=======================================
+
+The following diagram illustrates the lifecycle of a poll in our application :
+![high-level architecture](./pictures/poll_lifecycle_visio_v0.png)
+
+* First, a user creates a (valid) poll. It is assigned the pending status. In that state, it can be modified and opened.
+* Once the user is in front of his audience and decides to display the poll, he opens it. The poll is now in the opened state. In that state, users can join to vote and the poll cannot be edited any more.
+* Then, two possibilities:
+  * The poll never finishes, and is assigned to closed status. In that state, the poll cannot be modified, viewed or opened again.
+  * The poll finishes (all questions were displayed). In that case, the poll is assigned the completed status and its results can be viewed later on.
+
 High level architecture
 =======================================
 
