@@ -105,6 +105,133 @@ Exception:
 * When the poll is not finished 6 hours after it is opened, it is automatically closed. At that point, the results are lost.
 * The application must be robust enough to cope with any user disconnection (including the speaker)
 
+Data model
+=======================================
+
+Every user has:
+* an auto-generated unique identifier
+* an auto-generated salt (sha1) used to salt the user's password
+* an encrypted_password = hash512(concat(hash(pass), salt))
+* a firstname
+* a lastname
+* an email address, which is used to identify the user (used in the log in process)
+
+Mongoose automatically adds a __v field, used to identify the document's version.
+
+Example:
+~~~json
+{
+  "_id" : "4729ea9c94849dd77c35241c41360a5fddb69a33",
+  "email" : "james.dupont@mail.com",
+  "salt" : "48eded18e9c4dca9d2e7070101e4a83aab4bd24c",
+  "encrypted_password" : "892a8c10474b4d90b69564377a5ae5c63430ec936aec0679b0f3707a00dc6904",
+  "firstname" : "James",
+  "lastname" : "Dupont",
+  "__v" : 0
+}
+~~~
+
+Every poll has:
+* an auto-generated unique identifier
+* a state (pending, opened, closed, completed)
+* a reference to the user who created it (created_by)
+* a user-friendly name (name)
+* a list of questions (1 to 50). Each question has a name, a maximum of votes each user can cast on that question (1 to 10). A timeout (15-600 seconds) and a boolean deciding if anonymous voting is allowed.
+* each question has at least two answers (up to a maximum of 10). Each answer has a name, and an array of users who voted on that question (anonymous specifies if the user casted a vote anonymously and timing is the amount of time elapsed between the question is displayed and the reception of the vote in milliseconds)
+
+Mongoose automatically adds a __v field, used to identify the document's version.
+
+Example:
+~~~json
+{
+  "_id" : "1de4ab0136c0dea476f6ced848a5ba3e20ed5ad4",
+  "state" : "completed",
+  "created_by" : "4729ea9c94849dd77c35241c41360a5fddb69a33",
+  "creation_date" : ISODate("2015-10-28T16:36:15.999Z"),
+  "name" : "First poll",
+  "questions" : [{
+      "_id" : "1de4ab0136c0dea476f6ced848a5ba3e20ed5ad4-0",
+      "name" : "How is the weather today?",
+      "maxVote" : 5,
+      "allowAnonymous" : false,
+      "timeout" : 30,
+      "answers" : [{
+          "name" : "Good",
+          "_id" : "1de4ab0136c0dea476f6ced848a5ba3e20ed5ad4-0-0",
+          "users" : [{
+              "timing" : 2754,
+              "anonymous" : false,
+              "user" : "86b96d75f851c982204c8707fb62248996462581"
+            }]
+        }, {
+          "name" : "Not bad",
+          "_id" : "1de4ab0136c0dea476f6ced848a5ba3e20ed5ad4-0-1",
+          "users" : [{
+              "timing" : 3570,
+              "anonymous" : false,
+              "user" : "86b96d75f851c982204c8707fb62248996462581"
+            }, {
+              "timing" : 5218,
+              "anonymous" : false,
+              "user" : "86b96d75f851c982204c8707fb62248996462581"
+            }]
+        }, {
+          "name" : "Excellent",
+          "_id" : "1de4ab0136c0dea476f6ced848a5ba3e20ed5ad4-0-2",
+          "users" : [{
+              "timing" : 4797,
+              "anonymous" : false,
+              "user" : "86b96d75f851c982204c8707fb62248996462581"
+            }]
+        }, {
+          "name" : "Could be better",
+          "_id" : "1de4ab0136c0dea476f6ced848a5ba3e20ed5ad4-0-3",
+          "users" : [{
+              "timing" : 4266,
+              "anonymous" : false,
+              "user" : "86b96d75f851c982204c8707fb62248996462581"
+            }]
+        }]
+    }, {
+      "_id" : "1de4ab0136c0dea476f6ced848a5ba3e20ed5ad4-1",
+      "name" : "Yes or no?",
+      "maxVote" : 5,
+      "allowAnonymous" : false,
+      "timeout" : 30,
+      "answers" : [{
+          "name" : "Yes",
+          "_id" : "1de4ab0136c0dea476f6ced848a5ba3e20ed5ad4-1-0",
+          "users" : [{
+              "timing" : 2307,
+              "anonymous" : false,
+              "user" : "86b96d75f851c982204c8707fb62248996462581"
+            }, {
+              "timing" : 2474,
+              "anonymous" : false,
+              "user" : "86b96d75f851c982204c8707fb62248996462581"
+            }, {
+              "timing" : 2650,
+              "anonymous" : false,
+              "user" : "86b96d75f851c982204c8707fb62248996462581"
+            }, {
+              "timing" : 2816,
+              "anonymous" : false,
+              "user" : "86b96d75f851c982204c8707fb62248996462581"
+            }, {
+              "timing" : 3017,
+              "anonymous" : false,
+              "user" : "86b96d75f851c982204c8707fb62248996462581"
+            }]
+        }, {
+          "name" : "No",
+          "_id" : "1de4ab0136c0dea476f6ced848a5ba3e20ed5ad4-1-1",
+          "users" : []
+        }]
+    }],
+  "__v" : 0
+}
+~~~
+
 Poll lifecycle
 =======================================
 
