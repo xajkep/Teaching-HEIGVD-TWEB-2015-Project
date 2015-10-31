@@ -751,7 +751,7 @@ Payload: Array
 	  'firstName': String,
 	  'lastName': String,
 	  'email': String,
-	  'voted': Boolean,
+	  'voted': Boolean | Null,
 	}
 ]
 ~~~
@@ -806,7 +806,7 @@ Issued to the speaker and the audience at the request of the speaker or when som
 timeout is in most cases the question timeout (in seconds). However, if you join a poll during the voting period, this value will be lower ; in that case the voted field will contain the number of votes you already casted on this question.
 You must only allow voting for this specified amount of time once the message is received.
 
-current denotes the position of the question in the poll (1=first question)
+current denotes the position of the question in the poll (1=first question)<br />
 total is the number of questions in the poll
 
 
