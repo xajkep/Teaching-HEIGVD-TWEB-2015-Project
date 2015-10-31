@@ -34,7 +34,7 @@ data: when data is expected, this attribute is populated occordingly. Has no mea
 
 POST data
 
-route: BASE/register
+route: BASE/registerForm
 
 ~~~json
 {
@@ -145,7 +145,7 @@ Example:
 
 ### Edit password
 
-POST data
+PUT data
 
 route: BASE/account/password
 

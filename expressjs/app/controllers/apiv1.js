@@ -849,7 +849,7 @@ function checkPasswordAgainstPolicy(password) {
 }
 
 // New user account
-router.post('/register', function (req, res) {
+router.post('/registerForm', function (req, res) {
 	var errors = [];
 	
 	// Checking that all required attributes have been submitted
@@ -1070,60 +1070,53 @@ router.post('/account', function (req, res) {
 });
 
 // Edit password
-router.post('/account/password', function (req, res) {
+router.put('/account/password', function (req, res) {
+	
+	var authorizationHeader = req.headers['authorization'];
 	
 	var errors = [];
+	var respondCallback = function () { respondToUser(res, errors, null); };
 	
 	if (!req.body.hasOwnProperty("password")) {
 		errors.push("Password not supplied");
-	}
-	
-	var respondCallback = function () { respondToUser(res, errors, null); };
-
-	var authorizationHeader = req.headers['authorization'];
-
-	var errors = [];
-	var newPollDTO = {};
-	var respondCallback = function () { respondToUser(res, errors, {}); };
-	
-	checkAndExtractFromSessionToken(authorizationHeader,
-									function(userId) {
-										
-										// The submitted password is checked against the password policy
-										var passwordPolicyErrors = checkPasswordAgainstPolicy(req.body.password);
-		
-										for (var i=0;i<passwordPolicyErrors.length;i++) {
-											errors.push(passwordPolicyErrors[i]);
-										}
-										
-										if (errors.length == 0) {
-											console.log('Updating password for user ' + userId);
+		respondCallback();
+	} else {
+		checkAndExtractFromSessionToken(authorizationHeader,
+										function(userId) {
 											
-											// The user's salt is regenerated, for added safety
-											generateSalt(function(generatedSalt) {
-												hashPassword(generatedSalt, req.body.password, function(encryptedPassword) {
+											// The submitted password is checked against the password policy
+											var passwordPolicyErrors = checkPasswordAgainstPolicy(req.body.password);
+			
+											for (var i=0;i<passwordPolicyErrors.length;i++) {
+												errors.push(passwordPolicyErrors[i]);
+											}
+											
+											if (errors.length == 0) {
+												console.log('Updating password for user ' + userId);
+												
+												// The user's salt is regenerated, for added safety
+												generateSalt(function(generatedSalt) {
+													hashPassword(generatedSalt, req.body.password, function(encryptedPassword) {
 
-													// The user is updated in the database
-													User.findOneAndUpdate({ '_id': userId }, { 'salt': generatedSalt, 'encrypted_password': encryptedPassword }, function (err, person) {
-														if (err) {
-															errors.push(erro('E_GENERIC_ERROR', "Cannot update database"));
-														} else {
-															console.log('Password updated');
-														}
-														
-														respondCallback();
+														// The user is updated in the database
+														User.findOneAndUpdate({ '_id': userId }, { 'salt': generatedSalt, 'encrypted_password': encryptedPassword }, function (err, person) {
+															if (err) {
+																errors.push(erro('E_GENERIC_ERROR', "Cannot update database"));
+															} else {
+																console.log('Password updated');
+															}
+															
+															respondCallback();
+														});
 													});
 												});
-											});
-										} else {
+											} else {
+												respondCallback();
+											}
+										},
+										function() {
+											errors.push(erro('E_INVALID_SESSION', 'Invalid or no session provided'));
 											respondCallback();
-										}
-									},
-									function() {
-										errors.push(erro('E_INVALID_SESSION', 'Invalid or no session provided'));
-										respondCallback();
-									});
-	
-	
-	
+										});
+	}
 });

@@ -281,6 +281,9 @@ The following tests are performed:
 * First, the app's stats are retrieved
 * Three users are created
 * A request is then sent in order to create a 4th user (whose email is already registered). This should be refused by the server.
+* One of our 3 new users will then login
+* This user will request to change his password
+* We then once again log in, this time with the new password
 * A new poll is created by one of the new users
 * A list of polls is retrieved. It must contain the poll just created
 * We then retrieve the specific poll we created.

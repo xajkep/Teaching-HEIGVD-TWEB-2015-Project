@@ -93,7 +93,7 @@ scenario.step('storing and checking initial stats', function(response) {
 // The next three tests will register 3 new users
 scenario.step('register the first user', function(response) {
 	return this.post({
-	url: 'register',
+	url: 'registerForm',
 	body: {
 		firstname: 'User1',
 		lastname: 'Ln1',
@@ -106,7 +106,7 @@ scenario.step('register the first user', function(response) {
 
 scenario.step('register the second user', function(response) {
 	return this.post({
-	url: 'register',
+	url: 'registerForm',
 	body: {
 		firstname: 'User2',
 		lastname: 'Ln2',
@@ -119,7 +119,7 @@ scenario.step('register the second user', function(response) {
 
 scenario.step('register the third user', function(response) {
 	return this.post({
-	url: 'register',
+	url: 'registerForm',
 	body: {
 		firstname: 'User3',
 		lastname: 'Ln3',
@@ -130,10 +130,9 @@ scenario.step('register the third user', function(response) {
 	});
 });
 
-// The next three tests will register 3 new users
 scenario.step('registering again the first user (should fail)', function(response) {
 	return this.post({
-	url: 'register',
+	url: 'registerForm',
 	body: {
 		firstname: 'User1234567890',
 		lastname: 'User1234567890',
@@ -184,6 +183,68 @@ scenario.step('expecting session token in response body', function(response){
 	if (!response.body.data.hasOwnProperty('session')) {
 		return this.fail('No session attribute in response.data');
 	}
+	
+	currentSessionIdUser1 = response.body.data.session;
+
+	console.log('Got session: ' + currentSessionIdUser1);
+});
+
+// We will then change our password
+scenario.step('changing user1 password', function(response){
+	return this.put({
+	url:'account/password',
+	body: {
+		password: 'IaCAef6VRXo6'
+	},
+	headers: {
+		'Authorization': currentSessionIdUser1
+	},
+	expect: { statusCode: 200}
+	});
+});
+
+// Then, we check that the password modification is accepted by the server
+scenario.step('changing user1 password server check', function(response){
+	if (!response.body.hasOwnProperty('status')) {
+		return this.fail('No status attribute in response');
+	}
+
+	if (response.body.status != "ok") {
+		return this.fail('Could not change the password. status is not ok');
+	}
+});
+
+// We will then login with our new password
+scenario.step('login with user1 w/ new password', function(response){
+	return this.post({
+	url:'account',
+	body: {
+		email: 'asdf@asdf.asdf',
+		password: 'IaCAef6VRXo6'
+	},
+	expect: { statusCode: 200}
+	});
+});
+
+// Then, we check that the login was successful and we extract the returned session token
+scenario.step('extracting new session', function(response){
+	if (!response.body.hasOwnProperty('status')) {
+		return this.fail('No status attribute in response');
+	}
+
+	if (response.body.status != "ok") {
+		return this.fail('Could not log in. status is not ok');
+	}
+  
+	if (!response.body.hasOwnProperty('data')) {
+		return this.fail('No data attribute in response');
+	}
+	
+	if (!response.body.data.hasOwnProperty('session')) {
+		return this.fail('No session attribute in response.data');
+	}
+	
+	
 	
 	currentSessionIdUser1 = response.body.data.session;
 
@@ -553,17 +614,17 @@ scenario.step('checking final stats', function(response) {
 	
 	// We created 3 users
 	if (response.body.usersCount != initialStats.usersCount + 3) {
-		return this.fail('Final stats do not reflect the users created');
+		return this.fail('Final stats do not reflect the users created: expected ' + (initialStats.usersCount + 3) + " got " + response.body.usersCount);
 	}
 	
 	// We created one poll
 	if (response.body.pollsCount != initialStats.pollsCount + 1) {
-		return this.fail('Final stats do not reflect the polls created');
+		return this.fail('Final stats do not reflect the polls created: expected ' + (initialStats.pollsCount + 1) + " got " + response.body.pollsCount);
 	}
 	
 	// We have one opened poll
 	if (response.body.openPollsCount != initialStats.openPollsCount + 1) {
-		return this.fail('Final stats do not reflect the opened polls created');
+		return this.fail('Final stats do not reflect the opened polls created: expected ' + (initialStats.openPollsCount + 1) + " got " + response.body.openPollsCount);
 	}
 });
 
