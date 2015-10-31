@@ -4,7 +4,7 @@ This documentation is updated for each version of the API.
 
 * Every message and response is encoded in UTF-8.
 * Requests and responses are in JSON format.
-* Each call (except login) must have the Authorization HTTP HEADER set with the user session (returned by the login request) : Header: <session>
+* Each call (except login) must have the Authorization HTTP HEADER set with the user session (returned by the login request) : Header: SESSION_ID_HERE
 * Port: same as the Web server (8080)
 * BASE: /api/v1
 
