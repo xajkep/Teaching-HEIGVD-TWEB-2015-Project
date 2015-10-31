@@ -297,5 +297,6 @@ The following tests are performed:
 
 All tests must pass in order to declare the app as working.
 
-2015-10-28: Tests passed
-2015-10-31: Tests passed
+Tests history:<br />
+* 2015-10-28: Tests passed
+* 2015-10-31: Tests passed
