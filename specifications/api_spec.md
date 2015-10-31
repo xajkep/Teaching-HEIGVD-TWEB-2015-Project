@@ -840,7 +840,8 @@ Issued to the speaker when someone sends a vote or when the speaker reconnects t
 				  count: 7
 				},
 			   ],
-	'whovoted': String
+	'whovoted': String,
+	'timing': Number
 }
 ~~~
 
@@ -849,6 +850,7 @@ whovoted:
 * is null when catching up or when the question allows anonymous voting and the person who just voted did choose to vote anonymously.
 * is false if the poll is now closed or has not yet begun.
 * When not null, it contains the id of the person who voted.
+timing: Delta(timeWhenVoteReceived, timeWhenQuestionStarted) in milliseconds.
 
 ### voteResult
 
@@ -959,14 +961,12 @@ This message is used to cast a vote.
 ~~~json
 {
   'answerIndex': Number,
-  'voteAsAnonymous': Boolean,
-  'timing': Number
+  'voteAsAnonymous': Boolean
 }
 ~~~
 
 * answerIndex: the index of the question to cast a vote for. <br />
 * voteAsAnonymous: true will keep your vote private (if the question allows anonymous voting only) - your name will not be displayed. Specify any value when the current question does not accept anonymous voting.<br />
-* timing: Delta(timeWhenVoteReceived, timeWhenQuestionStarted) in milliseconds. <br />
 
 If this vote is accepted, a liveVoteResults message is then issued to the speakers.
 
