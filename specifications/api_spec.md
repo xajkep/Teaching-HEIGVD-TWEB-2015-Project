@@ -932,8 +932,8 @@ poll: poll id you want to join. The poll must be opened.
 The server will then issue an authAndJoinResponse message.
 
 ## catchUp
-This message is issued after a successful authAndJoin
-It tells the server that you are ready to receive asynchronous messages.
+This message is issued after a successful authAndJoin<br />
+It tells the server that you are ready to receive asynchronous messages.<br />
 The server will not respond when a catchUp message is sent from an unauthenticated client.
 
 Once sent, the server will immediately send you these messages, so you can catch up:
