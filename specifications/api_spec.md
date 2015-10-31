@@ -813,14 +813,30 @@ total is the number of questions in the poll
 ### goNextQuestionResult
 Issued in response to the goNextQuestion message.
 
-This message is only sent in case of error and its format is the same as described in General response.
-
 ~~~json
 {
   'status': ('ok'|'ko'),
   'messages': [ {'error': String,
                  'description': String }
 			  ]
+}
+~~~
+
+Response in case of success:
+~~~json
+{
+  'status': 'ok',
+  'messages': []
+}
+~~~
+
+Response in case of error:
+~~~json
+{
+  'status': 'ko',
+  'messages': [ { 'error': 'E_UNAUTHORIZED',
+                  'description': 'You are either not authenticated or not a speaker'
+				} ]
 }
 ~~~
 
@@ -855,6 +871,24 @@ timing: Delta(timeWhenVoteReceived, timeWhenQuestionStarted) in milliseconds.
 ### voteResult
 
 Issued in response to the vote message.
+
+Response when the vote is registered:
+~~~json
+{
+  'status': 'ok',
+  'messages': []
+}
+~~~
+
+Response in case of error:
+~~~json
+{
+  'status': 'ko',
+  'messages': [ { 'error': 'E_UNAUTHORIZED',
+                  'description': 'You are not authorized'
+				} ]
+}
+~~~
 
 Errors:<br />
 E_UNAUTHORIZED: You are not authenticated<br />
@@ -947,7 +981,7 @@ When the server receives this message, it will issue a userConnect message to th
 No payload.
 
 ## goNextQuestion
-This message is sent to go to the next question in the poll. Only a speaker can issue this message. It is required to issue this message to display the first question.
+This message is sent to go to the next question in the poll. Only a speaker can issue this message. It is required to issue this message to display the first question.<br />
 
 This will result in either a broadcast (to all connected clients who joined the same poll) of:
 * a nextQuestion message, if the current question is not the last question in the poll.
@@ -968,26 +1002,6 @@ This message is used to cast a vote.
 * answerIndex: the index of the question to cast a vote for. <br />
 * voteAsAnonymous: true will keep your vote private (if the question allows anonymous voting only) - your name will not be displayed. Specify any value when the current question does not accept anonymous voting.<br />
 
-If this vote is accepted, a liveVoteResults message is then issued to the speakers.
+If this vote is accepted, a liveVoteResults message is then issued to the speakers.<br />
+A voteResult is sent in response to you.<br />
 
-Response when the vote is registered:
-~~~json
-{
-  'status': 'ok',
-  'messages': []
-}
-~~~
-
-Response in case of error:
-~~~json
-{
-  'status': 'ko',
-  'messages': [ { 'error': 'E_UNAUTHORIZED',
-                  'description': 'You are not authorized'
-				} ]
-}
-~~~
-
-Errors:<br />
-E_UNAUTHORIZED : You are not authorized<br />
-E_INVALID_REQUEST : Generic error. Either you casted your maximum number of votes, or the poll is not open anymore.<br />

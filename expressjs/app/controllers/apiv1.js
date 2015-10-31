@@ -149,7 +149,9 @@ sio.sockets.on('connection', function (socket) {
 										},
 										function() {
 											console.log('Socket.io authentication failure');
-											socket.emit('authAndJoinResult', {'status': 'ko', 'messages': ['Invalid session or no session provided']});
+											var errors = [];
+											errors.push(erro('E_UNAUTHORIZED', 'You are either not authenticated or not a speaker'));
+											socket.emit('authAndJoinResult', {'status': 'ko', 'messages': errors});
 										});
 	});
 
