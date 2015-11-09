@@ -63,9 +63,9 @@ Response:
 
 ~~~json
 {
-	"status':"ok",
-	"messages':[],
-	"data':null
+	"status":"ok",
+	"messages":[],
+	"data":null
 }
 ~~~
 
