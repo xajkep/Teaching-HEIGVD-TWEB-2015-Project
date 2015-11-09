@@ -16,11 +16,11 @@ Note: set the Authorization header with your session
 
 ~~~json
 {
-  'status': ('ok'|'ko'),
-  'messages': [ {'error': String,
-                 'description': String }
+  "status": ("ok"|"ko"),
+  "messages": [ "error": String,
+                 "description": String }
 			  ],
-  'data': {}
+  "data": {}
 }
 ~~~
 
@@ -39,10 +39,10 @@ route: BASE/registerForm
 
 ~~~json
 {
-  'email': String,
-  'firstname': String,
-  'lastname': String,
-  'password': String
+  "email": String,
+  "firstname": String,
+  "lastname": String,
+  "password": String
 }
 ~~~
 
@@ -52,10 +52,10 @@ Example:
 
 ~~~json
 {
-	'email': 'jean.dupont@mail.com',
-	'firstname': 'Jean',
-	'lastname': 'Dupont',
-	'password': 'myPassword123'
+	"email": "jean.dupont@mail.com",
+	"firstname": "Jean",
+	"lastname": "Dupont",
+	"password": "myPassword123"
 }
 ~~~
 
@@ -63,9 +63,9 @@ Response:
 
 ~~~json
 {
-	'status':'ok',
-	'messages':[],
-	'data':null
+	"status':"ok",
+	"messages':[],
+	"data':null
 }
 ~~~
 
@@ -86,16 +86,16 @@ If this occurs, its others sessions previously connected to this same pool he is
 
 ~~~json
 {
-  'email': String,
-  'password': String
+  "email": String,
+  "password": String
 }
 ~~~
 
 Response:
 ~~~json
 {
-  'status': 'ok',
-  'data': {session: <session>}
+  "status": "ok",
+  "data": {session: <session>}
 }
 ~~~
 
@@ -104,9 +104,9 @@ _<session>_ is the authentication token you must include in every subsequent req
 Response, in case of failure:
 ~~~json
 {
-  'status': 'ko',
-  'messages': <errors>,
-  'data': null}
+  "status" : "ko",
+  "messages": <errors>,
+  "data": null}
 }
 ~~~
 
@@ -123,9 +123,9 @@ route: BASE/stats
 
 ~~~json
 {
-  'usersCount': Number,
-  'pollsCount': Number,
-  'openPollsCount': Number
+  "usersCount": Number,
+  "pollsCount": Number,
+  "openPollsCount": Number
 }
 ~~~
 
@@ -138,9 +138,9 @@ Returns basic information about the app.
 Example:
 ~~~json
 {
-  'usersCount': 2,
-  'pollsCount': 1,
-  'openPollsCount': 1
+  "usersCount": 2,
+  "pollsCount": 1,
+  "openPollsCount": 1
 }
 ~~~
 
@@ -152,7 +152,7 @@ route: BASE/account/password
 
 ~~~json
 {
-  'password': String
+  "password": String
 }
 ~~~
 
@@ -171,14 +171,14 @@ route: BASE/poll
 
 ~~~json
 {
-  'name': String,
-  'questions': [{
-    'name': String,
-    'allowAnonymous': Boolean,
-    'maxVote': Integer,
-    'timeout': Integer,
-    'answers': [{
-        'name'
+  "name": String,
+  "questions": [{
+    "name": String,
+    "allowAnonymous": Boolean,
+    "maxVote": Integer,
+    "timeout": Integer,
+    "answers": [{
+        "name"
       }]
     }]
 }
@@ -206,27 +206,27 @@ Example:
 
 ~~~json
 {
-	'name': 'SuperPOLL',
-	'questions': [
-	               {'name': 'How is the weather today?',
-				    'allowAnonymous': false,
-					'maxVote': 5,
-					'timeout': 30,
-					'answers': [
-					             {'name': 'Good'},
-								 {'name': 'Not bad'},
-								 {'name': 'Excellent'},
-								 {'name': 'Could be better'}
+	"name": "SuperPOLL",
+	"questions": [
+	               {"name" : "How is the weather today?",
+				    "allowAnonymous": false,
+					"maxVote": 5,
+					"timeout": 30,
+					"answers": [
+					             {"name": "Good"},
+								 {"name": "Not bad"},
+								 {"name": "Excellent"},
+								 {"name": "Could be better"}
 							    ]
 					},
 
-					{'name': 'Yes or no?',
-					 'allowAnonymous': false,
-					 'maxVote': 5,
-					 'timeout': 30,
-					 'answers': [
-					             {'name': 'Yes'},
-								 {'name': 'No'}
+					{"name": "Yes or no?",
+					 "allowAnonymous": false,
+					 "maxVote": 5,
+					 "timeout": 30,
+					 "answers": [
+					             {"name": "Yes"},
+								 {"name": "No"}
 								]
 					}
 				  ]
