@@ -249,14 +249,14 @@ Same request format as Create a new poll.
 
 ~~~json
 {
-  'name': String,
-  'questions': [{
-    'name': String,
-    'allowAnonymous': Boolean,
-    'maxVote': Integer,
-    'timeout': Integer,
-    'answers': [{
-        'name'
+  "name": String,
+  "questions": [{
+    "name": String,
+    "allowAnonymous": Boolean,
+    "maxVote": Integer,
+    "timeout": Integer,
+    "answers": [{
+        "name"
       }]
     }]
 }
@@ -320,10 +320,10 @@ Example:
 
 ~~~json
 [{
-  'email': String,
-  'polls': [{ '_id': String,
-			   'name' String,
-			   'creation_date': Date
+  "email": String,
+  "polls": [{ "_id": String,
+			   "name" String,
+			   "creation_date": Date
 			}]
 }]
 ~~~
@@ -344,17 +344,17 @@ When the poll is pending, the following response is provided:
 
 ~~~json
 {
-  '_id': String,
-  'name': String,
-  'questions': [{
-      '_id': String,
-      'name': String,
-      'allowAnonymous': Boolean,
-      'maxVote': Integer,
-      'timeout': Integer,
-      'answers': [{
-	    '_id': String,
-        'name': String
+  "_id": String,
+  "name": String,
+  "questions": [{
+      "_id": String,
+      "name": String,
+      "allowAnonymous": Boolean,
+      "maxVote": Integer,
+      "timeout": Integer,
+      "answers": [{
+	    "_id": String,
+        "name": String
       }]
     }]
 }
@@ -363,25 +363,25 @@ When the poll is pending, the following response is provided:
 When the poll is completed, the following response is provided:
 ~~~json
 {
-  '_id': String,
-  'name': String,
-  'questions': [{
-      '_id': String,
-      'name': String,
-      'allowAnonymous': Boolean,
-      'maxVote': Integer,
-      'timeout': Integer,
-      'answers': [{
-	    '_id': String,
-        'name': String
-		'users': [ {
-		              'anonymous': Boolean,
-                  'timing': Number,
-					  'user': {
-					             '_id': String,
-								 'email': String,
-								 'firstname': String,
-								 'lastname': String
+  "_id": String,
+  "name": String,
+  "questions": [{
+      "_id": String,
+      "name": String,
+      "allowAnonymous": Boolean,
+      "maxVote": Integer,
+      "timeout": Integer,
+      "answers": [{
+	    "_id": String,
+        "name": String
+		"users": [ {
+		              "anonymous": Boolean,
+                  "timing": Number,
+					  "user": {
+					             "_id": String,
+								 "email": String,
+								 "firstname": String,
+								 "lastname": String
 					   }
 					}]
       }]
@@ -397,96 +397,96 @@ Example:
 
 ~~~json
 {
-  'status':'ok',
-  'messages':[
+  "status":"ok",
+  "messages":[
 
   ],
-  'data':{
-    '_id':'5a39987657e8f45eea39fa32e3b5a85d120eeb8b',
-    'state':'completed',
-    'created_by':'d221b823f0ec6671b85e56d911c8f305735a5f01',
-    'creation_date':'2015-10-21T20:28:49.226Z',
-    'name':'SuperPOLL',
-    '__v':0,
-    'questions':[
+  "data":{
+    "_id":"5a39987657e8f45eea39fa32e3b5a85d120eeb8b",
+    "state":"completed",
+    "created_by":"d221b823f0ec6671b85e56d911c8f305735a5f01",
+    "creation_date":"2015-10-21T20:28:49.226Z",
+    "name":"SuperPOLL",
+    "__v":0,
+    "questions":[
       {
-        '_id':'5a39987657e8f45eea39fa32e3b5a85d120eeb8b-0',
-        'name':'How is the weather today?',
-        'maxVote':5,
-        'allowAnonymous':false,
-        'timeout':30,
-        'answers':[
+        "_id":"5a39987657e8f45eea39fa32e3b5a85d120eeb8b-0",
+        "name":"How is the weather today?",
+        "maxVote":5,
+        "allowAnonymous":false,
+        "timeout":30,
+        "answers":[
           {
-            'name':'Good',
-            '_id':'5a39987657e8f45eea39fa32e3b5a85d120eeb8b-0-0',
-            'users':[
+            "name":"Good",
+            "_id":"5a39987657e8f45eea39fa32e3b5a85d120eeb8b-0-0",
+            "users":[
               {
-                'anonymous':false,
-                'timing': 1200,
-                'user':{
-                  '_id':'86b96d75f851c982204c8707fb62248996462581',
-                  'email':'test@test.com2',
-                  'firstname':'Bon',
-                  'lastname':'Bon'
+                "anonymous":false,
+                "timing": 1200,
+                "user":{
+                  "_id":"86b96d75f851c982204c8707fb62248996462581",
+                  "email":"test@test.com2",
+                  "firstname":"Bon",
+                  "lastname":"Bon"
                 }
               },
               {
-                'anonymous':false,
-                'timing': 1231,
-                'user':{
-                  '_id':'50760a3f94ff03361a3948c46a13b33fbd9570d2',
-                  'email':'test@test.com3',
-                  'firstname':'test@test.com3',
-                  'lastname':'test@test.com3'
+                "anonymous":false,
+                "timing": 1231,
+                "user":{
+                  "_id":"50760a3f94ff03361a3948c46a13b33fbd9570d2",
+                  "email":"test@test.com3",
+                  "firstname":"test@test.com3",
+                  "lastname":"test@test.com3"
                 }
               }
             ]
           },
           {
-            'name':'Not bad',
-            '_id':'5a39987657e8f45eea39fa32e3b5a85d120eeb8b-0-1',
-            'users':[
+            "name":"Not bad",
+            "_id":"5a39987657e8f45eea39fa32e3b5a85d120eeb8b-0-1",
+            "users":[
 
             ]
           },
           {
-            'name':'Excellent',
-            '_id':'5a39987657e8f45eea39fa32e3b5a85d120eeb8b-0-2',
-            'users':[
+            "name":"Excellent",
+            "_id":"5a39987657e8f45eea39fa32e3b5a85d120eeb8b-0-2",
+            "users":[
               {
-                'anonymous':false,
-                'timing': 1763,
-                'user':{
-                  '_id':'50760a3f94ff03361a3948c46a13b33fbd9570d2',
-                  'email':'test@test.com3',
-                  'firstname':'test@test.com3',
-                  'lastname':'test@test.com3'
+                "anonymous":false,
+                "timing": 1763,
+                "user":{
+                  "_id":"50760a3f94ff03361a3948c46a13b33fbd9570d2",
+                  "email":"test@test.com3",
+                  "firstname":"test@test.com3",
+                  "lastname":"test@test.com3"
                 }
               }
             ]
           },
           {
-            'name':'Could be better',
-            '_id':'5a39987657e8f45eea39fa32e3b5a85d120eeb8b-0-3',
-            'users':[
+            "name":"Could be better",
+            "_id":"5a39987657e8f45eea39fa32e3b5a85d120eeb8b-0-3",
+            "users":[
               {
-                'anonymous':false,
-                'timing': 3428,
-                'user':{
-                  '_id':'86b96d75f851c982204c8707fb62248996462581',
-                  'email':'test@test.com2',
-                  'firstname':'Bon',
-                  'lastname':'Bon'
+                "anonymous":false,
+                "timing": 3428,
+                "user":{
+                  "_id":"86b96d75f851c982204c8707fb62248996462581",
+                  "email":"test@test.com2",
+                  "firstname":"Bon",
+                  "lastname":"Bon"
                 }
               },
               {
-                'anonymous':false,
-                'timing': 3988,
-                'user':{
-                  '_id':'50760a3f94ff03361a3948c46a13b33fbd9570d2',
-                  'email':'test@test.com3',
-                  'firstname':'test@test.com3',
-                  'lastname':'test@test.com3'
+                "anonymous":false,
+                "timing": 3988,
+                "user":{
+                  "_id":"50760a3f94ff03361a3948c46a13b33fbd9570d2",
+                  "email":"test@test.com3",
+                  "firstname":"test@test.com3",
+                  "lastname":"test@test.com3"
                 }
               }
             ]
@@ -494,110 +494,110 @@ Example:
         ]
       },
       {
-        '_id':'5a39987657e8f45eea39fa32e3b5a85d120eeb8b-1',
-        'name':'Yes or no?',
-        'maxVote':5,
-        'allowAnonymous':false,
-        'timeout':30,
-        'answers':[
+        "_id":"5a39987657e8f45eea39fa32e3b5a85d120eeb8b-1",
+        "name":"Yes or no?",
+        "maxVote":5,
+        "allowAnonymous":false,
+        "timeout":30,
+        "answers":[
           {
-            'name':'Yes',
-            '_id':'5a39987657e8f45eea39fa32e3b5a85d120eeb8b-1-0',
-            'users':[
+            "name":"Yes",
+            "_id":"5a39987657e8f45eea39fa32e3b5a85d120eeb8b-1-0",
+            "users":[
               {
-                'anonymous':false,
-                'timing': 1876,
-                'user':{
-                  '_id':'50760a3f94ff03361a3948c46a13b33fbd9570d2',
-                  'email':'test@test.com3',
-                  'firstname':'test@test.com3',
-                  'lastname':'test@test.com3'
+                "anonymous":false,
+                "timing": 1876,
+                "user":{
+                  "_id":"50760a3f94ff03361a3948c46a13b33fbd9570d2",
+                  "email":"test@test.com3",
+                  "firstname":"test@test.com3",
+                  "lastname":"test@test.com3"
                 }
               },
               {
-                'anonymous':false,
-                'timing': 6711,
-                'user':{
-                  '_id':'86b96d75f851c982204c8707fb62248996462581',
-                  'email':'test@test.com2',
-                  'firstname':'Bon',
-                  'lastname':'Bon'
+                "anonymous":false,
+                "timing": 6711,
+                "user":{
+                  "_id":"86b96d75f851c982204c8707fb62248996462581",
+                  "email":"test@test.com2",
+                  "firstname":"Bon",
+                  "lastname":"Bon"
                 }
               },
               {
-                'anonymous':false,
-                'timing': 6900,
-                'user':{
-                  '_id':'86b96d75f851c982204c8707fb62248996462581',
-                  'email':'test@test.com2',
-                  'firstname':'Bon',
-                  'lastname':'Bon'
+                "anonymous":false,
+                "timing": 6900,
+                "user":{
+                  "_id":"86b96d75f851c982204c8707fb62248996462581",
+                  "email":"test@test.com2",
+                  "firstname":"Bon",
+                  "lastname":"Bon"
                 }
               },
               {
-                'anonymous':false,
-                'timing': 7088,
-                'user':{
-                  '_id':'86b96d75f851c982204c8707fb62248996462581',
-                  'email':'test@test.com2',
-                  'firstname':'Bon',
-                  'lastname':'Bon'
+                "anonymous":false,
+                "timing": 7088,
+                "user":{
+                  "_id":"86b96d75f851c982204c8707fb62248996462581",
+                  "email":"test@test.com2",
+                  "firstname":"Bon",
+                  "lastname":"Bon"
                 }
               },
               {
-                'anonymous':false,
-                'timing': 8977,
-                'user':{
-                  '_id':'86b96d75f851c982204c8707fb62248996462581',
-                  'email':'test@test.com2',
-                  'firstname':'Bon',
-                  'lastname':'Bon'
+                "anonymous":false,
+                "timing": 8977,
+                "user":{
+                  "_id":"86b96d75f851c982204c8707fb62248996462581",
+                  "email":"test@test.com2",
+                  "firstname":"Bon",
+                  "lastname":"Bon"
                 }
               },
               {
-                'anonymous':false,
-                'timing': 8977,
-                'user':{
-                  '_id':'86b96d75f851c982204c8707fb62248996462581',
-                  'email':'test@test.com2',
-                  'firstname':'Bon',
-                  'lastname':'Bon'
+                "anonymous":false,
+                "timing": 8977,
+                "user":{
+                  "_id":"86b96d75f851c982204c8707fb62248996462581",
+                  "email":"test@test.com2",
+                  "firstname":"Bon",
+                  "lastname":"Bon"
                 }
               },
               {
-                'anonymous':false,
-                'timing': 8997,
-                'user':{
-                  '_id':'50760a3f94ff03361a3948c46a13b33fbd9570d2',
-                  'email':'test@test.com3',
-                  'firstname':'test@test.com3',
-                  'lastname':'test@test.com3'
+                "anonymous":false,
+                "timing": 8997,
+                "user":{
+                  "_id":"50760a3f94ff03361a3948c46a13b33fbd9570d2",
+                  "email":"test@test.com3",
+                  "firstname":"test@test.com3",
+                  "lastname":"test@test.com3"
                 }
               }
             ]
           },
           {
-            'name':'No',
-            '_id':'5a39987657e8f45eea39fa32e3b5a85d120eeb8b-1-1',
-            'users':[
+            "name":"No",
+            "_id":"5a39987657e8f45eea39fa32e3b5a85d120eeb8b-1-1",
+            "users":[
               {
-                'anonymous':false,
-                'timing': 9121,
-                'user':{
-                  '_id':'50760a3f94ff03361a3948c46a13b33fbd9570d2',
-                  'email':'test@test.com3',
-                  'firstname':'test@test.com3',
-                  'lastname':'test@test.com3'
+                "anonymous":false,
+                "timing": 9121,
+                "user":{
+                  "_id":"50760a3f94ff03361a3948c46a13b33fbd9570d2",
+                  "email":"test@test.com3",
+                  "firstname":"test@test.com3",
+                  "lastname":"test@test.com3"
                 }
               },
               {
-                'anonymous':false,
-                'timing': 12345,
-                'user':{
-                  '_id':'50760a3f94ff03361a3948c46a13b33fbd9570d2',
-                  'email':'test@test.com3',
-                  'firstname':'test@test.com3',
-                  'lastname':'test@test.com3'
+                "anonymous":false,
+                "timing": 12345,
+                "user":{
+                  "_id":"50760a3f94ff03361a3948c46a13b33fbd9570d2",
+                  "email":"test@test.com3",
+                  "firstname":"test@test.com3",
+                  "lastname":"test@test.com3"
                 }
               }
             ]
@@ -605,34 +605,34 @@ Example:
         ]
       },
       {
-        '_id':'5a39987657e8f45eea39fa32e3b5a85d120eeb8b-2',
-        'name':'What do you prefer?',
-        'maxVote':1,
-        'allowAnonymous':true,
-        'timeout':30,
-        'answers':[
+        "_id":"5a39987657e8f45eea39fa32e3b5a85d120eeb8b-2",
+        "name":"What do you prefer?",
+        "maxVote":1,
+        "allowAnonymous":true,
+        "timeout":30,
+        "answers":[
           {
-            'name':'Yellow',
-            '_id':'5a39987657e8f45eea39fa32e3b5a85d120eeb8b-2-0',
-            'users':[
+            "name":"Yellow",
+            "_id":"5a39987657e8f45eea39fa32e3b5a85d120eeb8b-2-0",
+            "users":[
               {
-                'anonymous':true,
-                'timing': 4566
+                "anonymous":true,
+                "timing": 4566
               }
             ]
           },
           {
-            'name':'Orange',
-            '_id':'5a39987657e8f45eea39fa32e3b5a85d120eeb8b-2-1',
-            'users':[
+            "name":"Orange",
+            "_id":"5a39987657e8f45eea39fa32e3b5a85d120eeb8b-2-1",
+            "users":[
               {
-                'anonymous':false,
-                'timing': 22244,
-                'user':{
-                  '_id':'86b96d75f851c982204c8707fb62248996462581',
-                  'email':'test@test.com2',
-                  'firstname':'Bon',
-                  'lastname':'Bon'
+                "anonymous":false,
+                "timing": 22244,
+                "user":{
+                  "_id":"86b96d75f851c982204c8707fb62248996462581",
+                  "email":"test@test.com2",
+                  "firstname":"Bon",
+                  "lastname":"Bon"
                 }
               }
             ]
@@ -659,10 +659,10 @@ route: BASE/polls
 response:
 ~~~json
 {
-  '_id': String,
-  'name': String,
-  'creation_date': Date,
-  'state': String
+  "_id": String,
+  "name": String,
+  "creation_date": Date,
+  "state": String
 }
 ~~~
 
@@ -670,20 +670,20 @@ Example:
 
 ~~~json
 {
-  'status': 'ok',
-  'messages': [],
-  'data': [
+  "status": "ok",
+  "messages": [],
+  "data": [
 			{
-			  '_id': '5a39987657e8f45eea39fa32e3b5a85d120eeb8b',
-			  'state': 'completed',
-			  'creation_date': '2015-10-21T20:28:49.226Z',
-			  'name': 'Poll A'
+			  "_id": "5a39987657e8f45eea39fa32e3b5a85d120eeb8b",
+			  "state": "completed",
+			  "creation_date": "2015-10-21T20:28:49.226Z",
+			  "name": "Poll A"
 			},
 			{
-			  '_id': 'e3dd2ecd0edcb753513fff2601b4f5f73dafdd32',
-			  'state': 'pending',
-			  'creation_date': '2015-10-22T10:55:25.790Z',
-			  'name': 'Poll B'
+			  "_id": "e3dd2ecd0edcb753513fff2601b4f5f73dafdd32",
+			  "state": "pending",
+			  "creation_date": "2015-10-22T10:55:25.790Z",
+			  "name": "Poll B"
 			}
 		  ]
 }
@@ -711,7 +711,7 @@ Issued to the client after a successful authentication (authAndJoin)
 Payload:
 ~~~json
 {
-  'name': String
+  "name": String
 }
 ~~~
 
@@ -728,11 +728,11 @@ Issued to the speaker when a used joined the poll
 Payload:
 ~~~json
 {
-  '_id': String,
-  'firstName': String,
-  'lastName': String,
-  'email': String,
-  'voted': Boolean | Null,
+  "_id": String,
+  "firstName": String,
+  "lastName": String,
+  "email": String,
+  "voted": Boolean | Null,
 }
 ~~~
 voted: Is always null when the current question allows anonymous voting. It is set to false when the poll has not yet started or is closed. Otherwise indicates if the user already casted at least one (non-anonymous) vote on the current question.
@@ -748,11 +748,11 @@ Payload: Array
 ~~~json
 [
 	{
-	  '_id': String,
-	  'firstName': String,
-	  'lastName': String,
-	  'email': String,
-	  'voted': Boolean | Null,
+	  "_id": String,
+	  "firstName": String,
+	  "lastName": String,
+	  "email": String,
+	  "voted": Boolean | Null,
 	}
 ]
 ~~~
@@ -764,18 +764,18 @@ Example:
 ~~~json
 [
 	{
-	  '_id': 5a39987657e8f45eea39fa32e3b5a85d120eeb89,
-	  'firstName': 'Paul',
-	  'lastName': 'Dupont',
-	  'email': 'paul.dupont@mail.com',
-	  'voted': false
+	  "_id": 5a39987657e8f45eea39fa32e3b5a85d120eeb89,
+	  "firstName": "Paul",
+	  "lastName": "Dupont",
+	  "email": "paul.dupont@mail.com",
+	  "voted": false
 	},
 	{
-	  '_id': 5a39987657e8f45eea39fa32e3b5a85d120eeb81,
-	  'firstName': 'Sophie',
-	  'lastName': 'Perette',
-	  'email': 'sophie.perette@mail.com',
-	  'voted': true
+	  "_id": 5a39987657e8f45eea39fa32e3b5a85d120eeb81,
+	  "firstName": "Sophie",
+	  "lastName": "Perette",
+	  "email": "sophie.perette@mail.com",
+	  "voted": true
 	},
 ]
 ~~~
@@ -785,21 +785,21 @@ Issued to the speaker and the audience at the request of the speaker or when som
 
 ~~~json
 {
-	'timeout': Number,
-	'question': {
-      '_id': String,
-      'name': String,
-      'allowAnonymous': Boolean,
-      'maxVote': Integer,
-      'timeout': Integer,
-      'answers': [{
-	    '_id': String,
-        'name': String
+	"timeout": Number,
+	"question": {
+      "_id": String,
+      "name": String,
+      "allowAnonymous": Boolean,
+      "maxVote": Integer,
+      "timeout": Integer,
+      "answers": [{
+	    "_id": String,
+        "name": String
       }]
     }
-	'voted': Number,
-	'current': Number,
-	'total': Number,
+	"voted": Number,
+	"current": Number,
+	"total": Number,
 
 }
 ~~~
@@ -816,9 +816,9 @@ Issued in response to the goNextQuestion message.
 
 ~~~json
 {
-  'status': ('ok'|'ko'),
-  'messages': [ {'error': String,
-                 'description': String }
+  "status": ("ok"|"ko"),
+  "messages": [ {"error": String,
+                 "description": String }
 			  ]
 }
 ~~~
@@ -826,17 +826,17 @@ Issued in response to the goNextQuestion message.
 Response in case of success:
 ~~~json
 {
-  'status': 'ok',
-  'messages': []
+  "status": "ok",
+  "messages": []
 }
 ~~~
 
 Response in case of error:
 ~~~json
 {
-  'status': 'ko',
-  'messages': [ { 'error': 'E_UNAUTHORIZED',
-                  'description': 'You are either not authenticated or not a speaker'
+  "status": "ko",
+  "messages": [ { "error": "E_UNAUTHORIZED",
+                  "description": "You are either not authenticated or not a speaker"
 				} ]
 }
 ~~~
@@ -849,7 +849,7 @@ Issued to the speaker when someone sends a vote or when the speaker reconnects t
 
 ~~~json
 {
-	'results': [
+	"results": [
 				{
 				  count: 5
 				},
@@ -857,8 +857,8 @@ Issued to the speaker when someone sends a vote or when the speaker reconnects t
 				  count: 7
 				},
 			   ],
-	'whovoted': String,
-	'timing': Number
+	"whovoted": String,
+	"timing": Number
 }
 ~~~
 
@@ -876,17 +876,17 @@ Issued in response to the vote message.
 Response when the vote is registered:
 ~~~json
 {
-  'status': 'ok',
-  'messages': []
+  "status": "ok",
+  "messages": []
 }
 ~~~
 
 Response in case of error:
 ~~~json
 {
-  'status': 'ko',
-  'messages': [ { 'error': 'E_UNAUTHORIZED',
-                  'description': 'You are not authorized'
+  "status": "ko",
+  "messages": [ { "error": "E_UNAUTHORIZED",
+                  "description": "You are not authorized"
 				} ]
 }
 ~~~
@@ -898,32 +898,32 @@ E_GENERIC_ERROR: A generic error occured (you specified an invalid answer index,
 ### authAndJoinResult
 Issued in response to the authAndJoin message.
 
-The server will choose to make you join the poll as speaker (if you are the poll's owner) or as audience (otherwise).
+The server will choose to make you join the poll as speaker (if you are the poll"s owner) or as audience (otherwise).
 
 Once you receive this message, you should create your event listeners and then, when ready, send the catchUp message.
 
 Example, when joining as speaker:
 ~~~json
 {
-  'status': 'ok',
-  'data': 'speaker'
+  "status": "ok",
+  "data": "speaker"
 }
 ~~~
 
 Example, when joining as audience:
 ~~~json
 {
-  'status': 'ok',
-  'data': 'audience'
+  "status": "ok",
+  "data": "audience"
 }
 ~~~
 
 Example, in case of error:
 ~~~json
 {
-  'status': 'ko',
-  'messages': [ { 'error': 'E_INVALID_IDENTIFIER',
-                  'description': 'The specified poll does not exist or is not opened'
+  "status": "ko",
+  "messages": [ { "error": "E_INVALID_IDENTIFIER",
+                  "description": "The specified poll does not exist or is not opened"
 				} ]
 }
 ~~~
@@ -956,8 +956,8 @@ This message is the first to be issued to the server.
 
 ~~~json
 {
-  'session': String,
-  'poll': String
+  "session": String,
+  "poll": String
 }
 ~~~
 
@@ -995,8 +995,8 @@ This message is used to cast a vote.
 
 ~~~json
 {
-  'answerIndex': Number,
-  'voteAsAnonymous': Boolean
+  "answerIndex": Number,
+  "voteAsAnonymous": Boolean
 }
 ~~~
 
@@ -1005,4 +1005,3 @@ This message is used to cast a vote.
 
 If this vote is accepted, a liveVoteResults message is then issued to the speakers.<br />
 A voteResult is sent in response to you.<br />
-
