@@ -58,7 +58,7 @@ tweb.factory('DisplayErrorMessagesFromAPI', function () {
 });
 
 tweb.factory('ServerPushPoll', function (DisplayErrorMessagesFromAPI) {
-	var _sio;
+	var _sio = null;
 	var _connectedUsers = [];
 	
 	
@@ -106,14 +106,18 @@ tweb.factory('ServerPushPoll', function (DisplayErrorMessagesFromAPI) {
 	var _vote = function(answerIndex, voteAsAnonymous) {
 		_sio.emit('vote', { 'answerIndex': answerIndex, 'voteAsAnonymous': voteAsAnonymous});
 	};
+	
+	var _disconnect = function() {
+		_sio.disconnect();
+	};
 
 	var _connect = function(host, port, session, pollIdToJoin, cbJoinedAsSpeaker, cbJoinedAsAudience) {
 		if (host == null || port == null) {
-			_sio = io.connect(); // same host
+			_sio = io.connect({ 'force new connection': true }); // same host
 		} else {
-			_sio = io.connect(host + ':' + port);
+			_sio = io.connect(host + ':' + port, { 'force new connection': true });
 		}
-		
+
 		_sio.on('authAndJoinResult', function(authAndJoinResult) {
 			if (authAndJoinResult.status == 'ok') {
 				//alert('Join poll success, as: ' + authAndJoinResult.data);
@@ -246,7 +250,8 @@ tweb.factory('ServerPushPoll', function (DisplayErrorMessagesFromAPI) {
 		goNextQuestion: _goNextQuestion,
 		vote: _vote,
 		registerLiveVoteResults: _registerLiveVoteResults,
-		catchUp: _catchUp
+		catchUp: _catchUp,
+		disconnect: _disconnect
 	}
 });
 
@@ -508,6 +513,8 @@ tweb.controller('pollspeaker', function($scope, $location, UserDataFactory, Serv
 											   $scope.goNextQuestionAllowed = false;
 											   $scope.stopTimer();
 											   $scope.$apply();
+											   
+											   ServerPushPoll.disconnect();
 										   },
 										   function() {
 											   // Question timeout
@@ -604,6 +611,7 @@ tweb.controller('pollaudience', function($scope, $location, UserDataFactory, Ser
 	}
 	
 	var redirectToPolls = function() {
+		ServerPushPoll.disconnect();
 		$location.path("/polls");
 	};
 	
@@ -707,6 +715,10 @@ tweb.controller('pollview', function($scope, $http, $location, $timeout, UserDat
 	var pollId = $location.search().id;
 	
 	$scope.graphOptions = { animationSteps: 40 };
+	
+	$scope.goBack = function() {
+		$location.path("/polls");
+	};
 	
 	$scope.createPartitipationGraph = function(element, data) {
 		var ctx3 = document.getElementById(element).getContext("2d");
@@ -837,6 +849,10 @@ tweb.controller('pollview', function($scope, $http, $location, $timeout, UserDat
 tweb.controller('polls', function($scope, $http, $location, UserDataFactory, ServerPushPoll, DisplayErrorMessagesFromAPI) {
 	$scope.userSession = UserDataFactory.getSession();
 
+	$scope.logout = function() {
+		$location.path("/login");
+	};
+	
 	$scope.createPoll = function() {
 		$location.path("/polldetails").search('mode', 'new');
 	};
