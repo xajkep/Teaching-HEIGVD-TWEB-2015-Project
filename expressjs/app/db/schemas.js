@@ -1,6 +1,13 @@
 var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
 
+// A user has:
+// a unique id
+// a unique email
+// a salt (assigned when created and every time the user changes his password)
+// an encrypted password (see documentation)
+// a firstname
+// a lastname
 var UserSchema = new Schema({
   _id: String,
   email: String,
@@ -10,6 +17,13 @@ var UserSchema = new Schema({
   lastname: String
 });
 
+// A poll has:
+// a unique id
+// a state (opened, closed, completed)
+// a creator (reference to a user)
+// a creation date
+// a name
+// a list of questions, each question has a name, a max number of votes, a bit indicating if anonymous voting is allowed, a timeout and a list of users who voted on each answer
 var PollSchema = new Schema({
   _id: String,
   state: String,

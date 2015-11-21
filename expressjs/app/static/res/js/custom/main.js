@@ -857,6 +857,37 @@ tweb.controller('polls', function($scope, $http, $location, UserDataFactory, Ser
 		$location.path("/polldetails").search('mode', 'new');
 	};
 	
+	$scope.deletePoll = function(pollId) {
+		$http({
+				method: 'DELETE',
+				url: "/api/v1/poll/" + pollId,
+				cache: false,
+				headers: {
+					'Authorization': $scope.userSession
+				}
+			})
+			.success(function(data, status, headers, config) {
+				if (data.status == 'ok') {
+					var polls = [];
+					
+					for (var i = 0; i < $scope.polls.length; i++) {
+						var currentPoll = $scope.polls[i];
+						
+						if (currentPoll._id != pollId) {
+							polls.push(currentPoll);
+						}
+					}
+					
+					$scope.polls = polls;
+				
+				} else {
+					alert("Could not delete poll: " + DisplayErrorMessagesFromAPI(data.messages));
+				}
+			}).error(function(data, status, headers, config) {
+				alert("Could not delete poll: http error");
+			});
+	};
+	
 	$scope.viewPollResults = function(pollId) {
 		$location.path("/pollview").search({ 'id': pollId });
 	};
