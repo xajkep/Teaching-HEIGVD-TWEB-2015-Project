@@ -762,7 +762,7 @@ The following sequence diagram shows which messages are exchanged in a 2-questio
   
 11.
 
-  socket.io instancea should now disconnect.
+  socket.io instances should now disconnect.
 
 
 ## Server => client messages
