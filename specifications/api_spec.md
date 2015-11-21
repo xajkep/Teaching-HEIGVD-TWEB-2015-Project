@@ -708,35 +708,61 @@ The following sequence diagram shows which messages are exchanged in a 2-questio
 ![SocketIOSequenceDiagram](./pictures/socketio_sequence_diagram_v0.png)
 
 1.
+
   1. The speaker joins by first connecting a socket.io instance to the server.
   2. He sends an authAndJoin message, which specifies which poll he wants to join.
   3. The server sends an authAndJoin response
   4. The speaker sets its listeners for the socket.io instance
   5. The speaker then issues a catchUp message
   6. The server sends the audienceList (all clients connected to the poll, except speakers), liveVoteResults (current results for the displayed question), nextQuestion (only if a question is shown!) and pollDetails (name of the poll)
+
 2.
+
   1. Client2 joins the server using the same process as explained above
   2. The server responds with the authAndJoinResult and pollDetails messages
   3. The server notifies every speaker that a new client just joined the poll by issuing a userConnect message
+
 3.
+
   1. The speaker starts the poll by sending the goNextQuestion message
   2. The server acknowledges by sending a goNextQuestionResult to the speaker
   3. A nextQuestion message is sent to every client in the poll. This message contains the question title and answers
+
 4.
+
   1. Client2 wants to cast a vote. He sends the vote message to the server
   2. The server acknowledge the message by sending a voteResult message
   3. Each speaker connected to the poll is notified that a vote has been received using a liveVoteResults message. This message contains the results for the current question.
+
 5.
+
   1. Client1 joins the server using the same process as explained above
   2. The server responds with the authAndJoinResult, pollDetails and nextQuestion (since a question is shown) messages
   3. The server notifies every speaker that a new client just joined the poll by issuing a userConnect message
 
-6. Once the question timer reaches zero, the server issues the votingOnThisQuestionEnded message to each connected client in the poll. At this time, no more vote should be casted (must wait for the nextQuestion message)
-7. Same as 3. (this time the process is shown with 3 clients instead of 2)
-8. Same as 4. this time both clients cast their vote
-9. Same as 6.
-10. The server issues a pollCompleted message to each client connected to the poll
-11. socket.io instanced should now disconnect.
+6.
+
+  Once the question timer reaches zero, the server issues the votingOnThisQuestionEnded message to each connected client in the poll. At this time, no more vote should be casted (must wait for the nextQuestion message)
+  
+7.
+
+  Same as 3. (this time the process is shown with 3 clients instead of 2)
+  
+8.
+
+  Same as 4. this time both clients cast their vote
+  
+9.
+
+  Same as 6.
+  
+10.
+
+  The server issues a pollCompleted message to each client connected to the poll
+  
+11.
+
+  socket.io instanced should now disconnect.
 
 
 ## Server => client messages
