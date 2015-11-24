@@ -45,7 +45,7 @@ By default, several questions and answers are already shown. You can either dele
 
 In order to delete a question, click on Delete on the right of the question. You can also move them up and down according to your needs.
 
-![newpoll2](./usermanimg/newpoll2.png
+![newpoll2](./usermanimg/newpoll2.png)
 
 For each question:
 * Specify its name (between 5 and 50 characters)
