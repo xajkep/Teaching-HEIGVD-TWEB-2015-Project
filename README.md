@@ -16,5 +16,7 @@ Our presentation website is available here: http://julienamacher.github.io/twebp
 Documentation
 ========================================
 
+<a href="USERMAN.md">User manual</a><strong>New</strong><br />
+
 <a href="specifications/Specifications.md">Specifications</a><br />
-<a href="specifications/api_spec.md">API specifications</a>
+<a href="specifications/api_spec.md">API specifications</a><strong>Added sequence diagram</strong>
