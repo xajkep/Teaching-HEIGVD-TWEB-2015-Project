@@ -3,7 +3,7 @@ This file contains all functions related to the lifecycle of a poll (from openin
 */
 var HashMap = require('hashmap');
 var polls = new HashMap();
-var pollHardTimeout = 3600 * 6;
+var pollHardTimeout = 3600 * 6; // in seconds
 
 var mongoose = require('mongoose');
 var Poll = mongoose.model('Poll');
@@ -125,12 +125,13 @@ module.exports = {
 		var question = poll.questions[poll.currentQuestion];
 		var answersCount = question.answers.length;
 		
+		// Checking the index. It must correspond to an existing answer for the current question.
 		if (answerIndex < 0 || answerIndex >= answersCount) {
 			cbWhenKO();
 			return;
 		}
 		
-
+		// We then make sure the user cannot cast more votes than they are allowed to.
 		var alreadyVotedCount = countAlreadyVoted(poll, userId);
 		
 		if (alreadyVotedCount >= poll.maxVote) {
@@ -141,6 +142,7 @@ module.exports = {
 		var answer = question.answers[answerIndex];
 		var voteAsAnonymousRegister = question.allowAnonymous ? voteAsAnonymous : false;
 
+		// Computing the delta T (in milliseconds)
 		var currentTime = new Date();
 		var deltaT = currentTime - question.started;
 		
@@ -182,6 +184,7 @@ module.exports = {
 
 		var poll = polls.get(pollId);
 		
+		// If the poll has not started yet
 		if (poll.currentQuestion < 0) {
 			return false;
 		}

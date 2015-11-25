@@ -1,32 +1,11 @@
 var tweb = angular.module('tweb', ['ngRoute', 'ngAnimate', 'chart.js']);
 
 /*
-tweb.directive("contenteditable", function() {
-  return {
-    restrict: "A",
-    require: "ngModel",
-    link: function(scope, element, attrs, ngModel) {
-
-      function read() {
-        ngModel.$setViewValue(element.html());
-      }
-
-      ngModel.$render = function() {
-        element.html(ngModel.$viewValue || "");
-      };
-
-      element.bind("blur keyup change", function() {
-        scope.$apply(read);
-      });
-    }
-  };
-});
-*/
-
-/*
 This factory is used to store data that is shared accross controllers
 */
 tweb.factory('UserDataFactory', function () {
+	
+	// The session attribute is the session obtained from the server
     var userData = {
         session: null
     };
@@ -57,33 +36,40 @@ tweb.factory('DisplayErrorMessagesFromAPI', function () {
 	};
 });
 
+/*
+This factory is used to implement asynchronous communication with the server while
+the client is participating in a poll. It handles message sending and reception,
+controllers can 
+*/
 tweb.factory('ServerPushPoll', function (DisplayErrorMessagesFromAPI) {
+	
+	// Socket.io instance
 	var _sio = null;
 	var _connectedUsers = [];
 	
-	
+	// Callbacks
 	var _cbOnUserConnect = null;
 	var _cbOnUserDisconnect = null;
 	var _cbOnAudienceList = null;
-	
 	var _cbOnPollDetails = null;
 	var _cbOnNextQuestion = null;
 	var _cbOnPollCompleted = null;
 	var _cbOnVotingOnThisQuestionEnded = null;
 	var _cbOnVoteResult = null;
-	
 	var _cbOnLiveVoteResults = null;
-	
 	var _cbOnDuplicateConnection = null;
 	
+	// Sends the catchUp message to the server
 	var _catchUp = function() {
 		_sio.emit('catchUp');
 	}
 	
+	// Registers a callback that will be executed when the liveVoteResults message is received
 	var _registerLiveVoteResults = function(cbOnLiveVoteResults) {
 		_cbOnLiveVoteResults = cbOnLiveVoteResults
 	}
 	
+	// Registers the multiple basic callbacks useful for both the speaker and the audience
 	var _registerBasicPollEvents = function(cbOnDuplicateConnection, cbOnPollDetails, cbOnNextQuestion, cbOnPollCompleted, cbOnVotingOnThisQuestionEnded, cbOnVoteResult) {
 		_cbOnDuplicateConnection = cbOnDuplicateConnection;
 		_cbOnPollDetails = cbOnPollDetails;
@@ -93,24 +79,39 @@ tweb.factory('ServerPushPoll', function (DisplayErrorMessagesFromAPI) {
 		_cbOnVoteResult = cbOnVoteResult;
 	};
 	
+	// Registers multiple callbacks useful only for the speaker
 	var _registerEventsWhenPeopleConnectAndDisconnect = function(cbOnUserConnect, cbOnUserDisconnect, cbOnAudienceList) {
 		_cbOnUserConnect = cbOnUserConnect;
 		_cbOnUserDisconnect = cbOnUserDisconnect;
 		_cbOnAudienceList = cbOnAudienceList;
 	};
 	
+	// Sends a goNextQuestion message to the server (speaker only)
 	var _goNextQuestion = function() {
 		_sio.emit('goNextQuestion');
 	};
 	
+	// Sends a vote to the server (audience only)
+	// answerIndex: index of the answer to cast a vote for (in the current active question)
+	// voteAsAnonymous: true to cast as anonymous, false otherwise. This parameter has no meaning when the current active question does not support anonymous voting (specify any value)
 	var _vote = function(answerIndex, voteAsAnonymous) {
 		_sio.emit('vote', { 'answerIndex': answerIndex, 'voteAsAnonymous': voteAsAnonymous});
 	};
 	
+	// Disconnect the socket.io client
 	var _disconnect = function() {
 		_sio.disconnect();
 	};
 
+	// Establish a new connection to the server
+	// host: host to connect to
+	// port: port to connect to
+	// Specifying null for either the host or the port will connect to the same server and port as the server who served this page
+	// pollIdToJoin: id of the poll to join
+	// The server will then decide if you join as speaker (if you are the poll owner) or as audience (if not).
+	//   cbJoinedAsSpeaker is executed when the server chose to make you join as speaker
+	//   cbJoinedAsAudience is executed when the server chose to make you join as audience
+	// Of course, only one of these callbacks is executed for each call to this function
 	var _connect = function(host, port, session, pollIdToJoin, cbJoinedAsSpeaker, cbJoinedAsAudience) {
 		if (host == null || port == null) {
 			_sio = io.connect({ 'force new connection': true }); // same host
@@ -120,7 +121,6 @@ tweb.factory('ServerPushPoll', function (DisplayErrorMessagesFromAPI) {
 
 		_sio.on('authAndJoinResult', function(authAndJoinResult) {
 			if (authAndJoinResult.status == 'ok') {
-				//alert('Join poll success, as: ' + authAndJoinResult.data);
 				if (authAndJoinResult.data == 'speaker') {
 					cbJoinedAsSpeaker();
 				} else {
@@ -131,22 +131,16 @@ tweb.factory('ServerPushPoll', function (DisplayErrorMessagesFromAPI) {
 			}
 		});
 		
+		// When a new audience member joins the poll
 		_sio.on('userConnect', function(user) {
-			
-			//alert('userConnect received');
-
 			_connectedUsers.push(user);
-			//alert('New user: ' + user._id);
-
 			if (_cbOnUserConnect != null) {
 				_cbOnUserConnect(_connectedUsers);
 			}
 		});
 		
+		// When a previously joined audience member quits
 		_sio.on('userDisconnect', function(userId) {
-
-			//alert('userDisconnect received');
-		
 			var newList = [];
 			var usersCount = _connectedUsers.length;
 			for (var i=0; i < usersCount; i++) {
@@ -162,21 +156,20 @@ tweb.factory('ServerPushPoll', function (DisplayErrorMessagesFromAPI) {
 			}
 		});
 		
+		// When the server responds to a catchUp message with the list of the audience members (speaker only)
 		_sio.on('audienceList', function(audienceList) {
 
 			_connectedUsers = audienceList;
-			
-			//alert('audienceList received');
 
 			if (_cbOnAudienceList != null) {
 				_cbOnAudienceList(_connectedUsers);
 			}
 		});
 
+		// When the server sends the next question
 		_sio.on('nextQuestion', function(nextQuestion) {
 			
-			//alert('nextQuestion received');
-			
+			// null will make the view display an unknown sign next to the user for the "has voted" attribute
 			var assign = nextQuestion.allowAnonymous ? null : false;
 			
 			var usersCount = _connectedUsers.length;
@@ -189,24 +182,28 @@ tweb.factory('ServerPushPoll', function (DisplayErrorMessagesFromAPI) {
 			}
 		});
 		
+		// When the poll is done
 		_sio.on('pollCompleted', function() {
 			if (_cbOnPollCompleted != null) {
 				_cbOnPollCompleted();
 			}
 		});
 		
+		// When the question timeout reached zero
 		_sio.on('votingOnThisQuestionEnded', function() {
 			if (_cbOnVotingOnThisQuestionEnded != null) {
 				_cbOnVotingOnThisQuestionEnded();
 			}
 		});
 		
+		// When the server responds to a catchUp message with the current question results (speaker only)
 		_sio.on('voteResult', function(result) {
 			if (_cbOnVoteResult != null) {
 				_cbOnVoteResult(result);
 			}
 		});
 		
+		// When someone casted a vote (speaker only)
 		_sio.on('liveVoteResults', function(results) {
 
 			// null if catching up or anonymous vote
@@ -224,20 +221,22 @@ tweb.factory('ServerPushPoll', function (DisplayErrorMessagesFromAPI) {
 			}
 		});
 		
+		// When the server responds to the catchUp message with the details of the poll
 		_sio.on('pollDetails', function(results) {
 			if (_cbOnPollDetails != null) {
 				_cbOnPollDetails(results);
 			}
 		});
 		
+		// When the same user joins the poll while it already has a session opened for the same poll (audience only)
 		_sio.on('duplicateConnection', function(results) {
 			if (_cbOnDuplicateConnection != null) {
 				_cbOnDuplicateConnection();
 			}
 		});
 
+		// Once connected, the authAndJoin message is immediately sent to the server
 		_sio.on('connect', function() {
-			//alert('Socket connected');
 			_sio.emit('authAndJoin', { 'session': session, 'poll': pollIdToJoin });
 		});
 	};
@@ -255,22 +254,6 @@ tweb.factory('ServerPushPoll', function (DisplayErrorMessagesFromAPI) {
 	}
 });
 
-/*
-tweb.factory('BuildPollFactory', function () {
-    var userData = {
-        poll: null
-    };
-	
-    return {
-		getPoll: function() {
-			return userData.poll;
-		},
-		setPoll: function(pPoll) {
-			userData.poll = pPoll;
-		}
-	}
-});
-*/
 
 tweb.config(['$routeProvider',
         function($routeProvider) {
@@ -325,12 +308,12 @@ tweb.config(['$routeProvider',
         }]);
 
 tweb.controller('home', function($scope, $http) {
-	
 	$scope.usersCount = 0;
 	$scope.pollsCount = 0;
 	$scope.openPollsCount = 0;
 
 	$scope.$on('$viewContentLoaded', function() {
+		// Retrieving the stats from the REST API
 		$http({
 			method: 'GET',
 			url: "/api/v1/stats/",
@@ -363,8 +346,8 @@ tweb.controller('login', function($scope, $http, $location, UserDataFactory, Dis
 		})
 		.success(function(data, status, headers, config) {
 			if (data.status == 'ok') {
+				// We store the session in the factory, so other controllers can access later it as well
 				UserDataFactory.setSession(data.data.session);
-				//alert('Logged in. Redirecting');
 				$location.path("/polls");
 			} else {
 				alert("Could not login: " + DisplayErrorMessagesFromAPI(data.messages));
@@ -380,10 +363,16 @@ tweb.controller('login', function($scope, $http, $location, UserDataFactory, Dis
 tweb.controller('pollspeaker', function($scope, $location, UserDataFactory, ServerPushPoll) {
 	$scope.userSession = UserDataFactory.getSession();
 	
+	// The poll id is a GET parameter
 	var pollId = $location.search().id;
 	
+	// Poll name
 	$scope.pollName = '';
+	
+	// Position in the poll
 	$scope.currentQuestionNumber = 0;
+	
+	// Number of questions in the poll
 	$scope.totalQuestions = 0;
 	
 	$scope.connected = ServerPushPoll.connectedUsers;
@@ -397,6 +386,8 @@ tweb.controller('pollspeaker', function($scope, $location, UserDataFactory, Serv
 	$scope.votingAsAnonymousIsAllowed = false;
 	
 	$scope.totalVotesCount = 0;
+	
+	// This is the activity graph
 	var chartVotingActivity;
 	var chartVotingActivityData = [
 			{
@@ -440,20 +431,17 @@ tweb.controller('pollspeaker', function($scope, $location, UserDataFactory, Serv
 	$scope.options = { animationSteps: 20 };
 
 	ServerPushPoll.registerEventsWhenPeopleConnectAndDisconnect(function(newConnectedList) {
-																	//alert('userconnect processing');
 																	// One user joined
 																	$scope.connected = newConnectedList;
 																	$scope.$apply();
 															    },
 																// Workaround. Even $apply doesn't work. Enjoy.
 																function(newConnectedList) {
-																	//alert('userDisconnect processing');
 																	// One user disconnected
 																	$scope.connected = newConnectedList;
 																	$scope.$apply();
 																},
 																function(newConnectedList) {
-																	//alert('audienceList processing');
 																	// When the speaker joins, the list of already connected is received
 																	$scope.connected = newConnectedList;
 																	$scope.$apply();
@@ -552,7 +540,7 @@ tweb.controller('pollspeaker', function($scope, $location, UserDataFactory, Serv
 											   $scope.$apply();
 										   });
 										   
-	
+	// This will include the partitipation graph in the poll. This graph has no Angular binding
 	$scope.createPartitipationGraph = function() {
 		var ctx3 = document.getElementById("votingactivity").getContext("2d");
 		chartVotingActivity = new Chart(ctx3).Scatter(chartVotingActivityData, {
@@ -577,6 +565,7 @@ tweb.controller('pollspeaker', function($scope, $location, UserDataFactory, Serv
 tweb.controller('pollaudience', function($scope, $location, UserDataFactory, ServerPushPoll, DisplayErrorMessagesFromAPI) {
 	$scope.userSession = UserDataFactory.getSession();
 
+	// The poll id is a GET parameter
 	var pollId = $location.search().id;
 	
 	$scope.pollName = '';
@@ -616,15 +605,18 @@ tweb.controller('pollaudience', function($scope, $location, UserDataFactory, Ser
 	};
 	
 	ServerPushPoll.registerBasicPollEvents(function() {
+												// When the same user already has a connection for the same poll 
 												$scope.votingIsAllowed = false;
 												$scope.$apply();
 												alert('This session has been terminated because you joined the same poll again.');
 											},
 											function(pollDetails) {
+												// Poll details
 												$scope.$apply(function() {
 													$scope.pollName = pollDetails.name;
 												});
 											}, function(question) {
+												// Next question (is also used as a catchUp)
 											   var nextQuestion = question.question;
 											   var timeout = question.timeout;
 		
@@ -643,7 +635,6 @@ tweb.controller('pollaudience', function($scope, $location, UserDataFactory, Ser
 											   $scope.currentQuestion = nextQuestion;
 											   $scope.displayQuestion = true;
 											   $scope.$apply();
-											   //alert('Next question: ' + question.question.name);
 										   },
 										   function() {
 											   // Poll completed
@@ -659,7 +650,6 @@ tweb.controller('pollaudience', function($scope, $location, UserDataFactory, Ser
 											   $scope.stopTimer();
 											   $scope.votingIsAllowed = false;
 											   $scope.$apply();
-											   //alert('Question timeout');
 										   },
 										   function(voteResult) {
 											   // Vote result
@@ -673,8 +663,6 @@ tweb.controller('pollaudience', function($scope, $location, UserDataFactory, Ser
 												   }
 												   
 												   $scope.$apply();
-
-												   //alert('Vote registered');
 											   } else {
 												   alert("Cannot vote:\n" + DisplayErrorMessagesFromAPI(voteResult.messages));
 											   }
@@ -688,7 +676,6 @@ tweb.controller('polljoin', function($scope, $location, UserDataFactory, ServerP
 	$scope.userSession = UserDataFactory.getSession();
 	var pollIdToJoin = $location.search().id;
 
-	//alert('Joining poll: ' + pollIdToJoin);
 	socketIOConnectToServer(ServerPushPoll,
 	                        UserDataFactory.getSession(),
 	                        pollIdToJoin,
@@ -703,6 +690,13 @@ tweb.controller('polljoin', function($scope, $location, UserDataFactory, ServerP
 	
 });
 
+/*
+spp: Reference to the shared ServerPushPoll factory
+session: User session obtained from the server
+pollIdToJoin: id of the poll you want to join
+cbAsSpeaker: callback to execute when the server decides to make you join as a speaker
+cbAsAudience: callback to execute when the server decides to make you join as an audience member
+*/
 function socketIOConnectToServer(spp, session, pollIdToJoin, cbAsSpeaker, cbAsAudience) {
 	spp.connect(null, null, session, pollIdToJoin,
 	            cbAsSpeaker, cbAsAudience);
@@ -720,6 +714,7 @@ tweb.controller('pollview', function($scope, $http, $location, $timeout, UserDat
 		$location.path("/polls");
 	};
 	
+	// Including the participation graph for each question. This graph has no Angular binding
 	$scope.createPartitipationGraph = function(element, data) {
 		var ctx3 = document.getElementById(element).getContext("2d");
 		var chartVotingActivity = new Chart(ctx3).Scatter(data, {
@@ -740,6 +735,7 @@ tweb.controller('pollview', function($scope, $http, $location, $timeout, UserDat
 	}; 
 
 	$scope.$on('$viewContentLoaded', function() {
+		// Retrieving poll stats
 		$http({
 			method: 'GET',
 			url: "/api/v1/poll/" + pollId,
@@ -801,11 +797,11 @@ tweb.controller('pollview', function($scope, $http, $location, $timeout, UserDat
 						currentAnswer.distinctUsers = distinctUsers;
 					}
 					
+					// Sorting timings so the graph can be plotted correctly
 					allTimings.sort(function(a, b) {
 										return a - b;
 									});
 					
-					var timing = 0;
 					var votesCount = 0;
 					var chartVotingActivityOnlyData = [];
 					
@@ -831,6 +827,7 @@ tweb.controller('pollview', function($scope, $http, $location, $timeout, UserDat
 
 				$scope.poll = poll;
 				
+				// For each question, creating the participation graph. This is done as soon as the view loads
 				$timeout(function () {
 					for (var i=0;i<$scope.poll.questions.length;i++) {
 						$scope.createPartitipationGraph('participationchart' + i, $scope.poll.questions[i].chartVotingActivityData);
@@ -858,6 +855,7 @@ tweb.controller('polls', function($scope, $http, $location, UserDataFactory, Ser
 	};
 	
 	$scope.deletePoll = function(pollId) {
+		// Requesting the server to delete the poll
 		$http({
 				method: 'DELETE',
 				url: "/api/v1/poll/" + pollId,
@@ -868,6 +866,10 @@ tweb.controller('polls', function($scope, $http, $location, UserDataFactory, Ser
 			})
 			.success(function(data, status, headers, config) {
 				if (data.status == 'ok') {
+					
+					// Removing the poll from the displayed polls.
+					// This saves a request to the server to get the user's poll
+					// Warning, delete $scope.polls[i] does not work and breaks the binding!
 					var polls = [];
 					
 					for (var i = 0; i < $scope.polls.length; i++) {
@@ -914,7 +916,6 @@ tweb.controller('polls', function($scope, $http, $location, UserDataFactory, Ser
 		})
 		.success(function(data, status, headers, config) {
 			if (data.status == 'ok') {
-				//alert('Poll is now open: ' + pollId);
 				$location.path("/polljoin").search({ 'id': pollId });
 			} else {
 				alert("Could not open poll: " + DisplayErrorMessagesFromAPI(data.messages));
@@ -931,7 +932,7 @@ tweb.controller('polls', function($scope, $http, $location, UserDataFactory, Ser
 	// User's polls
 	$scope.polls = [];
 	
-	// Search results
+	// Search by email results
 	$scope.search = {
 		users: []
 	};
@@ -988,7 +989,6 @@ tweb.controller('join', function($scope) {
 	$scope.message = 'Page: join';
 });
 
-
 tweb.controller('changepassword', function($scope, $http, $location, UserDataFactory, DisplayErrorMessagesFromAPI) {
 	
 	$scope.user = {
@@ -1019,6 +1019,7 @@ tweb.controller('changepassword', function($scope, $http, $location, UserDataFac
 			};
 
 			if (errors.length == 0) {
+				// Sending the request to update the password
 				$http({
 						method: 'PUT',
 						url: "/api/v1/account/password",
@@ -1110,6 +1111,7 @@ tweb.controller('polldetails', function($scope, $location, $http, UserDataFactor
 		var editId = (mode == 'edit') ? $location.search().id : null;
 
 		$scope.$on('$viewContentLoaded', function() {
+			// As soon as the view loads, we retrieve the poll data from the server
 			if (mode == 'edit') {
 				$http({
 					method: 'GET',
@@ -1129,6 +1131,7 @@ tweb.controller('polldetails', function($scope, $location, $http, UserDataFactor
 					alert("Could not retrieve poll: http error");
 				});
 			} else {
+				// This is the poll sample
 				$scope.poll = {
 					name: 'SuperPOLL',
 					questions: [
@@ -1168,6 +1171,7 @@ tweb.controller('polldetails', function($scope, $location, $http, UserDataFactor
 			}
 		});
 
+		// When the user wants to add an answer to the specified question
 		$scope.addAnswer = function(pos) {
 			$scope.poll.questions[pos].answers.push({
 				name: 'New answer'
@@ -1176,7 +1180,8 @@ tweb.controller('polldetails', function($scope, $location, $http, UserDataFactor
 			$scope.$apply();
 		}
 		
-		
+		// When the user wants to remove a question from the poll
+		// As usual, doing a delete $scope.poll.questions[pos] will break the bindings. Don't do that.
 		$scope.deleteQuestion = function(pos) {
 			var questionsQty = $scope.poll.questions.length;
 
@@ -1192,6 +1197,8 @@ tweb.controller('polldetails', function($scope, $location, $http, UserDataFactor
 			$scope.$apply();
 		}
 		
+		// When the user wnats to remove an answer from a question in the poll
+		// As usual, doing a delete $scope.poll.questions[questionPos].answers[answerPos] will break the bindings. Don't do that.
 		$scope.deleteAnswer = function(questionPos, answerPos) {
 			
 			var answersQty = $scope.poll.questions[questionPos].answers.length;
@@ -1225,7 +1232,7 @@ tweb.controller('polldetails', function($scope, $location, $http, UserDataFactor
 			$scope.$apply();
 		}
 		
-		
+		// Inserts a new question at the desired position. It contains the sample that will be inserted.
 		$scope.addQuestionAtPos = function(pos) {
 									  var newQuestion = {
 										  name: 'What do you prefer?',
@@ -1245,7 +1252,7 @@ tweb.controller('polldetails', function($scope, $location, $http, UserDataFactor
 									  $scope.$apply();
 								  };
 		
-		
+		// This will either create a new poll or update the one we are editing
 		$scope.save = function() {
 			var errors = [];
 			var questionsCount = $scope.poll.questions.length;
@@ -1289,6 +1296,8 @@ tweb.controller('polldetails', function($scope, $location, $http, UserDataFactor
 			}
 			
 			if (errors.length == 0) {
+				
+				// In case we are editing an existing poll
 				if (mode == 'edit') {
 					$http({
 						method: 'PUT',
@@ -1310,6 +1319,7 @@ tweb.controller('polldetails', function($scope, $location, $http, UserDataFactor
 						alert("Could not edit poll: http error");
 					});
 				} else {
+					// In case we want to create a new poll
 					$http({
 						method: 'POST',
 						url: "/api/v1/poll",

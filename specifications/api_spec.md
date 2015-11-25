@@ -47,6 +47,8 @@ route: BASE/registerForm
 ~~~
 
 _password_ must be at least 8 characters in length.
+_email_ must be between 5 and 70 characters in length.
+_firstname_ and _lastname_ must be between 2 and 70 characters in length.
 
 Example:
 
@@ -68,6 +70,7 @@ Response:
 	"data":null
 }
 ~~~
+
 
 Errors:<br />
 E_EMAIL_ALREADY_REGISTERED : The supplied email address is already registered<br />

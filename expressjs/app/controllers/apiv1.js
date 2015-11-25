@@ -25,6 +25,7 @@ sio.sockets.on('connection', function (socket) {
 	socket.isAuthenticated = false;
 	console.log('New socket.io connection');
 	
+	// A socket.io client disconnected
 	socket.on('disconnect', function() {
 		console.log("User disconnected");
 		
@@ -33,6 +34,7 @@ sio.sockets.on('connection', function (socket) {
 		}
 	});
 	
+	// A socket.io client is ready to catch up 
 	socket.on('catchUp', function() {
 		if (socket.isAuthenticated === true) {
 			
@@ -93,6 +95,7 @@ sio.sockets.on('connection', function (socket) {
 		}
 	});
 	
+	// First message any socket.io client should send
 	socket.on('authAndJoin', function(authData) {
 		console.log('Processing authAndJoin');
 		
@@ -155,6 +158,7 @@ sio.sockets.on('connection', function (socket) {
 										});
 	});
 
+	// A speaker wants to display the next question in the poll
 	socket.on('goNextQuestion', function() {
 		console.log('Processing goNextQuestion');
 
@@ -190,6 +194,7 @@ sio.sockets.on('connection', function (socket) {
 		}
 	});
 	
+	// A socket.io client wants to cast a vote
 	socket.on('vote', function(data) {
 		var answerIndex = data.answerIndex;
 		var voteAsAnonymous = data.voteAsAnonymous;
@@ -835,7 +840,7 @@ This function will check the supplied password.
 It must be conform to all security requirements.
 
 There requirements are:
-- The length of the password must be at least 8 characterSet
+- The length of the password must be at least 8 characters
 
 Returns an array of error messages. An empty array mean the provided password is conform to the policy.
 */
