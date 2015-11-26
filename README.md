@@ -24,6 +24,7 @@ Documentation
 Done in part 2
 ========================================
 
+* Socket.IO implemented on both the client and the server
 * User manual
 * Sequence diagram explaining which messages are exchanged between clients and the server and when
 * Authentication process
@@ -70,3 +71,8 @@ This process starts when a user decides to load a poll in memory:
 Exception: When the poll has been opened for more than 6 hours, it is automatically closed.
 
 As an added optimization, questions that have already been displayed are unloaded from memory.
+
+For our session management, we used the jsonwebtoken module. It allows the storage of the entire session on the client side.
+The session is signed using a secret known only to the server in order to prevent clients from modifying its session data.
+
+
