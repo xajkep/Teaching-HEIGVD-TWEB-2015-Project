@@ -41,7 +41,7 @@ In order to create a new poll, click on Create a new poll on your home page.
 
 First, specify the name of the poll on the top of the page (replace the default value, SuperPOLL)
 
-By default, several questions and answers are already shown. You can either delete them or use them as a start point by modifying them.
+By default, several questions and answers are already shown. You can either delete them or use them as a starting point by modifying them.
 
 In order to delete a question, click on Delete on the right of the question. You can also move them up and down according to your needs.
 
@@ -55,6 +55,7 @@ For each question:
   * "Timeout" is the duration of the vote for this question, in seconds (between 15 and 600)
 
 A poll can contain at most 50 questions.
+
 Hint: You can add a question at a specific position by clicking on Add question here
 
 ![newpoll3](./usermanimg/newpoll3.png)
@@ -73,7 +74,7 @@ When you are done, click the Save poll button.
 
 ![newpoll5](./usermanimg/newpoll5.png)
 
-You are now redirected to your home page. It shows the newly cleated poll:
+You are now redirected to your home page. It shows the newly created poll:
 
 ![polls2](./usermanimg/polls2.png)
 
