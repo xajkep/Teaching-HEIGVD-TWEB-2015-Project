@@ -27,7 +27,7 @@ Done in part 2
 * Socket.IO implemented on both the client and the server
 
   For segregating polls and speakers/audience in each poll, we used the <a href="http://socket.io/docs/rooms-and-namespaces/">rooms feature</a> provided by Socket.io.
-  When a user joins, the server makes it join either the poll_`POLL-ID`_speaker (if he is the poll owner) or the poll_`POLL-ID`_audience room. In either case we make them join the poll_`POLL-ID` room as well for ease of use.
+  When a user joins, the server makes it join either the `poll_POLL-ID_speaker` (if he is the poll owner) or the `poll_POLL-ID_audience` room. In either case we make them join the `poll_POLL-ID` room as well for ease of use.
 
 * User manual
 * Sequence diagram explaining which messages are exchanged between clients and the server and when
