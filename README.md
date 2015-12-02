@@ -25,6 +25,10 @@ Done in part 2
 ========================================
 
 * Socket.IO implemented on both the client and the server
+
+  For segregating polls and speakers/audience in each poll, we used the <a href="http://socket.io/docs/rooms-and-namespaces/">rooms feature</a> provided by Socket.io.
+  When a user joins, the server makes it join either the poll_`POLL-ID`_speaker (if he is the poll owner) or the poll_`POLL-ID`_audience room. In either case we make them join the poll_`POLL-ID` room as well for ease of use.
+
 * User manual
 * Sequence diagram explaining which messages are exchanged between clients and the server and when
 * Authentication process
@@ -39,10 +43,12 @@ Done in part 2
 * Join a poll as audience:
   * The interface only allows voting for the alloted time
   * Possible answers are displayed and the user can select them
+  * Anonymous volting is possible only when the question allows it
 * The poll supports user reconnection for both the speaker and the audience
+* Verification by the server that the same user is not already connected to the same poll. If it is, then the first session is terminated.
 
 Still to be done/improved:
-* Create a formal test script
+* Create a formal test script that will emulate users in the poll
 
 Known bugs:
 * When a user fails to join a poll by clicking on Join, he cannot proceed to join another poll.
