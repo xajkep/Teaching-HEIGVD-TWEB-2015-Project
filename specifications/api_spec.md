@@ -703,7 +703,7 @@ Socket.io is used once a poll is opened and until it is closed or completed. You
 * Receive live results
 * Be notified of the next question
 
-The endpoint is the same server and port as the Web server. Encoding it UTF-8.
+The endpoint is the same server and port as the Web server. Encoding is UTF-8.
 Once connected, start by sending the authAndJoin message.
 
 The following sequence diagram shows which messages are exchanged in a 2-question poll:
