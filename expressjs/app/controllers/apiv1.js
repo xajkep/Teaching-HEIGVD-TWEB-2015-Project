@@ -112,9 +112,7 @@ sio.sockets.on('connection', function (socket) {
 												socket.emit('authAndJoinResult', {'status': 'ko', 'messages': errors});
 											} else {
 												console.log('Socket.io authentication success');
-												
-												// TO-DO: check if user is already connected. If so, disconnect all other sessions.
-												
+
 												User.findOne({ '_id': userId }, function (err, user) {
 												  if (err || user == null) {
 													  // Should never happen
@@ -131,7 +129,7 @@ sio.sockets.on('connection', function (socket) {
 																socketInRoom.disconnect();
 															}
 														}
-													  
+
 														socket.isAuthenticated = true;
 														socket.userId = userId;
 														socket.firstName = user.firstname;
@@ -146,6 +144,8 @@ sio.sockets.on('connection', function (socket) {
 
 														// Joining the type specific room. joinPollResult = 'speaker|audience'
 														socket.emit('authAndJoinResult', {'status': 'ok', 'data': joinPollResult});
+														
+														console.log('authAndJoin success: user=' + socket.email + ' (' + socket.userId + ')poll=' + socket.pollId);
 												  }
 												});
 											}

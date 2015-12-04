@@ -113,6 +113,9 @@ tweb.factory('ServerPushPoll', function (DisplayErrorMessagesFromAPI) {
 	//   cbJoinedAsAudience is executed when the server chose to make you join as audience
 	// Of course, only one of these callbacks is executed for each call to this function
 	var _connect = function(host, port, session, pollIdToJoin, cbJoinedAsSpeaker, cbJoinedAsAudience) {
+		
+		_connectedUsers = [];
+		
 		if (host == null || port == null) {
 			_sio = io.connect({ 'force new connection': true }); // same host
 		} else {

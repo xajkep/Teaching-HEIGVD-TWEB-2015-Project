@@ -46,6 +46,10 @@ Done in part 2
   * Anonymous volting is possible only when the question allows it
 * The poll supports user reconnection for both the speaker and the audience
 * Verification by the server that the same user is not already connected to the same poll. If it is, then the first session is terminated.
+* Bugs corrected on 2012-12-04:
+
+    - When a speaker opens another poll in the same session, previously connected users were displayed.
+	- A user could cast more votes than they were allowed. The server was not checking the correct variable (currentQuestion.maxVote)
 
 Still to be done/improved:
 * Create a formal test script that will emulate users in the poll

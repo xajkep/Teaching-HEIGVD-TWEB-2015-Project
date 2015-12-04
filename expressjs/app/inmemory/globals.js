@@ -25,8 +25,8 @@ var countAlreadyVoted = function(poll, userId) {
 		var answer = question.answers[answerIndex];
 		var usersLength = answer.users.length;
 		
-		for (var i = 0; i < usersLength; ++i) {
-			if (answer.users[i].user == userId) {
+		for (var userIndex = 0; userIndex < usersLength; ++userIndex) {
+			if (answer.users[userIndex].user == userId) {
 				alreadyVotedCount = alreadyVotedCount + 1;
 			}
 		}
@@ -133,8 +133,8 @@ module.exports = {
 		
 		// We then make sure the user cannot cast more votes than they are allowed to.
 		var alreadyVotedCount = countAlreadyVoted(poll, userId);
-		
-		if (alreadyVotedCount >= poll.maxVote) {
+
+		if (alreadyVotedCount >= question.maxVote) {
 			cbWhenKO();
 			return;
 		}
