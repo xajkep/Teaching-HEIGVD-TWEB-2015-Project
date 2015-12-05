@@ -46,7 +46,22 @@ Done in part 2
   * Anonymous volting is possible only when the question allows it
 * The poll supports user reconnection for both the speaker and the audience
 * Verification by the server that the same user is not already connected to the same poll. If it is, then the first session is terminated.
-* Segregated AngularJs controllers and factories into their own .js file 
+* Segregated AngularJs controllers and factories into their own .js file
+* Segregated NodeJS controllers into their own .js file
+* The NodeJS server now requires the DATABASE_STRING environment variable be defined.
+  
+  To do so, on Windows, execute the following:
+  
+  SET DATABASE_STRING=mongodb://tweb:dwmrqi5y@ds043694.mongolab.com:43694/tweb
+  
+  And on Unix systems, execute the following:
+  
+  export DATABASE_STRING=mongodb://tweb:dwmrqi5y@ds043694.mongolab.com:43694/tweb
+  
+  When exporting to Heroku:
+  
+  heroku config:set DATABASE_STRING=mongodb://tweb:dwmrqi5y@ds043694.mongolab.com:43694/tweb
+  
 * Bugs corrected on 2012-12-04:
 
     - When a speaker opens another poll in the same session, previously connected users were displayed.

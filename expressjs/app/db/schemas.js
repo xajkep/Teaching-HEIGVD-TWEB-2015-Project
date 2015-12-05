@@ -33,13 +33,17 @@ var PollSchema = new Schema({
   questions: [ {
 				  _id: String,
 				  name: String,
+				  // Maximum number of times a single user can vote on the question (=sum of his votes on all answers)
 				  maxVote: Number,
 				  allowAnonymous: Boolean,
+				  // Allowed duration of voting on this question. In seconds.
 				  timeout: Number,
 				  answers: [
 							   {
 								   _id: String,
+								   // Name of the answer. For example: Yes
 								   name: String,
+								   // A user vote is composed of: a reference to the user who voted, a flag: anonymous or not, and the delta(vote received - start of question) in milliseconds
 								   users: [ { user: { type: String, ref: 'User' }, anonymous: Boolean, timing: Number } ]
 							   }
 						   ]

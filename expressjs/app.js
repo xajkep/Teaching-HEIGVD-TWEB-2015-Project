@@ -6,7 +6,11 @@ var bodyParser = require('body-parser');
 
 
 // MongoDB connection string
-var mongoDBConfig = 'mongodb://tweb:dwmrqi5y@ds043694.mongolab.com:43694/tweb'; // 'mongodb://localhost/tweb' 'mongodb://tweb:dwmrqi5y@ds043694.mongolab.com:43694/tweb';
+var mongoDBConfig = process.env.DATABASE_STRING || null; // 'mongodb://tweb:dwmrqi5y@ds043694.mongolab.com:43694/tweb'; // 'mongodb://localhost/tweb' 'mongodb://tweb:dwmrqi5y@ds043694.mongolab.com:43694/tweb';
+
+if (mongoDBConfig == null) {
+	throw new Error('the DATABASE_STRING environment variable is not defined');
+}
 
 // Listening port. Is the same for the Web server and the Socket.IO server
 var appListenOnPortConfig = process.env.PORT || 8080;
