@@ -9,7 +9,7 @@ var bodyParser = require('body-parser');
 var mongoDBConfig = 'mongodb://tweb:dwmrqi5y@ds043694.mongolab.com:43694/tweb'; // 'mongodb://localhost/tweb' 'mongodb://tweb:dwmrqi5y@ds043694.mongolab.com:43694/tweb';
 
 // Listening port. Is the same for the Web server and the Socket.IO server
-var appListenOnPortConfig = process.env.PORT || 8081;
+var appListenOnPortConfig = process.env.PORT || 8080;
 
 // HMAC secret used to secure pseudo-sessions against tampering
 var sessionSecret = 'VlL_LGgy5yu89-nW+7U6f7u0TbIlmP.z';
