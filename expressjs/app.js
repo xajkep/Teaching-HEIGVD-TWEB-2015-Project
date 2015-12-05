@@ -3,10 +3,8 @@ var glob = require('glob');
 var mongoose = require('mongoose');
 var bodyParser = require('body-parser');
 
-
-
 // MongoDB connection string
-var mongoDBConfig = process.env.DATABASE_STRING || null; // 'mongodb://tweb:dwmrqi5y@ds043694.mongolab.com:43694/tweb'; // 'mongodb://localhost/tweb' 'mongodb://tweb:dwmrqi5y@ds043694.mongolab.com:43694/tweb';
+var mongoDBConfig = process.env.DATABASE_STRING || null;
 
 if (mongoDBConfig == null) {
 	throw new Error('the DATABASE_STRING environment variable is not defined');
