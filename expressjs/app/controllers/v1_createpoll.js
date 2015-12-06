@@ -68,7 +68,7 @@ router.post('/poll', function (req, res) {
 												});
 											};
 											
-											// We then generate a hopefully random identifier, which will identify the new poll
+											// We then generate a hopefully unique random identifier, which will identify the new poll
 											common.generateId(function(generatedPollId) {
 												insertPoll(generatedPollId);
 											});

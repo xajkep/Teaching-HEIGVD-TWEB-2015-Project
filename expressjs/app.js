@@ -14,7 +14,11 @@ if (mongoDBConfig == null) {
 var appListenOnPortConfig = process.env.PORT || 8080;
 
 // HMAC secret used to secure pseudo-sessions against tampering
-var sessionSecret = 'VlL_LGgy5yu89-nW+7U6f7u0TbIlmP.z';
+var sessionSecret = process.env.SESSION_SECRET || null;
+
+if (sessionSecret == null) {
+	throw new Error('the SESSION_SECRET environment variable is not defined');
+}
 
 // Establishing a connection to our MongoDB server
 mongoose.connect(mongoDBConfig);

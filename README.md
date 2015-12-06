@@ -48,19 +48,25 @@ Done in part 2
 * Verification by the server that the same user is not already connected to the same poll. If it is, then the first session is terminated.
 * Segregated AngularJs controllers and factories into their own .js file
 * Segregated NodeJS controllers into their own .js file
-* The NodeJS server now requires the DATABASE_STRING environment variable be defined.
+* The NodeJS server now requires the DATABASE_STRING and SESSION_SECRET environment variables be defined.
+  
+  * DATABASE_STRING : Must be a valid MongoDB connection string
+  * SESSION_SECRET : Secret used to sign the session and thus ensure it has not been tampered with by the client
   
   To do so, on Windows, execute the following:
   
   SET DATABASE_STRING=mongodb://tweb:dwmrqi5y@ds043694.mongolab.com:43694/tweb
+  SET SESSION_SECRET=VlL_LGgy5yu89-nW+7U6f7u0TbIlmP.z
   
   And on Unix systems, execute the following:
   
   export DATABASE_STRING=mongodb://tweb:dwmrqi5y@ds043694.mongolab.com:43694/tweb
+  export SESSION_SECRET=VlL_LGgy5yu89-nW+7U6f7u0TbIlmP.z
   
   When exporting to Heroku:
   
   heroku config:set DATABASE_STRING=mongodb://tweb:dwmrqi5y@ds043694.mongolab.com:43694/tweb
+  heroku config:set SESSION_SECRET=VlL_LGgy5yu89-nW+7U6f7u0TbIlmP.z
   
 * Bugs corrected on 2012-12-04:
 

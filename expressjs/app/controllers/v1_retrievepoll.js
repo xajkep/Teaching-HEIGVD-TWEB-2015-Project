@@ -50,12 +50,10 @@ router.get('/poll/:id', function (req, res) {
 																var currentUser = currentAnswer.users[z];
 																
 																// Since mongoose did a join, the _id whould be a duplicate. It is removed once.
-																//console.log('deleting currentUser._id: ' + currentUser._id);
 																delete currentUser._id;
 																
 																// If the user voted anonymously, his id is removed from the response
 																if (currentUser.anonymous) {
-																	//console.log('deleting currentUser.user: ' + currentUser.user);
 																	delete currentUser.user;
 																}
 															}

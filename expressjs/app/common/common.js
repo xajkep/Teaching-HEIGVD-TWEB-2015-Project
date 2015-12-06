@@ -1,3 +1,7 @@
+/*
+This file contains common utility functions
+*/
+
 var crypto = require('crypto');
 var jwt = require('jsonwebtoken');
 var appjs = require(__dirname + '/../../app.js');
@@ -143,26 +147,26 @@ module.exports = {
 		var newPollDTO = [];
 
 		if (!poll.hasOwnProperty("name")) {
-			errors.push(common.erro('E_INVALID_REQUEST', "Poll name not supplied"));
+			errors.push(erro('E_INVALID_REQUEST', "Poll name not supplied"));
 		} else {
 			pollName = poll.name;
 			
 			if (pollName.length < 3 || pollName.length > 30) {
-				errors.push(common.erro('E_INVALID_REQUEST', "Poll name is invalid"));
+				errors.push(erro('E_INVALID_REQUEST', "Poll name is invalid"));
 			}
 		}
 
 		if (!poll.hasOwnProperty("questions")) {
-			errors.push(common.erro('E_INVALID_REQUEST', "Poll questions not supplied"));
+			errors.push(erro('E_INVALID_REQUEST', "Poll questions not supplied"));
 		} else {
 			newPollDTO.name = pollName;
 			newPollDTO.questions = [];
 			
 			var questionsCount = poll.questions.length;
 			if (questionsCount < 1) {
-				errors.push(common.erro('E_INVALID_REQUEST', "At least one question must be specified"));
+				errors.push(erro('E_INVALID_REQUEST', "At least one question must be specified"));
 			} else if (questionsCount > 50) {
-				errors.push(common.erro('E_INVALID_REQUEST', "Too many questions specified"));
+				errors.push(erro('E_INVALID_REQUEST', "Too many questions specified"));
 			} else {
 				
 				for (var questionIndex = 0; questionIndex < poll.questions.length ; questionIndex++) {
@@ -170,27 +174,27 @@ module.exports = {
 					var currentQuestion = poll.questions[questionIndex];
 					
 					if (!currentQuestion.hasOwnProperty("name")) {
-						errors.push(common.erro('E_INVALID_REQUEST', "Question has no name"));
+						errors.push(erro('E_INVALID_REQUEST', "Question has no name"));
 						break;
 					}
 
 					if (!currentQuestion.hasOwnProperty("allowAnonymous")) {
-						errors.push(common.erro('E_INVALID_REQUEST', "Question has no allowAnonymous"));
+						errors.push(erro('E_INVALID_REQUEST', "Question has no allowAnonymous"));
 						break;
 					}
 					
 					if (!currentQuestion.hasOwnProperty("maxVote")) {
-						errors.push(common.erro('E_INVALID_REQUEST', "Question has no maxVote"));
+						errors.push(erro('E_INVALID_REQUEST', "Question has no maxVote"));
 						break;
 					}
 					
 					if (!currentQuestion.hasOwnProperty("answers")) {
-						errors.push(common.erro('E_INVALID_REQUEST', "Question has no answers"));
+						errors.push(erro('E_INVALID_REQUEST', "Question has no answers"));
 						break;
 					}
 					
 					if (!currentQuestion.hasOwnProperty("timeout")) {
-						errors.push(common.erro('E_INVALID_REQUEST', "Question has no timeout"));
+						errors.push(erro('E_INVALID_REQUEST', "Question has no timeout"));
 						break;
 					}
 					
@@ -212,26 +216,26 @@ module.exports = {
 					console.log(" timeout: " + currentQuestionDTO.timeout);
 					
 					if (currentQuestionDTO.name.length < 5 || currentQuestionDTO.name.length > 50) {
-						errors.push(common.erro('E_INVALID_REQUEST', "Question name is invalid"));
+						errors.push(erro('E_INVALID_REQUEST', "Question name is invalid"));
 					}
 					
 					if (currentQuestionDTO.allowAnonymous !== true && currentQuestionDTO.allowAnonymous !== false) {
-						errors.push(common.erro('E_INVALID_REQUEST', "AllowAnonymous is invalid"));
+						errors.push(erro('E_INVALID_REQUEST', "AllowAnonymous is invalid"));
 					}
 					
 					if (currentQuestionDTO.maxVote < 1 || currentQuestionDTO.maxVote > 10) {
-						errors.push(common.erro('E_INVALID_REQUEST', "MaxVote is invalid"));
+						errors.push(erro('E_INVALID_REQUEST', "MaxVote is invalid"));
 					}
 					
 					if (currentQuestionDTO.timeout < 15 || currentQuestionDTO.timeout > 600) {
-						errors.push(common.erro('E_INVALID_REQUEST', "Timeout is invalid"));
+						errors.push(erro('E_INVALID_REQUEST', "Timeout is invalid"));
 					}
 					
 					var answersCount = currentQuestionAnswers.length;
 					if (answersCount < 2) {
-						errors.push(common.erro('E_INVALID_REQUEST', "At least two answers must be specified"));
+						errors.push(erro('E_INVALID_REQUEST', "At least two answers must be specified"));
 					} else if (answersCount > 10) {
-						errors.push(common.erro('E_INVALID_REQUEST', "Too many answers specified"));
+						errors.push(erro('E_INVALID_REQUEST', "Too many answers specified"));
 					} else {
 						console.log("  Answers:");
 						
@@ -240,7 +244,7 @@ module.exports = {
 							var currentAnswer = currentQuestionAnswers[answerIndex];
 							
 							if (!currentQuestion.hasOwnProperty("name")) {
-								errors.push(common.erro('E_INVALID_REQUEST', "Answer has no name"));
+								errors.push(erro('E_INVALID_REQUEST', "Answer has no name"));
 								break;
 							}
 							

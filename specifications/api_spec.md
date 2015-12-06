@@ -829,14 +829,14 @@ Example:
 ~~~json
 [
 	{
-	  "_id": 5a39987657e8f45eea39fa32e3b5a85d120eeb89,
+	  "_id": "5a39987657e8f45eea39fa32e3b5a85d120eeb89",
 	  "firstName": "Paul",
 	  "lastName": "Dupont",
 	  "email": "paul.dupont@mail.com",
 	  "voted": false
 	},
 	{
-	  "_id": 5a39987657e8f45eea39fa32e3b5a85d120eeb81,
+	  "_id": "5a39987657e8f45eea39fa32e3b5a85d120eeb81",
 	  "firstName": "Sophie",
 	  "lastName": "Perette",
 	  "email": "sophie.perette@mail.com",
