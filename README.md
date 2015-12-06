@@ -55,18 +55,18 @@ Done in part 2
   
   To do so, on Windows, execute the following:
   
-  SET DATABASE_STRING=mongodb://tweb:dwmrqi5y@ds043694.mongolab.com:43694/tweb
-  SET SESSION_SECRET=VlL_LGgy5yu89-nW+7U6f7u0TbIlmP.z
+  * SET DATABASE_STRING=mongodb://tweb:dwmrqi5y@ds043694.mongolab.com:43694/tweb
+  * SET SESSION_SECRET=VlL_LGgy5yu89-nW+7U6f7u0TbIlmP.z
   
   And on Unix systems, execute the following:
   
-  export DATABASE_STRING=mongodb://tweb:dwmrqi5y@ds043694.mongolab.com:43694/tweb
-  export SESSION_SECRET=VlL_LGgy5yu89-nW+7U6f7u0TbIlmP.z
+  * export DATABASE_STRING=mongodb://tweb:dwmrqi5y@ds043694.mongolab.com:43694/tweb
+  * export SESSION_SECRET=VlL_LGgy5yu89-nW+7U6f7u0TbIlmP.z
   
   When exporting to Heroku:
   
-  heroku config:set DATABASE_STRING=mongodb://tweb:dwmrqi5y@ds043694.mongolab.com:43694/tweb
-  heroku config:set SESSION_SECRET=VlL_LGgy5yu89-nW+7U6f7u0TbIlmP.z
+  * heroku config:set DATABASE_STRING=mongodb://tweb:dwmrqi5y@ds043694.mongolab.com:43694/tweb
+  * heroku config:set SESSION_SECRET=VlL_LGgy5yu89-nW+7U6f7u0TbIlmP.z
   
 * Bugs corrected on 2012-12-04:
 
