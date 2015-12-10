@@ -10,7 +10,7 @@ Benoit Zuckschwerdt
 Websites
 ========================================
 
-The app is available here: https://shrouded-falls-6875.herokuapp.com <br />
+The app is available here: http://94.242.59.182:8080 <br />
 Our presentation website is available here: http://julienamacher.github.io/twebpres/
 
 Documentation

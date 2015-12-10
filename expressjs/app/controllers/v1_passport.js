@@ -43,7 +43,7 @@ passport.use(new GitHubStrategy({
 	console.log("Received callback from GitHub from email: " + userEmail);
 
 	User.findOne({ 'email': userEmail }, '_id', function (err, userFound) {
-		if (err){
+		if (err || userFound == null){
 			console.log("GitHub callback. The following email does not exist locally, creating it: " + userEmail);
 			common.generateId(function(generatedId) {
 				var newUser = new User({ _id: generatedId,
