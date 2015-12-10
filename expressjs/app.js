@@ -20,6 +20,24 @@ if (sessionSecret == null) {
 	throw new Error('the SESSION_SECRET environment variable is not defined');
 }
 
+var passportGitHubCallbackUrl = process.env.PASSPORT_GITHUB_CALLBACK_URL || null;
+
+if (passportGitHubCallbackUrl == null) {
+	throw new Error('the PASSPORT_GITHUB_CALLBACK_URL environment variable is not defined');
+}
+
+var passportGitHubClientId = process.env.PASSPORT_GITHUB_CLIENT_ID || null;
+
+if (passportGitHubClientId == null) {
+	throw new Error('the PASSPORT_GITHUB_CLIENT_ID environment variable is not defined');
+}
+
+var passportGitHubClientSecret = process.env.PASSPORT_GITHUB_CLIENT_SECRET || null;
+
+if (passportGitHubClientSecret == null) {
+	throw new Error('the PASSPORT_GITHUB_CLIENT_SECRET environment variable is not defined');
+}
+
 // Establishing a connection to our MongoDB server
 mongoose.connect(mongoDBConfig);
 
@@ -51,8 +69,12 @@ var sio = require('socket.io').listen(server);
 // We export the socket.io config
 // as well as the secret used to sign the sessions (so we can use them in our api file)
 module.exports = {
+	'app': app,
 	'sio': sio,
-	'sessionSecret': sessionSecret
+	'sessionSecret': sessionSecret,
+	'passport' : { 'passportGitHubClientId': passportGitHubClientId,
+	               'passportGitHubClientSecret': passportGitHubClientSecret,
+	               'passportGitHubCallbackUrl': passportGitHubCallbackUrl }
 };
 
 // Including all constrollers in our controllers folder

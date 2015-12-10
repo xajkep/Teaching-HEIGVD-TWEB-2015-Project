@@ -1,4 +1,8 @@
-tweb.controller('register', function($scope, $http, $location, UserDataFactory, DisplayErrorMessagesFromAPI) {
+tweb.controller('register', function($window, $scope, $http, $location, UserDataFactory, DisplayErrorMessagesFromAPI) {
+	
+	$scope.registerUsingGitHub = function() {
+		$window.location.href = "/api/v1/callbacks/redirect_github";
+	};
 	
 	$scope.user = {
 		'firstname': '',

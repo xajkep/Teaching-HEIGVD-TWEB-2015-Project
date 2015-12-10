@@ -1,4 +1,4 @@
-var tweb = angular.module('tweb', ['ngRoute', 'ngAnimate', 'chart.js']);
+var tweb = angular.module('tweb', ['ngRoute', 'ngAnimate', 'chart.js', 'ui.gravatar']);
 
 tweb.config(['$routeProvider',
         function($routeProvider) {

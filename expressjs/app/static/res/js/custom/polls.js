@@ -1,6 +1,7 @@
 
 tweb.controller('polls', function($scope, $http, $location, UserDataFactory, ServerPushPoll, DisplayErrorMessagesFromAPI) {
 	$scope.userSession = UserDataFactory.getSession();
+	$scope.userEmail = UserDataFactory.getEmail();
 
 	$scope.logout = function() {
 		$location.path("/login");

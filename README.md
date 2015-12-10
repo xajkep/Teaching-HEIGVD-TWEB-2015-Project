@@ -21,6 +21,30 @@ Documentation
 <a href="specifications/Specifications.md">Specifications</a><br />
 <a href="specifications/api_spec.md">API specifications</a> <strong>Added sequence diagram</strong>
 
+Done in part 3
+========================================
+
+* Implemented Gravatar
+
+  Users first need to configure their display picture.
+  This is achieved by creating a Gravatar account using the same email address than the one they use to login with in our app.
+  
+  ![Gravatar config](./specifications/pictures/gravatar1.png)
+  
+  Then, when they join a poll, their picture is displayed alon their name:
+  
+  ![Gravatar display in poll](./specifications/pictures/gravatar2.png)
+
+
+* Implemented SSO using <a href="https://github.com/cfsghost/passport-github">GitHub</a> and <a href="https://github.com/jaredhanson/passport">Passport</a>
+  
+  See our <a href="registerapp_github/howto.md">manual</a> on how to create an application on GitHub.
+
+  The following additional environment variables are now required:
+  * PASSPORT_GITHUB_CLIENT_ID : GitHub Client ID
+  * PASSPORT_GITHUB_CLIENT_SECRET : GitHub Client Secret
+  * PASSPORT_GITHUB_CALLBACK_URL : GitHub OAuth Callback URL. IT MUST BE THE SAME THAN THE ONE REGISTERED IN YOUR GITHUB APPLICATION
+
 Done in part 2
 ========================================
 
@@ -52,21 +76,36 @@ Done in part 2
   
   * DATABASE_STRING : Must be a valid MongoDB connection string
   * SESSION_SECRET : Secret used to sign the session and thus ensure it has not been tampered with by the client
+  * PASSPORT_GITHUB_CLIENT_ID : GitHub Client ID
+  * PASSPORT_GITHUB_CLIENT_SECRET : GitHub Client Secret
+  * PASSPORT_GITHUB_CALLBACK_URL : GitHub OAuth Callback URL
   
   To do so, on Windows, execute the following:
   
   * SET DATABASE_STRING=mongodb://tweb:dwmrqi5y@ds043694.mongolab.com:43694/tweb
   * SET SESSION_SECRET=VlL_LGgy5yu89-nW+7U6f7u0TbIlmP.z
+  * SET PASSPORT_GITHUB_CALLBACK_URL=https://shrouded-falls-6875.herokuapp.com/api/v1/callbacks/github
+  
+  (+ PASSPORT_GITHUB_CLIENT_ID)
+  (+ PASSPORT_GITHUB_CLIENT_SECRET)
   
   And on Unix systems, execute the following:
   
   * export DATABASE_STRING=mongodb://tweb:dwmrqi5y@ds043694.mongolab.com:43694/tweb
   * export SESSION_SECRET=VlL_LGgy5yu89-nW+7U6f7u0TbIlmP.z
+  * export PASSPORT_GITHUB_CALLBACK_URL=https://shrouded-falls-6875.herokuapp.com/api/v1/callbacks/github
+  
+  (+ PASSPORT_GITHUB_CLIENT_ID)
+  (+ PASSPORT_GITHUB_CLIENT_SECRET)
   
   When exporting to Heroku:
   
   * heroku config:set DATABASE_STRING=mongodb://tweb:dwmrqi5y@ds043694.mongolab.com:43694/tweb
   * heroku config:set SESSION_SECRET=VlL_LGgy5yu89-nW+7U6f7u0TbIlmP.z
+  * heroku config:set PASSPORT_GITHUB_CALLBACK_URL=https://shrouded-falls-6875.herokuapp.com/api/v1/callbacks/github
+  
+  (+ PASSPORT_GITHUB_CLIENT_ID)
+  (+ PASSPORT_GITHUB_CLIENT_SECRET)
   
 * Bugs corrected on 2012-12-04:
 
