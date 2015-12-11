@@ -1,6 +1,6 @@
 <!DOCTYPE html>
-<html>
-	<head>
+<html ng-app="tweb" ng-controller="headcontroller">
+	<head >
 		<title>QuickPoll</title>
 		<style type="text/css">
 		body {
@@ -31,10 +31,15 @@
 			left: -100%;
 		}
 		</style>
-		<link rel="stylesheet" href="res/css/bootstrap.min.css">
+		<link rel="stylesheet" href="res/css/bootstrap_{{ layout.url }}.min.css">
 		<link rel="stylesheet" href="res/css/angular-chart.css">
 	</head>
-	<body ng-app="tweb">
+	<body>
+
+		<div class="form-group" style="float: right;margin-right: 10px;color: black !important; background-color: white: !important">
+			<select ng-model="layout" ng-options="l as l.name for l in layouts"></select>
+		</div>
+	
 		<div class="container">
 			<div ng-view></div>
 		</div>
@@ -62,6 +67,7 @@
 		<script src="res/js/custom/register.js"></script>
 		<script src="res/js/custom/ServerPushPoll.js"></script>
 		<script src="res/js/custom/UserDataFactory.js"></script>
+		<script src="res/js/custom/headcontroller.js"></script>
 		
 		<script src="res/js/frameworks/angular-gravatar.min.js"></script>
 	</body>

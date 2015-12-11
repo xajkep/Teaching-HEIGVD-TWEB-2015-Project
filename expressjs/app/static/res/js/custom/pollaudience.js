@@ -30,6 +30,11 @@ tweb.controller('pollaudience', function($scope, $location, UserDataFactory, Ser
 		}
 	};
 	
+	$scope.$on("$destroy", function(){
+        $scope.stopTimer();
+		ServerPushPoll.disconnect();
+    });
+	
 	$scope.vote = function(answerIndex, voteAsAnonymous) {
 		$scope.currentQuestion.answers[answerIndex].voted = true;
 		ServerPushPoll.vote(answerIndex, voteAsAnonymous);

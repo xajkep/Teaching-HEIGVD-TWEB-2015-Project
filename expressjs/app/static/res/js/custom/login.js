@@ -8,6 +8,10 @@ tweb.controller('login', function($window, $scope, $http, $location, UserDataFac
 	$scope.loginWithGitHub = function() {
 		$window.location.href = "/api/v1/callbacks/redirect_github";
 	};
+	
+	$scope.loginWithFacebook = function() {
+		$window.location.href = "/api/v1/callbacks/redirect_facebook";
+	};
 
 	// Are we coming from an SSO ? (like GitHub). If so, retrieving parameters from the URL
 	$scope.$on('$viewContentLoaded', function() {

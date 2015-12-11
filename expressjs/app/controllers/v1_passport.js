@@ -8,6 +8,7 @@ var common = require(__dirname + '/../common/common.js');
 var jwt = require('jsonwebtoken');
 var passport = require('passport');
 var GitHubStrategy = require('passport-github2').Strategy;
+var FacebookStrategy = require('passport-facebook').Strategy;
 var mongoose = require('mongoose');
 
 // Mongoose schemas
@@ -20,31 +21,19 @@ module.exports = function (a) {
 
 app.use(passport.initialize());
 
-
-passport.serializeUser(function(user, done) {
-  done(null, user);
-});
-
-passport.deserializeUser(function(obj, done) {
-  done(null, obj);
-});
-
-passport.use(new GitHubStrategy({
-    clientID: passportConfig.passportGitHubClientId,
-    clientSecret: passportConfig.passportGitHubClientSecret,
-    callbackURL: passportConfig.passportGitHubCallbackUrl
-  },
-  function(accessToken, refreshToken, profile, done) {
-
+function authOrCreateUser(realm, profile, done) {
+	
+	console.log("SSO Profile received: %j", profile);
+	
 	var userEmail = profile.emails[0].value;
 	var userFirstName = profile.displayName;
 	var userLastName = profile.displayName;
 
-	console.log("Received callback from GitHub from email: " + userEmail);
+	console.log("Received callback from " + realm + " from email: " + userEmail);
 
 	User.findOne({ 'email': userEmail }, '_id', function (err, userFound) {
 		if (err || userFound == null){
-			console.log("GitHub callback. The following email does not exist locally, creating it: " + userEmail);
+			console.log(realm + " callback. The following email does not exist locally, creating it: " + userEmail);
 			common.generateId(function(generatedId) {
 				var newUser = new User({ _id: generatedId,
 										 email: userEmail,
@@ -70,10 +59,49 @@ passport.use(new GitHubStrategy({
 				"email": userEmail,
 			};
 			
-			console.log("GitHub callback. The following email does exist: " + userEmail);
+			console.log("" + realm + " callback. The following email does exist: " + userEmail);
 			return done(null, profile);
 		}
 	});
+}
+
+function ssoSuccessCreateSession(req, res) {
+	// Basic check : are we coming from a SSO strategy or is it just a user browsing our urls?
+	if (req.hasOwnProperty("user") && req.user.hasOwnProperty("custom")) {
+		console.log("Authenticated using SSO: %j", req.user.custom);
+		
+		// Generating a new token for the authenticated user
+		var userSessionToken = jwt.sign({ userId: req.user.custom._id }, sessionSecret, {
+										   expiresIn: 3600 * 6
+										});
+										
+		
+		res.redirect('/sp/#/login?session=' + userSessionToken + '&email=' + req.user.custom.email);
+		
+		delete req.user.custom;
+	} else {
+		res.redirect('/');
+	}
+}
+
+
+passport.serializeUser(function(user, done) {
+  done(null, user);
+});
+
+passport.deserializeUser(function(obj, done) {
+  done(null, obj);
+});
+
+// GitHub start
+
+passport.use(new GitHubStrategy({
+    clientID: passportConfig.passportGitHubClientId,
+    clientSecret: passportConfig.passportGitHubClientSecret,
+    callbackURL: passportConfig.passportGitHubCallbackUrl
+  },
+  function(accessToken, refreshToken, profile, done) {
+		authOrCreateUser("GitHub", profile, done);	
   }
 ));
 
@@ -83,22 +111,33 @@ router.get('/redirect_github', passport.authenticate('github', { scope: [ 'user:
 
 router.get('/github',  passport.authenticate('github', { failureRedirect: '/sp/#/login' }),
 	function(req, res) {
-		
-		// Basic check : are we coming from GitHubStrategy or is it just a user browsing our urls?
-		if (req.hasOwnProperty("user") && req.user.hasOwnProperty("custom")) {
-			console.log("Authenticated using GitHub: %j", req.user.custom);
-			
-			// Generating a new token for the authenticated user
-			var userSessionToken = jwt.sign({ userId: req.user.custom._id }, sessionSecret, {
-											   expiresIn: 3600 * 6
-											});
-											
-			
-			res.redirect('/sp/#/login?session=' + userSessionToken + '&email=' + req.user.custom.email);
-			
-			delete req.user.custom;
-		} else {
-			res.redirect('/');
-		}
+		ssoSuccessCreateSession(req, res);
 	}
 );
+
+// GitHub end
+
+// Facebook start
+
+passport.use(new FacebookStrategy({
+    clientID: passportConfig.passportFacebookClientId,
+    clientSecret: passportConfig.passportFacebookClientSecret,
+    callbackURL: passportConfig.passportFacebookCallbackUrl,
+	profileFields: ['emails']
+  },
+  function(accessToken, refreshToken, profile, done) {
+		authOrCreateUser("Facebook", profile, done);	
+  }
+));
+
+router.get('/redirect_facebook', passport.authenticate('facebook', { scope: [ 'email' ] }),
+	function(req, res){}
+);
+
+router.get('/facebook', passport.authenticate('facebook', { failureRedirect: '/sp/#/login' }),
+	function(req, res){
+		ssoSuccessCreateSession(req, res);
+	}
+);
+
+// Facebook end

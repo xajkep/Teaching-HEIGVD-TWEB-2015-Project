@@ -72,40 +72,47 @@ Done in part 2
 * Verification by the server that the same user is not already connected to the same poll. If it is, then the first session is terminated.
 * Segregated AngularJs controllers and factories into their own .js file
 * Segregated NodeJS controllers into their own .js file
-* The NodeJS server now requires the DATABASE_STRING and SESSION_SECRET environment variables be defined.
+* The NodeJS server now requires the following environment variables be defined:
   
   * DATABASE_STRING : Must be a valid MongoDB connection string
   * SESSION_SECRET : Secret used to sign the session and thus ensure it has not been tampered with by the client
   * PASSPORT_GITHUB_CLIENT_ID : GitHub Client ID
   * PASSPORT_GITHUB_CLIENT_SECRET : GitHub Client Secret
   * PASSPORT_GITHUB_CALLBACK_URL : GitHub OAuth Callback URL
+  * PASSPORT_FACEBOOK_CLIENT_ID : Facebook Client ID
+  * PASSPORT_FACEBOOK_CLIENT_SECRET : Facebook Client Secret
+  * PASSPORT_FACEBOOK_CALLBACK_URL : Facebook OAuth Callback URL
   
   To do so, on Windows, execute the following:
   
   * SET DATABASE_STRING=mongodb://tweb:dwmrqi5y@ds043694.mongolab.com:43694/tweb
   * SET SESSION_SECRET=VlL_LGgy5yu89-nW+7U6f7u0TbIlmP.z
   * SET PASSPORT_GITHUB_CALLBACK_URL=https://shrouded-falls-6875.herokuapp.com/api/v1/callbacks/github
-  
-  (+ PASSPORT_GITHUB_CLIENT_ID)
-  (+ PASSPORT_GITHUB_CLIENT_SECRET)
+  * SET PASSPORT_FACEBOOK_CALLBACK_URL=https://shrouded-falls-6875.herokuapp.com/api/v1/callbacks/facebook
+  * (+ PASSPORT_GITHUB_CLIENT_ID)
+  * (+ PASSPORT_GITHUB_CLIENT_SECRET)
+  * (+ PASSPORT_FACEBOOK_CLIENT_ID)
+  * (+ PASSPORT_GITHUB_CLIENT_SECRET)
   
   And on Unix systems, execute the following:
   
   * export DATABASE_STRING=mongodb://tweb:dwmrqi5y@ds043694.mongolab.com:43694/tweb
   * export SESSION_SECRET=VlL_LGgy5yu89-nW+7U6f7u0TbIlmP.z
   * export PASSPORT_GITHUB_CALLBACK_URL=https://shrouded-falls-6875.herokuapp.com/api/v1/callbacks/github
-  
-  (+ PASSPORT_GITHUB_CLIENT_ID)
-  (+ PASSPORT_GITHUB_CLIENT_SECRET)
+  * (+ PASSPORT_GITHUB_CLIENT_ID)
+  * (+ PASSPORT_GITHUB_CLIENT_SECRET)
+  * (+ PASSPORT_FACEBOOK_CLIENT_ID)
+  * (+ PASSPORT_GITHUB_CLIENT_SECRET)
   
   When exporting to Heroku:
   
   * heroku config:set DATABASE_STRING=mongodb://tweb:dwmrqi5y@ds043694.mongolab.com:43694/tweb
   * heroku config:set SESSION_SECRET=VlL_LGgy5yu89-nW+7U6f7u0TbIlmP.z
   * heroku config:set PASSPORT_GITHUB_CALLBACK_URL=https://shrouded-falls-6875.herokuapp.com/api/v1/callbacks/github
-  
-  (+ PASSPORT_GITHUB_CLIENT_ID)
-  (+ PASSPORT_GITHUB_CLIENT_SECRET)
+  * (+ PASSPORT_GITHUB_CLIENT_ID)
+  * (+ PASSPORT_GITHUB_CLIENT_SECRET)
+  * (+ PASSPORT_FACEBOOK_CLIENT_ID)
+  * (+ PASSPORT_GITHUB_CLIENT_SECRET)
   
 * Bugs corrected on 2012-12-04:
 

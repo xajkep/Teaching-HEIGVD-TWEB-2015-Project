@@ -38,6 +38,24 @@ if (passportGitHubClientSecret == null) {
 	throw new Error('the PASSPORT_GITHUB_CLIENT_SECRET environment variable is not defined');
 }
 
+var passportFacebookCallbackUrl = process.env.PASSPORT_FACEBOOK_CALLBACK_URL || null;
+
+if (passportFacebookCallbackUrl == null) {
+	throw new Error('the PASSPORT_FACEBOOK_CALLBACK_URL environment variable is not defined');
+}
+
+var passportFacebookClientId = process.env.PASSPORT_FACEBOOK_CLIENT_ID || null;
+
+if (passportFacebookClientId == null) {
+	throw new Error('the PASSPORT_FACEBOOK_CLIENT_ID environment variable is not defined');
+}
+
+var passportFacebookClientSecret = process.env.PASSPORT_FACEBOOK_CLIENT_SECRET || null;
+
+if (passportFacebookClientSecret == null) {
+	throw new Error('the PASSPORT_FACEBOOK_CLIENT_SECRET environment variable is not defined');
+}
+
 // Establishing a connection to our MongoDB server
 mongoose.connect(mongoDBConfig);
 
@@ -74,7 +92,11 @@ module.exports = {
 	'sessionSecret': sessionSecret,
 	'passport' : { 'passportGitHubClientId': passportGitHubClientId,
 	               'passportGitHubClientSecret': passportGitHubClientSecret,
-	               'passportGitHubCallbackUrl': passportGitHubCallbackUrl }
+	               'passportGitHubCallbackUrl': passportGitHubCallbackUrl,
+				   'passportFacebookClientId': passportFacebookClientId,
+	               'passportFacebookClientSecret': passportFacebookClientSecret,
+	               'passportFacebookCallbackUrl': passportFacebookCallbackUrl
+				}
 };
 
 // Including all constrollers in our controllers folder

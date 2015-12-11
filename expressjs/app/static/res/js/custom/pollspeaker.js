@@ -198,4 +198,9 @@ tweb.controller('pollspeaker', function($scope, $location, UserDataFactory, Serv
 
 		ServerPushPoll.catchUp();
 	});
+	
+	$scope.$on("$destroy", function(){
+        $scope.stopTimer();
+		ServerPushPoll.disconnect();
+    });
 });
