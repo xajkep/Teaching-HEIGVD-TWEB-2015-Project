@@ -2,6 +2,8 @@ var express = require('express');
 var glob = require('glob');
 var mongoose = require('mongoose');
 var bodyParser = require('body-parser');
+var https = require('https');
+var fs = require('fs');
 
 // MongoDB connection string
 var mongoDBConfig = process.env.DATABASE_STRING || null;
@@ -56,6 +58,14 @@ if (passportFacebookClientSecret == null) {
 	throw new Error('the PASSPORT_FACEBOOK_CLIENT_SECRET environment variable is not defined');
 }
 
+var enableSSL = false;
+var sslPrivateKeyPath = process.env.SSL_PRIVATE_KEY_PATH || null;
+var sslCertificatePath = process.env.SSL_CERTIFICATE_PATH || null;
+
+if (sslPrivateKeyPath !== null && sslCertificatePath !== null) {
+	enableSSL = true;
+}
+
 // Establishing a connection to our MongoDB server
 mongoose.connect(mongoDBConfig);
 
@@ -77,9 +87,25 @@ app.set('views', __dirname + '/app/views');
 app.set('view engine', 'jade');
 
 // Binding the listening socket
-var server = app.listen(appListenOnPortConfig, function () {
-  console.log('Express server listening on port ' + appListenOnPortConfig);
-});
+var server;
+
+if (!enableSSL) {
+	server = app.listen(appListenOnPortConfig, function () {
+		console.log('Express server listening on port ' + appListenOnPortConfig);
+	});
+} else {
+	console.log('Reading SSL: private key path: ' + sslPrivateKeyPath);
+	console.log('Reading SSL: certificate path: ' + sslCertificatePath);
+	
+	var sslOptions = {
+		key: fs.readFileSync(sslPrivateKeyPath),
+		cert: fs.readFileSync(sslCertificatePath),
+	};
+	
+	server = https.createServer(sslOptions, app).listen(appListenOnPortConfig, function () {
+		console.log('Express server with SSL listening on port ' + appListenOnPortConfig);
+	});
+}
 
 // Socket.IO will listen on the same port as our Web server
 var sio = require('socket.io').listen(server);

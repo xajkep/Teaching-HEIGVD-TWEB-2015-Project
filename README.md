@@ -10,7 +10,7 @@ Benoit Zuckschwerdt
 Websites
 ========================================
 
-The app is available here: http://quickpoll.top:8080 <br />
+The app is available here: https://quickpoll.top <br /> <strong>New in part 3: SSL enabled</strong><br />
 Our presentation website is available here: http://julienamacher.github.io/twebpres/
 
 Documentation
@@ -58,6 +58,10 @@ Done in part 3
   * Removed 2 unused scope.apply calls
   
 * Added quickpoll.top domain
+* Implemented SSL with a free certificate from <a href="https://letsencrypt.org/">Let's Encrypt</a>
+  The following additional environment variables are necessary:
+  * SSL_PRIVATE_KEY_PATH : Path of the private key (pem format). Should look like: /etc/letsencrypt/live/SITE/privkey.pem
+  * SSL_CERTIFICATE_PATH : Path of the certificate (pem format). Should look like: /etc/letsencrypt/live/SITE/cert.pem
   
 Done in part 2
 ========================================
