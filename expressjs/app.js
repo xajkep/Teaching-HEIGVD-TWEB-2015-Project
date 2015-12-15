@@ -59,11 +59,14 @@ if (passportFacebookClientSecret == null) {
 }
 
 var enableSSL = false;
+var whenSSLEnabledAlsoRedirectHttp;
 var sslPrivateKeyPath = process.env.SSL_PRIVATE_KEY_PATH || null;
 var sslCertificatePath = process.env.SSL_CERTIFICATE_PATH || null;
 
 if (sslPrivateKeyPath !== null && sslCertificatePath !== null) {
 	enableSSL = true;
+	var sslRedirect80ToSecureEnv = process.env.SSL_REDIRECT_80_TO_SECURED || null;
+	whenSSLEnabledAlsoRedirectHttp = sslRedirect80ToSecureEnv == "true";
 }
 
 // Establishing a connection to our MongoDB server
@@ -105,6 +108,18 @@ if (!enableSSL) {
 	server = https.createServer(sslOptions, app).listen(appListenOnPortConfig, function () {
 		console.log('Express server with SSL listening on port ' + appListenOnPortConfig);
 	});
+	
+	if (whenSSLEnabledAlsoRedirectHttp) {
+		
+		if (appListenOnPortConfig == 80) {
+			console.log('Cannot redirect unsecured to secured because the app is configured to listen on port 80');
+		} else {
+			require('http').createServer(function (req, res) {
+				res.writeHead(301, { "Location": "https://" + req.headers['host'] + req.url });
+				res.end();
+			}).listen(80);
+		}
+	}
 }
 
 // Socket.IO will listen on the same port as our Web server

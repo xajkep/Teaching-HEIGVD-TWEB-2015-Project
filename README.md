@@ -16,13 +16,13 @@ Our presentation website is available here: http://julienamacher.github.io/twebp
 Documentation
 ========================================
 
-<a href="USERMAN.md">User manual</a> <strong>New in part 2</strong><br />
-
-<a href="specifications/Specifications.md">Specifications</a><br />
-<a href="specifications/api_spec.md">API specifications</a> <strong>New in part 2: added sequence diagram</strong>
-
-<a href="registerapp_github/howto.md">Create an application on GitHub</a> <strong>New</strong><br />
-<a href="registerapp_facebook/howto.md">Create an application on Facebook</a> <strong>New</strong>
+* <a href="USERMAN.md">User manual</a> <strong>New in part 2</strong>
+* <a href="specifications/Specifications.md">Specifications</a>
+* <a href="specifications/api_spec.md">API specifications</a> <strong>New in part 2: added sequence diagram</strong>
+* <a href="registerapp_github/howto.md">Create an application on GitHub</a> <strong>New in part 3</strong>
+* <a href="registerapp_facebook/howto.md">Create an application on Facebook</a> <strong>New in part 3</strong>
+* <a href="install_debian/howto.md">Install the environment on a Debian box</a> <strong>New in part 3</strong>
+* <a href="letsencrypt/howto.md">Get a new certificate from the Let's encrypt initiative</a> <strong>New in part 3</strong>
 
 Done in part 3
 ========================================
@@ -59,9 +59,19 @@ Done in part 3
   
 * Added quickpoll.top domain
 * Implemented SSL with a free certificate from <a href="https://letsencrypt.org/">Let's Encrypt</a>
+  
   The following additional environment variables are necessary:
+  
   * SSL_PRIVATE_KEY_PATH : Path of the private key (pem format). Should look like: /etc/letsencrypt/live/SITE/privkey.pem
   * SSL_CERTIFICATE_PATH : Path of the certificate (pem format). Should look like: /etc/letsencrypt/live/SITE/cert.pem
+  
+  And this one is optional:
+  
+  * SSL_REDIRECT_80_TO_SECURED : If its value is set to "true", an endpoint will listen on port 80 and redirect clients on the SSL endpoint (port 443)
+  
+* A <a href="install_debian/howto.md">manual</a> on how to install the required execution environment in order to execute the application.
+
+  The server we are using is a 1.2€/month VPS in the Cloud at <a href="https://www.arubacloud.com/">Arubacloud</a> (<a href="https://www.arubacloud.com/free-trial.aspx">Free 10€ voucher</a>)
   
 Done in part 2
 ========================================
