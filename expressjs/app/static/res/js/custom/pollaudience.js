@@ -1,4 +1,4 @@
-tweb.controller('pollaudience', function($scope, $location, UserDataFactory, ServerPushPoll, DisplayErrorMessagesFromAPI) {
+tweb.controller('pollaudience', function($scope, $location, $interval, UserDataFactory, ServerPushPoll, DisplayErrorMessagesFromAPI) {
 	$scope.userSession = UserDataFactory.getSession();
 
 	// The poll id is a GET parameter
@@ -11,22 +11,22 @@ tweb.controller('pollaudience', function($scope, $location, UserDataFactory, Ser
 	$scope.voteRegistered = false;
 	$scope.voteCountOnThisQuestion = 0;
 	$scope.votingAsAnonymousIsAllowed = false;
+	var timerHdl;
 	
 	$scope.startTimer = function() {
-		$scope.timerHdl = setInterval(function() {
-									     $scope.timerRemaining = $scope.timerRemaining - 1;
-										 $scope.$apply();
-										 
-										 if ($scope.timerRemaining <= 0) {
-											 $scope.stopTimer();
-										 }
-									 }, 1000);
+		timerHdl = $interval(function() {
+								 $scope.timerRemaining = $scope.timerRemaining - 1;
+
+								 if ($scope.timerRemaining <= 0) {
+									 $scope.stopTimer();
+								 }
+							 }, 1000);
 	};
 	
 	$scope.stopTimer = function() {
-		if ($scope.timerHdl != null) {
-			clearTimeout($scope.timerHdl);
-			$scope.timerHdl = null;
+		if (angular.isDefined(timerHdl)) {
+			$interval.cancel(timerHdl);
+			timerHdl = undefined;
 		}
 	};
 	

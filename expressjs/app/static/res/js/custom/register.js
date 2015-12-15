@@ -4,6 +4,10 @@ tweb.controller('register', function($window, $scope, $http, $location, UserData
 		$window.location.href = "/api/v1/callbacks/redirect_github";
 	};
 	
+	$scope.registerUsingFacebook = function() {
+		$window.location.href = "/api/v1/callbacks/redirect_facebook";
+	};
+	
 	$scope.user = {
 		'firstname': '',
 		'lastname': '',

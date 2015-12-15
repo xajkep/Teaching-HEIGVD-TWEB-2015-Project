@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html ng-app="tweb" ng-controller="headcontroller">
+<html ng-app="tweb" ng-controller="headcontroller" ng-cloak>
 	<head >
 		<title>QuickPoll</title>
 		<style type="text/css">
@@ -31,7 +31,7 @@
 			left: -100%;
 		}
 		</style>
-		<link rel="stylesheet" href="res/css/bootstrap_{{ layout.url }}.min.css">
+		<link rel="stylesheet" ng-href="res/css/bootstrap_{{ layout.url }}.min.css">
 		<link rel="stylesheet" href="res/css/angular-chart.css">
 	</head>
 	<body>

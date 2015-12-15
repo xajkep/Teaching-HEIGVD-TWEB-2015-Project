@@ -1,4 +1,4 @@
-tweb.controller('pollspeaker', function($scope, $location, UserDataFactory, ServerPushPoll) {
+tweb.controller('pollspeaker', function($scope, $location, $interval, UserDataFactory, ServerPushPoll) {
 	$scope.userSession = UserDataFactory.getSession();
 	
 	// The poll id is a GET parameter
@@ -19,11 +19,11 @@ tweb.controller('pollspeaker', function($scope, $location, UserDataFactory, Serv
 	$scope.votingIsAllowed = false;
 	$scope.goNextQuestionAllowed = true;
 	$scope.hasPollEnded = false;
-	$scope.timerHdl = null;
 	$scope.timerRemaining = 0;
 	$scope.votingAsAnonymousIsAllowed = false;
-	
 	$scope.totalVotesCount = 0;
+	
+	var timerHdl;
 	
 	// This is the activity graph
 	var chartVotingActivity;
@@ -38,20 +38,19 @@ tweb.controller('pollspeaker', function($scope, $location, UserDataFactory, Serv
 			}];
 	
 	$scope.startTimer = function() {
-		$scope.timerHdl = setInterval(function() {
-									     $scope.timerRemaining = $scope.timerRemaining - 1;
-										 $scope.$apply();
-										 
-										 if ($scope.timerRemaining <= 0) {
-											 $scope.stopTimer();
-										 }
-									 }, 1000);
+		timerHdl = $interval(function() {
+									 $scope.timerRemaining = $scope.timerRemaining - 1;
+
+									 if ($scope.timerRemaining <= 0) {
+										 $scope.stopTimer();
+									 }
+								 }, 1000);
 	};
 	
 	$scope.stopTimer = function() {
-		if ($scope.timerHdl != null) {
-			clearTimeout($scope.timerHdl);
-			$scope.timerHdl = null;
+		if (angular.isDefined(timerHdl)) {
+			$interval.cancel(timerHdl);
+			timerHdl = undefined;
 		}
 	};
 	

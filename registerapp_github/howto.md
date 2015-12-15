@@ -1,6 +1,6 @@
 # How to obtain a a ClientID and Client Secret from GitHub
 
-* First, go to https://developer.github.com/v3/oauth/ and click on the REgister their application link.
+* First, go to https://developer.github.com/v3/oauth/ and click on the Register their application link.
 * Proceed to log in with your GitHub credentials
 * In the Register a new OAuth application  which should now be displayed, enter:
   * The application name (for example: QuickPolls)
