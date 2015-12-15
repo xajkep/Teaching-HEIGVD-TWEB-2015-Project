@@ -21,7 +21,7 @@ Documentation
 <a href="specifications/Specifications.md">Specifications</a><br />
 <a href="specifications/api_spec.md">API specifications</a> <strong>New in part 2: added sequence diagram</strong>
 
-<a href="registerapp_github/howto.md">Create an application on GitHub</a> <strong>New</strong>
+<a href="registerapp_github/howto.md">Create an application on GitHub</a> <strong>New</strong><br />
 <a href="registerapp_facebook/howto.md">Create an application on Facebook</a> <strong>New</strong>
 
 Done in part 3
