@@ -10,7 +10,7 @@ Benoit Zuckschwerdt
 Websites
 ========================================
 
-The app is available here: http://94.242.59.182:8080 <br />
+The app is available here: http://quickpoll.top:8080 <br />
 Our presentation website is available here: http://julienamacher.github.io/twebpres/
 
 Documentation
@@ -56,6 +56,8 @@ Done in part 3
   * Replaced setInterval and clearInterval with the Angular interval service.
   * Added debounce on the search by email field to reduce the number of requests sent to the server and thus reduce the load on the server
   * Removed 2 unused scope.apply calls
+  
+* Added quickpoll.top domain
   
 Done in part 2
 ========================================
