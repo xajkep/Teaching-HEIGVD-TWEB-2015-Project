@@ -35,16 +35,25 @@ Done in part 3
   
   ![Gravatar display in poll](./specifications/pictures/gravatar2.png)
 
-
-* Implemented SSO using <a href="https://github.com/cfsghost/passport-github">GitHub</a> and <a href="https://github.com/jaredhanson/passport">Passport</a>
+* Implemented SSO using <a href="https://github.com/cfsghost/passport-github">GitHub</a> and <a href="https://github.com/jaredhanson/passport-facebook">Facebook</a> using <a href="https://github.com/jaredhanson/passport">Passport</a>
   
-  See our <a href="registerapp_github/howto.md">manual</a> on how to create an application on GitHub.
+  See our manuals on how to create applications:
+  * <a href="registerapp_github/howto.md">Create an application on GitHub</a>
+  * <a href="registerapp_facebook/howto.md">Create an application on Facebook</a>
 
   The following additional environment variables are now required:
   * PASSPORT_GITHUB_CLIENT_ID : GitHub Client ID
   * PASSPORT_GITHUB_CLIENT_SECRET : GitHub Client Secret
   * PASSPORT_GITHUB_CALLBACK_URL : GitHub OAuth Callback URL. IT MUST BE THE SAME THAN THE ONE REGISTERED IN YOUR GITHUB APPLICATION
+  * PASSPORT_FACEBOOK_CLIENT_ID: Facebook Client ID
+  * PASSPORT_FACEBOOK_CLIENT_SECRET Facebook Client Secret
+  * PASSPORT_FACEBOOK_CALLBACK_URL : Facebook OAuth Callback URL. Again, must be the same than what is allowed in the Facebook app configuration (see the manual)
 
+* Taken into account the feedback of part 2:
+  * Replaced setInterval and clearInterval with the Angular interval service.
+  * Added debounce on the search by email field to reduce the number of requests sent to the server and thus reduce the load on the server
+  * Removed 2 unused scope.apply calls
+  
 Done in part 2
 ========================================
 
@@ -93,8 +102,9 @@ Done in part 2
   * (+ PASSPORT_GITHUB_CLIENT_SECRET)
   * (+ PASSPORT_FACEBOOK_CLIENT_ID)
   * (+ PASSPORT_GITHUB_CLIENT_SECRET)
-  
-  And on Unix systems, execute the following:
+  * (+ PASSPORT_FACEBOOK_CLIENT_ID)
+  * (+ PASSPORT_FACEBOOK_CLIENT_SECRET)
+  * (+ PASSPORT_FACEBOOK_CALLBACK_URL)
   
   * export DATABASE_STRING=mongodb://tweb:dwmrqi5y@ds043694.mongolab.com:43694/tweb
   * export SESSION_SECRET=VlL_LGgy5yu89-nW+7U6f7u0TbIlmP.z
@@ -103,6 +113,9 @@ Done in part 2
   * (+ PASSPORT_GITHUB_CLIENT_SECRET)
   * (+ PASSPORT_FACEBOOK_CLIENT_ID)
   * (+ PASSPORT_GITHUB_CLIENT_SECRET)
+  * (+ PASSPORT_FACEBOOK_CLIENT_ID)
+  * (+ PASSPORT_FACEBOOK_CLIENT_SECRET)
+  * (+ PASSPORT_FACEBOOK_CALLBACK_URL)
   
   When exporting to Heroku:
   
@@ -113,6 +126,9 @@ Done in part 2
   * (+ PASSPORT_GITHUB_CLIENT_SECRET)
   * (+ PASSPORT_FACEBOOK_CLIENT_ID)
   * (+ PASSPORT_GITHUB_CLIENT_SECRET)
+  * (+ PASSPORT_FACEBOOK_CLIENT_ID)
+  * (+ PASSPORT_FACEBOOK_CLIENT_SECRET)
+  * (+ PASSPORT_FACEBOOK_CALLBACK_URL)
   
 * Bugs corrected on 2012-12-04:
 
