@@ -16,10 +16,13 @@ Our presentation website is available here: http://julienamacher.github.io/twebp
 Documentation
 ========================================
 
-<a href="USERMAN.md">User manual</a> <strong>New</strong><br />
+<a href="USERMAN.md">User manual</a> <strong>New in part 2</strong><br />
 
 <a href="specifications/Specifications.md">Specifications</a><br />
-<a href="specifications/api_spec.md">API specifications</a> <strong>Added sequence diagram</strong>
+<a href="specifications/api_spec.md">API specifications</a> <strong>New in part 2: added sequence diagram</strong>
+
+<a href="registerapp_github/howto.md">Create an application on GitHub</a> <strong>New</strong>
+<a href="registerapp_facebook/howto.md">Create an application on Facebook</a> <strong>New</strong>
 
 Done in part 3
 ========================================
