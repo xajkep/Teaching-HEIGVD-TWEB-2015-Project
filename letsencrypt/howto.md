@@ -7,14 +7,14 @@ A standard certificate will be given to you absolutely free of charge. It is val
 
 Execute the following commands, in order:
 
-apt-get updateapt-get
-apt-get install git
-apt-get install python
-wget https://bootstrap.pypa.io/get-pip.py
-python get-pip.py
-git clone https://github.com/letsencrypt/letsencrypt
-cd letsencrypt
-./letsencrypt-auto certonly --standalone --email `YOUR_EMAIL` -d `YOUR_DOMAIN_NAME`
+	apt-get updateapt-get
+	apt-get install git
+	apt-get install python
+	wget https://bootstrap.pypa.io/get-pip.py
+	python get-pip.py
+	git clone https://github.com/letsencrypt/letsencrypt
+	cd letsencrypt
+	./letsencrypt-auto certonly --standalone --email `YOUR_EMAIL` -d `YOUR_DOMAIN_NAME`
 
 You'll find the private key and your certificate in the following location: /etc/letsencrypt/live/`YOUR_DOMAIN_NAME`/
 Make sure to make a backup of it.

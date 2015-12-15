@@ -1,4 +1,4 @@
-# How to obtain a a ClientID and Client Secret from Facebook
+# How to obtain a ClientID and Client Secret from Facebook
 
 * First, go to https://developer.facebook.com and enroll as a developer. You must already be logged as a regular user in Facebook.
 * Facebook will ask you to confirm your identity either by sending you an SMS or by linking a credit card

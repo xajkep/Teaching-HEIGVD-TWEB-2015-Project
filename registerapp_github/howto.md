@@ -1,4 +1,4 @@
-# How to obtain a a ClientID and Client Secret from GitHub
+# How to obtain a ClientID and Client Secret from GitHub
 
 * First, go to https://developer.github.com/v3/oauth/ and click on the Register their application link.
 * Proceed to log in with your GitHub credentials
