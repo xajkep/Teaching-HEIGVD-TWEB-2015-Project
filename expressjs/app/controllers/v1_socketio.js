@@ -55,7 +55,7 @@ sio.sockets.on('connection', function (socket) {
 
 			// If the poll has started, catching up
 			if (currentQuestion !== null) {
-				socket.voted = currentQuestion.voted > 0;
+				socket.voted = currentQuestion.voted;
 				console.log('Catching up on question. Time remaining: ' + currentQuestion.timeout);
 				socket.emit('nextQuestion', currentQuestion);
 			}
@@ -74,7 +74,7 @@ sio.sockets.on('connection', function (socket) {
 					voted = false;
 				} else {
 					if (!currentQuestion.question.allowAnonymous) {
-						voted = socket.voted;
+						voted = socket.voted > 0;
 					}
 				}
 
@@ -132,7 +132,7 @@ sio.sockets.on('connection', function (socket) {
 														socket.email = user.email;
 														socket.pollId = authData.poll;
 														socket.isSpeaker = (joinPollResult == 'speaker');
-														socket.voted = false;
+														socket.voted = 0;
 														
 														// Joining the common room
 														socket.join('poll_' + authData.poll);
@@ -159,7 +159,7 @@ sio.sockets.on('connection', function (socket) {
 
 		if (socket.isAuthenticated === true && socket.isSpeaker === true) {
 			for (var socketId in sio.nsps['/'].adapter.rooms['poll_' + socket.pollId + '_audience']){
-				sio.sockets.connected[socketId].voted = false;
+				sio.sockets.connected[socketId].voted = 0;
 			}
 			
 			globals.goNextQuestion(socket.pollId,
@@ -200,11 +200,11 @@ sio.sockets.on('connection', function (socket) {
 		if (socket.isAuthenticated === true && socket.isSpeaker !== true) {
 			
 			// Registering the vote
-			globals.vote(socket.pollId, answerIndex, socket.userId, voteAsAnonymous,
+			globals.vote(socket.pollId, answerIndex, socket.userId, socket.voted, voteAsAnonymous,
 						function(timing, voteRegisteredAsAnonymous) {
 							// Vote registered
 							console.log('Vote registered');
-							socket.voted = true;
+							socket.voted = socket.voted + 1;
 							socket.emit('voteResult', {'status': 'ok'});
 							
 							// Retrieving live voting results to send to speakers

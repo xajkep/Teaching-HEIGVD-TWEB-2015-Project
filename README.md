@@ -52,6 +52,8 @@ Done in part 3
   * PASSPORT_FACEBOOK_CLIENT_SECRET Facebook Client Secret
   * PASSPORT_FACEBOOK_CALLBACK_URL : Facebook OAuth Callback URL. Again, must be the same than what is allowed in the Facebook app configuration (see the manual)
 
+  18th December: Angular now receives the user's session in a cookie instead of receiving it as a URL parameter, which was displayed on screen for a plit second and thus represent a security issue.
+  
 * Taken into account the feedback of part 2:
   * Replaced setInterval and clearInterval with the Angular interval service.
   * Added debounce on the search by email field to reduce the number of requests sent to the server and thus reduce the load on the server

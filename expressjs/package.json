@@ -6,6 +6,7 @@
   "dependencies": {
     "api-copilot": "^0.6.1",
     "body-parser": "^1.14.1",
+    "cookies": "^0.5.1",
     "crypto": "0.0.3",
     "express": "^4.13.3",
     "fs": "0.0.2",

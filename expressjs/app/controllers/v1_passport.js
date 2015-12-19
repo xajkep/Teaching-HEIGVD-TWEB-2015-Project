@@ -10,6 +10,7 @@ var passport = require('passport');
 var GitHubStrategy = require('passport-github2').Strategy;
 var FacebookStrategy = require('passport-facebook').Strategy;
 var mongoose = require('mongoose');
+var Cookies = require('cookies');
 
 // Mongoose schemas
 var User = mongoose.model('User');
@@ -22,47 +23,52 @@ module.exports = function (a) {
 app.use(passport.initialize());
 
 function authOrCreateUser(realm, profile, done) {
-	
-	console.log("SSO Profile received: %j", profile);
-	
-	var userEmail = profile.emails[0].value;
-	var userFirstName = profile.displayName;
-	var userLastName = profile.displayName;
 
-	console.log("Received callback from " + realm + " from email: " + userEmail);
+	//console.log("SSO Profile received: %j", profile);
+	
+	// Sanity check. At least one email should be received.
+	if (profile.emails.length > 0) {
+		var userEmail = profile.emails[0].value;
+		var userFirstName = profile.displayName;
+		var userLastName = profile.displayName;
 
-	User.findOne({ 'email': userEmail }, '_id', function (err, userFound) {
-		if (err || userFound == null){
-			console.log(realm + " callback. The following email does not exist locally, creating it: " + userEmail);
-			common.generateId(function(generatedId) {
-				var newUser = new User({ _id: generatedId,
-										 email: userEmail,
-										 salt: "",
-										 encrypted_password: "",
-										 firstname: userFirstName,
-										 lastname: userLastName });
-				
-				// Our new user is then inserted in the database						
-				newUser.save(function (err, newUser) {
-					// This is used to pass variables
-					profile.custom = {
-						"_id": newUser._id,
-						"email": newUser.email,
-					};
-					return done(null, profile);
+		console.log("Received callback from " + realm + " from email: " + userEmail);
+
+		User.findOne({ 'email': userEmail }, '_id', function (err, userFound) {
+			if (err || userFound == null){
+				console.log(realm + " callback. The following email does not exist locally, creating it: " + userEmail);
+				common.generateId(function(generatedId) {
+					var newUser = new User({ _id: generatedId,
+											 email: userEmail,
+											 salt: "",
+											 encrypted_password: "",
+											 firstname: userFirstName,
+											 lastname: userLastName });
+					
+					// Our new user is then inserted in the database						
+					newUser.save(function (err, newUser) {
+						// This is used to pass variables
+						profile.custom = {
+							"_id": newUser._id,
+							"email": newUser.email,
+						};
+						return done(null, profile);
+					});
 				});
-			});
-		} else {
-			// This is used to pass variables
-			profile.custom = {
-				"_id": userFound._id,
-				"email": userEmail,
-			};
-			
-			console.log("" + realm + " callback. The following email does exist: " + userEmail);
-			return done(null, profile);
-		}
-	});
+			} else {
+				// This is used to pass variables
+				profile.custom = {
+					"_id": userFound._id,
+					"email": userEmail,
+				};
+				
+				console.log(realm + " callback. The following email does exist: " + userEmail);
+				return done(null, profile);
+			}
+		});
+	} else {
+		return done(["No email provided"]);
+	}
 }
 
 function ssoSuccessCreateSession(req, res) {
@@ -76,7 +82,17 @@ function ssoSuccessCreateSession(req, res) {
 										});
 										
 		
-		res.redirect('/sp/#/login?session=' + userSessionToken + '&email=' + req.user.custom.email);
+		// Old technique. Can still be used but is less secure since the session is visible for a plit instant in the url bar.
+		//res.redirect('/sp/#/login?session=' + userSessionToken + '&email=' + req.user.custom.email);
+		
+		// Adding the cookies. These will be analyzed by our AngularJS login page, that will immediately delete them once they have been read.
+		// httpOnly MUST be set to false for the cookies to be accessible from AngularJS!
+		var cookies = new Cookies(req, res);
+		cookies.set('session', userSessionToken, { 'httpOnly': false, 'overwrite': true, 'maxAge': 30000 });
+		cookies.set('email', req.user.custom.email, { 'httpOnly': false, 'overwrite': true, 'maxAge': 30000 });
+		
+		res.writeHead(302, { 'Location': '/sp/#/login' });
+		res.end();
 		
 		delete req.user.custom;
 	} else {

@@ -1,4 +1,4 @@
-tweb.controller('login', function($window, $scope, $http, $location, UserDataFactory, DisplayErrorMessagesFromAPI) {
+tweb.controller('login', function($window, $scope, $http, $location, $cookies, UserDataFactory, DisplayErrorMessagesFromAPI) {
 	// DEBUG TO-DO
 	$scope.user = {
 		'email': 'test@test.com',
@@ -15,16 +15,27 @@ tweb.controller('login', function($window, $scope, $http, $location, UserDataFac
 
 	// Are we coming from an SSO ? (like GitHub). If so, retrieving parameters from the URL
 	$scope.$on('$viewContentLoaded', function() {
-		var session = $location.search().session;
-		var email = $location.search().email;
+		var sessionByParameter = $location.search().session;
+		var emailByParameter = $location.search().email;
+		
+		var sessionByCookie = $cookies.get('session');
+		var emailByCookie = $cookies.get('email');
 
-		if (typeof session !== 'undefined' && typeof email !== 'undefined') {
-			UserDataFactory.setSession(session);
-			UserDataFactory.setEmail(email);
+		if (typeof sessionByParameter !== 'undefined' && typeof emailByParameter !== 'undefined') {
+			UserDataFactory.setSession(sessionByParameter);
+			UserDataFactory.setEmail(emailByParameter);
 			
 			// Important: clearing parameters (otherwise they are kept from controller to controller)
-			$location.search('session', null);
-			$location.search('email', null);
+			$location.search('sessionByParameter', null);
+			$location.search('emailByParameter', null);
+			
+			$location.path("/polls");
+		} else if (typeof sessionByCookie !== 'undefined' && typeof emailByCookie !== 'undefined') {
+			UserDataFactory.setSession(sessionByCookie);
+			UserDataFactory.setEmail(emailByCookie);
+
+			$cookies.remove('session', { 'path': '/' });
+			$cookies.remove('email', { 'path': '/' });
 			
 			$location.path("/polls");
 		}

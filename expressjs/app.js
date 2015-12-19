@@ -80,6 +80,13 @@ db.on('error', function () {
 // MongoDB fake schemas import
 require(__dirname + '/app/db/schemas.js');
 
+// Mongoose schemas
+var Poll = mongoose.model('Poll');
+
+// Closing all polls that happened to be opened when the server closed
+Poll.update({'state': 'opened' }, {'state': 'closed'}, {'multi': true}, function(err, numAffected) {
+});
+
 // Express configuration
 var app = express();
 
@@ -114,6 +121,8 @@ if (!enableSSL) {
 		if (appListenOnPortConfig == 80) {
 			console.log('Cannot redirect unsecured to secured because the app is configured to listen on port 80');
 		} else {
+			console.log('Creating the listener on port 80 that will redirect clients to the SSL secured port');
+			
 			require('http').createServer(function (req, res) {
 				res.writeHead(301, { "Location": "https://" + req.headers['host'] + req.url });
 				res.end();

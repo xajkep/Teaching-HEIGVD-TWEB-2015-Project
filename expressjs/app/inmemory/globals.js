@@ -105,11 +105,12 @@ module.exports = {
 	pollId: Id of the poll
 	userId: If of the user who cast a vote
 	answerIndex: Index of the answer to vote for (0 for the first answer, n-1 for the last answer)
+	votedCount: Number of votes this user already casted on the active question
 	voteAsAnonymous: true to cast this vote as anonymous, false otherwise (has no effect if the active question does not allow anonymous voting)
 	cbWhenOK: callback executed when the vote has been successfully registered. The amount of time (in ms) since the question was opened and the vote casted is received as first parameter. The second parameter indicates if the vote was registered as anonymous (true) or not (false)
 	cbWhenKO: callback executed when the vote cannot be casted (invalid pollId specified, poll not in memory, voting no more allowed in the poll, the user already casted too many votes, invalid answerIndex specified)
 	*/
-	vote: function(pollId, answerIndex, userId, voteAsAnonymous, cbWhenOK, cbWhenKO) {
+	vote: function(pollId, answerIndex, userId, votedCount, voteAsAnonymous, cbWhenOK, cbWhenKO) {
 		if (!polls.has(pollId)) {
 			cbWhenKO();
 			return;
@@ -132,13 +133,11 @@ module.exports = {
 		}
 		
 		// We then make sure the user cannot cast more votes than they are allowed to.
-		var alreadyVotedCount = countAlreadyVoted(poll, userId);
-
-		if (alreadyVotedCount >= question.maxVote) {
+		if (votedCount >= question.maxVote) {
 			cbWhenKO();
 			return;
 		}
-
+		
 		var answer = question.answers[answerIndex];
 		var voteAsAnonymousRegister = question.allowAnonymous ? voteAsAnonymous : false;
 
