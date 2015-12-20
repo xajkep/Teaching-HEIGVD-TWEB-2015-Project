@@ -3,6 +3,8 @@ var router = express.Router();
 var mongoose = require('mongoose');
 var globals = require(__dirname + '/../inmemory/globals.js');
 var common = require(__dirname + '/../common/common.js');
+var appjs = require(__dirname + '/../../app.js');
+var sio = appjs.sio;
 
 // Mongoose schemas
 var Poll = mongoose.model('Poll');
