@@ -50,7 +50,7 @@ function authOrCreateUser(realm, profile, done) {
 						// This is used to pass variables
 						profile.custom = {
 							"_id": newUser._id,
-							"email": newUser.email,
+							"email": newUser.email
 						};
 						return done(null, profile);
 					});

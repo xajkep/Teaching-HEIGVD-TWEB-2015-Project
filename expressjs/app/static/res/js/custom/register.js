@@ -19,7 +19,12 @@ tweb.controller('register', function($window, $scope, $http, $location, UserData
 	$scope.register = function() {
 
 		if (UserDataFactory.getSession() != null) {
-			alert('You are already logged in');
+			Lobibox.alert(
+				'error',
+				{
+					"msg": 'You are already logged in'
+				}
+			);
 		} else {
 		
 			var errors = [];
@@ -43,15 +48,31 @@ tweb.controller('register', function($window, $scope, $http, $location, UserData
 				})
 				.success(function(data, status, headers, config) {
 					if (data.status == 'ok') {
-						alert('Registered.');
+						Lobibox.alert(
+							'success',
+							{
+								"msg": "Account created. You will be redirected to the login page"
+							}
+						);
+
 						$location.path("/login");
 					} else {
-						alert("Could not register:\n" + DisplayErrorMessagesFromAPI(data.messages));
+						Lobibox.alert(
+							'error',
+							{
+								"msg": "Could not register:\n" + DisplayErrorMessagesFromAPI(data.messages, "<br />")
+							}
+						);
 					}
 				}).error(function(data, status, headers, config) {
 				});
 			} else {
-				alert(errors.join());
+				Lobibox.alert(
+					'error',
+					{
+						"msg": errors.join("<br />")
+					}
+				);
 			}
 		}
 	};

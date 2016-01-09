@@ -1,4 +1,8 @@
-<a href="" class="btn btn-info pull-right" role="button" ng-click="logout();">Log out</a>
+<span class="pull-right">
+	<a href="" class="btn btn-info" role="button" ng-click="viewParticipation();">Participation</a>
+	&nbsp;&nbsp;
+	<a href="" class="btn btn-info" role="button" ng-click="logout();">Log out</a>
+</span>
 
 <h1>Polls</h1>
 
@@ -43,6 +47,7 @@
 				<a href="" class="btn btn-info" role="button" ng-click="editPoll(poll._id)" ng-if="poll.state == 'pending'">Edit</a>
 				<a href="" class="btn btn-info" role="button" ng-click="joinPoll(poll._id)" ng-if="poll.state == 'opened'">Join</a>
 				<a href="" class="btn btn-info" role="button" ng-click="viewPollResults(poll._id)" ng-if="poll.state == 'completed'">View results</a>
+				<a href="" class="btn btn-info" role="button" ng-click="duplicatePoll(poll._id)">Duplicate</a>
 			</td>
 			<td>{{poll.name}}</td>
 			<td>{{poll.creation_date | date:'yyyy-MM-dd HH:mm'}}</td>

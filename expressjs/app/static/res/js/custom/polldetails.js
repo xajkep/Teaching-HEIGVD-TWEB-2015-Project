@@ -2,7 +2,12 @@
 tweb.controller('polldetails', function($scope, $location, $http, UserDataFactory, DisplayErrorMessagesFromAPI) {
 
 	if (UserDataFactory.getSession() == null) {
-		alert("Please login first");
+		Lobibox.alert(
+			'error',
+			{
+				"msg": "Please login first"
+			}
+		);
 		$location.path("login");
 	} else {
 		var userSession = UserDataFactory.getSession();
@@ -30,10 +35,20 @@ tweb.controller('polldetails', function($scope, $location, $http, UserDataFactor
 					if (data.status == 'ok') {
 						$scope.poll = data.data;
 					} else {
-						alert("Could not retrieve poll:\n" + DisplayErrorMessagesFromAPI(data.messages));
+						Lobibox.alert(
+							'error',
+							{
+								"msg": "Could not retrieve poll:<br />" + DisplayErrorMessagesFromAPI(data.messages, "<br />")
+							}
+						);
 					}
 				}).error(function(data, status, headers, config) {
-					alert("Could not retrieve poll: http error");
+					Lobibox.alert(
+						'error',
+						{
+							"msg": "Could not retrieve poll: http error"
+						}
+					);
 				});
 			} else {
 				// This is the poll sample
@@ -215,13 +230,29 @@ tweb.controller('polldetails', function($scope, $location, $http, UserDataFactor
 					})
 					.success(function(data, status, headers, config) {
 						if (data.status == 'ok') {
-							alert('Poll edited.');
+							Lobibox.alert(
+								'success',
+								{
+									"msg": 'Poll edited.'
+								}
+							);
+							
 							$location.path("/polls");
 						} else {
-							alert("Could not edit poll:\n" + data.messages.join());
+							Lobibox.alert(
+								'error',
+								{
+									"msg": "Could not edit poll:<br />" + DisplayErrorMessagesFromAPI(data.messages, "<br />")
+								}
+							);
 						}
 					}).error(function(data, status, headers, config) {
-						alert("Could not edit poll: http error");
+						Lobibox.alert(
+							'error',
+							{
+								"msg": "Could not edit poll: http error"
+							}
+						);
 					});
 				} else {
 					// In case we want to create a new poll
@@ -236,17 +267,38 @@ tweb.controller('polldetails', function($scope, $location, $http, UserDataFactor
 					})
 					.success(function(data, status, headers, config) {
 						if (data.status == 'ok') {
-							alert('Poll created.');
+							Lobibox.alert(
+								'success',
+								{
+									"msg": 'Poll created.'
+								}
+							);
+							
 							$location.path("/polls");
 						} else {
-							alert("Could not create poll:\n" + DisplayErrorMessagesFromAPI(data.messages));
+							Lobibox.alert(
+								'error',
+								{
+									"msg": "Could not create poll:\n" + DisplayErrorMessagesFromAPI(data.messages, "<br />")
+								}
+							);
 						}
 					}).error(function(data, status, headers, config) {
-						alert("Could not create poll: http error");
+						Lobibox.alert(
+							'error',
+							{
+								"msg": "Could not create poll: http error"
+							}
+						);
 					});
 				}
 			} else {
-				alert(errors.join());
+				Lobibox.alert(
+					'error',
+					{
+						"msg": errors.join("<br />")
+					}
+				);
 			}
 		}
 		

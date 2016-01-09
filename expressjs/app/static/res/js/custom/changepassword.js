@@ -40,14 +40,35 @@ tweb.controller('changepassword', function($scope, $http, $location, UserDataFac
 						}
 				}).success(function(data, status, headers, config) {
 					if (data.status == 'ok') {
-						alert('Password changed.');
+						Lobibox.alert(
+							'success',
+							{
+								"msg": "Password changed."
+							}
+						);
 					} else {
-						alert("Could not change password:\n" + DisplayErrorMessagesFromAPI(data.messages));
+						Lobibox.alert(
+							'error',
+							{
+								"msg": "Could not change password: " + DisplayErrorMessagesFromAPI(data.messages, "<br />")
+							}
+						);
 					}
 				}).error(function(data, status, headers, config) {
+					Lobibox.alert(
+							'error',
+							{
+								"msg": "Could not change password: http error"
+							}
+						);
 				});
 			} else {
-				alert(errors.join());
+				Lobibox.alert(
+					'error',
+					{
+						"msg": errors.join("<br />")
+					}
+				);
 			}
 		}
 	};

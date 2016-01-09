@@ -92,7 +92,12 @@ tweb.factory('ServerPushPoll', function (DisplayErrorMessagesFromAPI) {
 					cbJoinedAsAudience();
 				}
 			} else {
-				alert('Join poll failure: ' + DisplayErrorMessagesFromAPI(authAndJoinResult.messages));
+				Lobibox.alert(
+					'error',
+					{
+						"msg": 'Join poll failure: ' + DisplayErrorMessagesFromAPI(authAndJoinResult.messages, "<br />")
+					}
+				);
 			}
 		});
 		

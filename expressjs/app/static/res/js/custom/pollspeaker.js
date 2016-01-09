@@ -1,5 +1,6 @@
 tweb.controller('pollspeaker', function($scope, $location, $interval, UserDataFactory, ServerPushPoll) {
 	$scope.userSession = UserDataFactory.getSession();
+	$scope.userEmail = UserDataFactory.getEmail();
 	
 	// The poll id is a GET parameter
 	var pollId = $location.search().id;

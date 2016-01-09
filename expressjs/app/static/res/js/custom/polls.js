@@ -3,12 +3,118 @@ tweb.controller('polls', function($scope, $http, $location, UserDataFactory, Ser
 	$scope.userSession = UserDataFactory.getSession();
 	$scope.userEmail = UserDataFactory.getEmail();
 
+	var retrievePolls = function() {
+		$http({
+			method: 'GET',
+			url: "/api/v1/polls",
+			cache: false,
+			headers: {
+				'Authorization': $scope.userSession
+			}
+		})
+		.success(function(data, status, headers, config) {
+			if (data.status == 'ok') {
+				$scope.polls = data.data;
+			} else {
+				Lobibox.alert(
+					'error',
+					{
+						"msg": "Could not retrieve polls: " + DisplayErrorMessagesFromAPI(data.messages)
+					}
+				);
+			}
+		}).error(function(data, status, headers, config) {
+			Lobibox.alert(
+				'error',
+				{
+					"msg": "Could not retrieve polls: http error"
+				}
+			);
+		});
+
+		$scope.$watch('searchText', function (val) {
+			if (val != '' && val != undefined && val.length >= 3){
+				$http({
+					method: 'GET',
+					url: "/api/v1/users/email/" + val,
+					cache: false,
+					headers: {
+						'Authorization': $scope.userSession
+					}
+				})
+				.success(function(data, status, headers, config) {
+					if (data.status == 'ok') {
+						$scope.search.users = data.data;
+					} else {
+						Lobibox.alert(
+							'error',
+							{
+								"msg": "Could not retrieve users by email: " + DisplayErrorMessagesFromAPI(data.messages, "<br />")
+							}
+						);
+					}
+				}).error(function(data, status, headers, config) {
+					Lobibox.alert(
+						'error',
+						{
+							"msg": "Could not retrieve users by email: http error"
+						}
+					);
+				});
+			} else {
+				$scope.search.users = [];
+			}
+		});
+	};
+	
 	$scope.logout = function() {
 		$location.path("/login");
 	};
 	
 	$scope.createPoll = function() {
 		$location.path("/polldetails").search('mode', 'new');
+	};
+	
+	$scope.viewParticipation = function() {
+		$location.path("/participation");
+	};
+	
+	$scope.duplicatePoll = function(pollId) {
+		$http({
+				method: 'POST',
+				url: "/api/v1/poll/" + pollId + "/duplicate",
+				cache: false,
+				headers: {
+					'Authorization': $scope.userSession
+				}
+			})
+			.success(function(data, status, headers, config) {
+				if (data.status == 'ok') {
+					
+					Lobibox.alert(
+						'success',
+						{
+							"msg": 'Poll duplicated.'
+						}
+					);
+					
+					retrievePolls();
+				} else {
+					Lobibox.alert(
+						'error',
+						{
+							"msg": "Could not duplicate poll: " + DisplayErrorMessagesFromAPI(data.messages, "<br />")
+						}
+					);
+				}
+			}).error(function(data, status, headers, config) {
+				Lobibox.alert(
+					'error',
+					{
+						"msg": "Could not duplicate poll: http error"
+					}
+				);
+			});
 	};
 	
 	$scope.deletePoll = function(pollId) {
@@ -38,12 +144,29 @@ tweb.controller('polls', function($scope, $http, $location, UserDataFactory, Ser
 					}
 					
 					$scope.polls = polls;
+					
+					Lobibox.alert(
+						'success',
+						{
+							"msg": 'Poll deleted.'
+						}
+					);
 				
 				} else {
-					alert("Could not delete poll: " + DisplayErrorMessagesFromAPI(data.messages));
+					Lobibox.alert(
+						'error',
+						{
+							"msg": "Could not delete poll: " + DisplayErrorMessagesFromAPI(data.messages, "<br />")
+						}
+					);
 				}
 			}).error(function(data, status, headers, config) {
-				alert("Could not delete poll: http error");
+				Lobibox.alert(
+					'error',
+					{
+						"msg": "Could not delete poll: http error"
+					}
+				);
 			});
 	};
 	
@@ -75,10 +198,20 @@ tweb.controller('polls', function($scope, $http, $location, UserDataFactory, Ser
 			if (data.status == 'ok') {
 				$location.path("/polljoin").search({ 'id': pollId });
 			} else {
-				alert("Could not open poll: " + DisplayErrorMessagesFromAPI(data.messages));
+				Lobibox.alert(
+					'error',
+					{
+						"msg": "Could not open poll: " + DisplayErrorMessagesFromAPI(data.messages, "<br />")
+					}
+				);
 			}
 		}).error(function(data, status, headers, config) {
-			alert("Could not open poll: http error");
+			Lobibox.alert(
+				'error',
+				{
+					"msg": "Could not open poll: http error"
+				}
+			);
 		});
 	};
 	
@@ -93,51 +226,17 @@ tweb.controller('polls', function($scope, $http, $location, UserDataFactory, Ser
 	$scope.search = {
 		users: []
 	};
-	
+
 	if (UserDataFactory.getSession() == null) {
-		alert("Please login first");
+		Lobibox.alert(
+			'error',
+			{
+				"msg": "Please login first"
+			}
+		);
+		
 		$location.path("login");
 	} else {
-		$http({
-			method: 'GET',
-			url: "/api/v1/polls",
-			cache: false,
-			headers: {
-				'Authorization': $scope.userSession
-			}
-		})
-		.success(function(data, status, headers, config) {
-			if (data.status == 'ok') {
-				$scope.polls = data.data;
-			} else {
-				alert("Could not retrieve polls: " + DisplayErrorMessagesFromAPI(data.messages));
-			}
-		}).error(function(data, status, headers, config) {
-			alert("Could not retrieve polls: http error");
-		});
-
-		$scope.$watch('searchText', function (val) {
-			if (val != '' && val != undefined && val.length >= 3){
-				$http({
-					method: 'GET',
-					url: "/api/v1/users/email/" + val,
-					cache: false,
-					headers: {
-						'Authorization': $scope.userSession
-					}
-				})
-				.success(function(data, status, headers, config) {
-					if (data.status == 'ok') {
-						$scope.search.users = data.data;
-					} else {
-						alert("Could not retrieve users by email: " + DisplayErrorMessagesFromAPI(data.messages));
-					}
-				}).error(function(data, status, headers, config) {
-					alert("Could not retrieve users by email: http error");
-				});
-			} else {
-				$scope.search.users = [];
-			}
-		});
+		retrievePolls();
 	}
 });

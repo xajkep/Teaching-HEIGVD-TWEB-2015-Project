@@ -47,6 +47,10 @@ tweb.config(['$routeProvider',
                     templateUrl: 'res/partials/changepassword.html',
                     controller: 'changepassword'
                 }).
+				when('/participation', {
+                    templateUrl: 'res/partials/participation.html',
+                    controller: 'participation'
+                }).
                 otherwise({
                     redirectTo: '/login'
                 });

@@ -5,6 +5,7 @@ var common = require(__dirname + '/../common/common.js');
 
 // Mongoose schemas
 var Poll = mongoose.model('Poll');
+var User = mongoose.model('User');
 
 module.exports = function (app) {
   app.use('/api/v1', router);
@@ -24,20 +25,17 @@ router.get('/poll/:id', function (req, res) {
 										// populate() will resolve "foreign keys"
 										Poll.findOne({ '_id': pollIdToRetrieve }).populate('questions.answers.users.user', '_id email firstname lastname').exec(function (err, poll){
 										  if (err || poll == null) {
-											  console.log('User ' + userId + ' requested the non existing poll: ' + pollIdToRetrieve + ' err: ' + err);
 											  errors.push(common.erro('E_INVALID_IDENTIFIER', 'Poll not found'));
 										  } else {
-											 // Only the owner of a poll can request it
-											 if (common.checkStringTimeConst(poll.created_by, userId)) {
+											  var respondWithPollData = function() {
 												// The poll cannot be viewed if it is already finished or currently opened
 												if (poll.state == 'opened' || poll.state == 'closed') {
 													errors.push(common.erro('E_INVALID_STATE', 'The state is not opened or closed'));
+													respondCallback();
 												} else {
 													// We then return only selected fields to the user
 													var filteredPoll = poll.toObject();
-													 
-													console.log('Responding with poll: ' + poll._id);
-													
+
 													var questionsCount = filteredPoll.questions.length;
 													for (var i=0; i<questionsCount;i++) {
 														var currentQuestion = filteredPoll.questions[i];
@@ -61,13 +59,32 @@ router.get('/poll/:id', function (req, res) {
 													}
 
 													dataRespondToClient = filteredPoll;
+													respondCallback();													
 												}
-											 } else {
-												console.log('Refused: user ' + userId + ' requested poll ' + pollIdToRetrieve);
-												errors.push(common.erro('E_UNAUTHORIZED', 'You did not create this poll'));
-											 }
-											 
-											 respondCallback();
+											  };
+											  
+											  var respondWithUnauthorized = function() {
+												  console.log('Refused: user ' + userId + ' requested poll ' + pollIdToRetrieve);
+												  errors.push(common.erro('E_UNAUTHORIZED', 'You are not allowed'));
+												  respondCallback();
+											  };
+											  
+											  
+											  var userRequestingIsThePollCreator = common.checkStringTimeConst(poll.created_by, userId);
+
+											  // If the user requesting the poll is the creator, he can retrieve the poll
+											  if (userRequestingIsThePollCreator) {
+												  respondWithPollData();
+											  } else {
+												// If the user requesting the poll is not creator, he can only retrieve the poll if he participated in the poll
+												User.findOne({ '_id': userId, 'participation_polls': pollIdToRetrieve }, '_id', function (err, userFound) {
+													if (err || userFound !== null) {
+														respondWithPollData();
+													} else {
+														respondWithUnauthorized();
+													}
+												});
+											  }
 										  }
 										});
 									},

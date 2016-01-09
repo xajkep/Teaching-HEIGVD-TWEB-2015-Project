@@ -1,0 +1,25 @@
+<a href="" class="btn btn-info" role="button" ng-click="goBack();">Go back</a>
+
+<h1>Participations</h1>
+
+<table class="table" ng-if="polls.length > 0">
+	<thead>
+		<tr>
+			<th>Actions</th>
+			<th>Name</th>
+			<th>Date</th>
+			<th>State</th>
+		</tr>
+	</thead>
+	<tbody>
+		<tr ng-repeat="poll in polls track by $index">
+			<td>
+				<a href="" class="btn btn-info" role="button" ng-click="joinPoll(poll._id)" ng-if="poll.state == 'opened'">Join</a>
+				<a href="" class="btn btn-info" role="button" ng-click="viewPollResults(poll._id)" ng-if="poll.state == 'completed'">View results</a>
+			</td>
+			<td>{{poll.name}}</td>
+			<td>{{poll.creation_date | date:'yyyy-MM-dd HH:mm'}}</td>
+			<td>{{poll.state}}</td>
+		</tr>
+	</tbody>
+</table>

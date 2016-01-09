@@ -21,6 +21,7 @@ tweb.controller('login', function($window, $scope, $http, $location, $cookies, U
 		var sessionByCookie = $cookies.get('session');
 		var emailByCookie = $cookies.get('email');
 
+		/*
 		if (typeof sessionByParameter !== 'undefined' && typeof emailByParameter !== 'undefined') {
 			UserDataFactory.setSession(sessionByParameter);
 			UserDataFactory.setEmail(emailByParameter);
@@ -30,7 +31,7 @@ tweb.controller('login', function($window, $scope, $http, $location, $cookies, U
 			$location.search('emailByParameter', null);
 			
 			$location.path("/polls");
-		} else if (typeof sessionByCookie !== 'undefined' && typeof emailByCookie !== 'undefined') {
+		} else*/ if (typeof sessionByCookie !== 'undefined' && typeof emailByCookie !== 'undefined') {
 			UserDataFactory.setSession(sessionByCookie);
 			UserDataFactory.setEmail(emailByCookie);
 
@@ -56,10 +57,20 @@ tweb.controller('login', function($window, $scope, $http, $location, $cookies, U
 				UserDataFactory.setEmail(submittedEmail);
 				$location.path("/polls");
 			} else {
-				alert("Could not login: " + DisplayErrorMessagesFromAPI(data.messages));
+				Lobibox.alert(
+					'error',
+					{
+						"msg": "Could not login: " + DisplayErrorMessagesFromAPI(data.messages, "<br />")
+					}
+				);
 			}
 		}).error(function(data, status, headers, config) {
-			$scope.msg2 = data;
+			Lobibox.alert(
+				'error',
+				{
+					"msg": "Could not login: http error"
+				}
+			);
 		});
 	};
 });

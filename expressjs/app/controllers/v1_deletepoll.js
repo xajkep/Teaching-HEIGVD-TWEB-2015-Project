@@ -5,6 +5,7 @@ var common = require(__dirname + '/../common/common.js');
 
 // Mongoose schemas
 var Poll = mongoose.model('Poll');
+var User = mongoose.model('User');
 
 module.exports = function (app) {
   app.use('/api/v1', router);
@@ -39,6 +40,12 @@ router.delete('/poll/:id', function (req, res) {
 													errors.push(common.erro('E_INVALID_STATE', 'The poll is currently opened'));
 													respondCallback();
 												} else {
+													
+													// Removing references to the poll we are deleting
+													User.update({}, { $pull: { 'participation_polls': pollIdToDelete } }, {multi: true}, function(err) {
+														console.log("err=" + err);
+													});
+													
 													// Removing the poll
 													Poll.remove({ _id: pollIdToDelete }, function(err) {
 														

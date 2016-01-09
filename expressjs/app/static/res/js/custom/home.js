@@ -15,7 +15,12 @@ tweb.controller('home', function($scope, $http) {
 			$scope.pollsCount = data.pollsCount;
 			$scope.openPollsCount = data.openPollsCount;
 		}).error(function(data, status, headers, config) {
-			alert("Could not retrieve stats: http error");
+			Lobibox.alert(
+				'error',
+				{
+					"msg": "Could not retrieve stats: http error"
+				}
+			);
 		});
 	});
 });

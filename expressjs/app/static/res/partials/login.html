@@ -9,7 +9,7 @@
 <br />
 
 <h4>Regular login</h4>
-<form novalidate class="simple-form">
+<form ng-submit="login()" class="simple-form">
 	<div class="form-group">
 		<label for="email">Email:</label>
 		<input type="text" name="email" class="form-control" ng-model="user.email" placeholder="Email" required />
@@ -18,5 +18,5 @@
 		<label for="password">Password:</label>
 		<input type="password" name="password" class="form-control" ng-model="user.password" placeholder="Password" required />
 	</div>
-	<input type="button" value="Login" class="btn btn-default" ng-click="login()" />
+	<input type="submit" value="Login" class="btn btn-default" />
 </form>

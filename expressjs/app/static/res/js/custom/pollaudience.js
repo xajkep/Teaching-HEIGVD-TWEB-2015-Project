@@ -42,14 +42,29 @@ tweb.controller('pollaudience', function($scope, $location, $interval, UserDataF
 	
 	var redirectToPolls = function() {
 		ServerPushPoll.disconnect();
+		
+		Lobibox.alert(
+			'success',
+			{
+				"msg": "Thank you for your participation."
+			}
+		);
+		
 		$location.path("/polls");
 	};
 	
 	ServerPushPoll.registerBasicPollEvents(function() {
 												// When the same user already has a connection for the same poll 
-												$scope.votingIsAllowed = false;
+												$scope.votingIsAllo
+												wed = false;
 												$scope.$apply();
-												alert('This session has been terminated because you joined the same poll again.');
+												
+												Lobibox.alert(
+													'error',
+													{
+														"msg": 'This session has been terminated because you joined the same poll again.'
+													}
+												);
 											},
 											function(pollDetails) {
 												// Poll details
@@ -105,7 +120,12 @@ tweb.controller('pollaudience', function($scope, $location, $interval, UserDataF
 												   
 												   $scope.$apply();
 											   } else {
-												   alert("Cannot vote:\n" + DisplayErrorMessagesFromAPI(voteResult.messages));
+												   Lobibox.alert(
+														'error',
+														{
+															"msg": "Cannot vote:\n" + DisplayErrorMessagesFromAPI(voteResult.messages, "<br />")
+														}
+													);
 											   }
 										   });
 										   

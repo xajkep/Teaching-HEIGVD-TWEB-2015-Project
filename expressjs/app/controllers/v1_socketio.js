@@ -124,6 +124,11 @@ sio.sockets.on('connection', function (socket) {
 																socketInRoom.disconnect();
 															}
 														}
+														
+														// Adds the relationship "User participated in the poll" if not already present
+														User.findOneAndUpdate({ "_id": userId }, { $addToSet: { "participation_polls": authData.poll }}, function(err, doc) {
+															console.log("Relationship err=" + err);
+														});
 
 														socket.isAuthenticated = true;
 														socket.userId = userId;

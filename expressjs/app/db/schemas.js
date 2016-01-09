@@ -14,7 +14,8 @@ var UserSchema = new Schema({
   salt: String,
   encrypted_password: String,
   firstname: String,
-  lastname: String
+  lastname: String,
+  participation_polls: [{ type: String, ref: 'Poll' }]
 });
 
 // A poll has:

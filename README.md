@@ -58,6 +58,10 @@ Done in part 3
   * Replaced setInterval and clearInterval with the Angular interval service.
   * Added debounce on the search by email field to reduce the number of requests sent to the server and thus reduce the load on the server
   * Removed 2 unused scope.apply calls
+  * Forms can be submitted using the Enter key
+  * Updated the Jekyll website to be more attractive
+  * Removed alerts(). We are now using <a href="http://lobianijs.com/site/lobibox">Lobibox</a> for user notifications
+  * Added the feature listing polls in which the user participated ("Participated" button once logged in the top right corner). Allows for re-joining a poll (if it is opened) or viewing its results (if it is completed). API has been modified to allow people who participated in the poll to view it, in addition of its owner.
   
 * Added quickpoll.top domain
 * Implemented SSL with a free certificate from <a href="https://letsencrypt.org/">Let's Encrypt</a>

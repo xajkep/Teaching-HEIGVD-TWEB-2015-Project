@@ -129,10 +129,20 @@ tweb.controller('pollview', function($scope, $http, $location, $timeout, UserDat
 					}
 				});
 			} else {
-				alert("Could not retrieve poll: " + DisplayErrorMessagesFromAPI(data.messages));
+				Lobibox.alert(
+					'error',
+					{
+						"msg": "Could not retrieve poll: " + DisplayErrorMessagesFromAPI(data.messages, "<br />")
+					}
+				);
 			}
 		}).error(function(data, status, headers, config) {
-			alert("Could not retrieve poll: http error");
+			Lobibox.alert(
+					'error',
+					{
+						"msg": "Could not retrieve poll: http error"
+					}
+				);
 		});
 	});
 

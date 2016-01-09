@@ -166,6 +166,53 @@ E_BAD_PASSWORD : The password is too weak<br />
 E_INVALID_SESSION: No session provided or the provided session is invalid<br />
 E_GENERIC_ERROR : An internal error as occured
 
+### Get a list of polls in which I have participated
+
+GET request
+
+route: BASE/participations
+
+No payload.
+
+~~~json
+{
+  "data": {
+	polls: [ {
+		"_id": "abc",
+		"state:" "opened"
+	}
+	]
+  }
+}
+~~~
+
+
+### Duplicate an existing poll
+
+You can only duplicate your own polls.
+
+POST request
+
+route: BASE/poll/$id/duplicate
+
+No payload.
+
+name: name of the poll
+
+~~~json
+{
+  "data": String
+}
+~~~
+
+data: id of the duplicated poll
+
+Errors:<br />
+* E_INVALID_IDENTIFIER : Poll not found
+* E_UNAUTHORIZED : You did not create this poll
+* E_GENERIC_ERROR : Cannot add poll
+* E_INVALID_SESSION : Invalid or no session provided
+
 ### Create a new poll
 
 POST request
@@ -338,6 +385,8 @@ E_INVALID_SESSION: No session provided or the provided session is invalid<br />
 E_INVALID_REQUEST : When the supplied email address is too short<br />
 
 ### View poll
+
+Only the poll's owner and people who joined it can view it.
 
 GET request
 
@@ -651,7 +700,7 @@ Errors:<br />
 E_INVALID_SESSION: No session provided or the provided session is invalid<br />
 E_INVALID_IDENTIFIER: The specified id is invalid<br />
 E_INVALID_STATE: The poll cannot be viewed because it is either in the opened or closed state<br />
-E_UNAUTHORIZED: You are not the poll owner<br />
+E_UNAUTHORIZED: You are not allowed<br />
 
 ### List my polls
 

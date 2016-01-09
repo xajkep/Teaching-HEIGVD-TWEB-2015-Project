@@ -78,7 +78,8 @@ router.post('/registerForm', function (req, res) {
 												 salt: generatedSalt,
 												 encrypted_password: encryptedPassword,
 												 firstname: req.body.firstname,
-												 lastname: req.body.lastname });
+												 lastname: req.body.lastname,
+												 participation_polls: []} );
 						
 						// Our new user is then inserted in the database						
 						newUser.save(function (err, newUser) {
