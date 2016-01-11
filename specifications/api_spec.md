@@ -176,12 +176,15 @@ No payload.
 
 ~~~json
 {
+  "status": "ok",
   "data": {
-	polls: [ {
-		"_id": "abc",
-		"state:" "opened"
-	}
-	]
+    "polls":[
+	          {
+			    "_id": "460f5c191942bb7bbd5407682ea113eb989b31c9",
+			    "state": "completed",
+			    "name":"SuperPOLL"
+			  }
+			]
   }
 }
 ~~~

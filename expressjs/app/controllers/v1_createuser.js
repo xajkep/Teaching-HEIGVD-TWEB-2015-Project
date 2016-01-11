@@ -61,7 +61,7 @@ router.post('/registerForm', function (req, res) {
 
 	if (errors.length == 0) {
 		// We check that the email address is not already in the database
-		User.findOne({ email: req.body.email }, function (err, user){
+		User.findOne({ email: { $regex : new RegExp(req.body.email, "i") } }, function (err, user){
 		  if (user != null) {
 			  // Email already registered
 			  errors.push(common.erro("E_EMAIL_ALREADY_REGISTERED", "Email already registered"));

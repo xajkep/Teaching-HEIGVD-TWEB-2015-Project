@@ -53,6 +53,7 @@ router.get('/users/email/:email', function (req, res) {
 															currentUsers[polls[0].created_by].polls = pollsToAdd;
 														}
 														
+														// Once we have received all opened from this specific user, we respond to the request
 														if (++retrieved == users.length) {
 															
 															for (var k in currentUsers) {

@@ -63,6 +63,14 @@ Done in part 3
   * Removed alerts(). We are now using <a href="http://lobianijs.com/site/lobibox">Lobibox</a> for user notifications
   * Added the feature listing polls in which the user participated ("Participated" button once logged in the top right corner). Allows for re-joining a poll (if it is opened) or viewing its results (if it is completed). API has been modified to allow people who participated in the poll to view it, in addition of its owner.
   
+* Added a feature listing every polls the user joined. This allows him to view its results or join the poll again (if it is not finished yet)
+
+  ![Participations](./specifications/pictures/participations.png)
+
+* Added a "Duplicate" button on the list of polls, which allows a user to duplicate any poll (the duplicate has of course no answer attached)
+
+  ![Duplicate a poll](./specifications/pictures/duplicate.png)
+  
 * Added quickpoll.top domain
 * Implemented SSL with a free certificate from <a href="https://letsencrypt.org/">Let's Encrypt</a>
   

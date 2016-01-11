@@ -80,11 +80,7 @@ function ssoSuccessCreateSession(req, res) {
 		var userSessionToken = jwt.sign({ userId: req.user.custom._id }, sessionSecret, {
 										   expiresIn: 3600 * 6
 										});
-										
-		
-		// Old technique. Can still be used but is less secure since the session is visible for a plit instant in the url bar.
-		//res.redirect('/sp/#/login?session=' + userSessionToken + '&email=' + req.user.custom.email);
-		
+
 		// Adding the cookies. These will be analyzed by our AngularJS login page, that will immediately delete them once they have been read.
 		// httpOnly MUST be set to false for the cookies to be accessible from AngularJS!
 		var cookies = new Cookies(req, res);
