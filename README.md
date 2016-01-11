@@ -71,6 +71,7 @@ Done in part 3
 
   ![Duplicate a poll](./specifications/pictures/duplicate.png)
   
+* Added a full-screen notification when a new question is diplayed on the audience view using <a href="https://github.com/t4t5/sweetalert">sweetalert</a>
 * Added quickpoll.top domain
 * Implemented SSL with a free certificate from <a href="https://letsencrypt.org/">Let's Encrypt</a>
   

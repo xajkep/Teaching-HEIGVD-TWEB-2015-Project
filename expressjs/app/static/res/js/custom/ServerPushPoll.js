@@ -105,6 +105,7 @@ tweb.factory('ServerPushPoll', function (DisplayErrorMessagesFromAPI) {
 		_sio.on('userConnect', function(user) {
 			_connectedUsers.push(user);
 			if (_cbOnUserConnect != null) {
+				$
 				_cbOnUserConnect(_connectedUsers);
 			}
 		});

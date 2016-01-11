@@ -1,12 +1,12 @@
-<h4>{{pollName}}</h4>
+<h3>{{pollName}}</h3>
 
 <div>
 	<h4 ng-if="votingIsAllowed === true">Voting is allowed! {{timerRemaining}} seconds remaining</h4>
-	<h4 ng-if="votingIsAllowed === false">Waiting for voting to be allowed...</h4>
+	<strong ng-if="votingIsAllowed === false">Waiting for voting to be allowed...</strong>
 </div>
 
 <div ng-if="displayQuestion">
-	<h4>{{currentQuestion.name}}</h4>
+	<h3>{{currentQuestion.name}}</h3>
 	<ul ng-repeat="answer in currentQuestion.answers track by $index">
 		<li><a href="" class="btn btn-default" role="button" ng-click="vote($index, false)" ng-if="votingIsAllowed">Vote</a> <a href="" class="btn btn-default" role="button" ng-click="vote($index, true)" ng-if="votingIsAllowed && votingAsAnonymousIsAllowed">Vote as anonymous</a> {{answer.name}} <img src="res/img/tick1.png" alt="Voted" ng-if="answer.voted === true" /></li>
 	</ul>

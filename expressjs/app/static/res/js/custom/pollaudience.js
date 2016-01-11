@@ -83,6 +83,14 @@ tweb.controller('pollaudience', function($scope, $location, $interval, UserDataF
 													$scope.startTimer();
 													$scope.votingIsAllowed = $scope.voteCountOnThisQuestion < nextQuestion.maxVote;
 													$scope.votingAsAnonymousIsAllowed = nextQuestion.allowAnonymous;
+													
+													swal({
+													  "title": "You can vote!",
+													  "text": "<strong>A new question is displayed.</strong>",
+													  "timer": 1500,
+													  "html": true,
+													  "showConfirmButton": false
+													});
 											   } else {
 												   $scope.votingIsAllowed = false;
 											   }
