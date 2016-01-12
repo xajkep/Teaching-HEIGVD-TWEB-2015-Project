@@ -10,7 +10,7 @@ Benoit Zuckschwerdt
 Websites
 ========================================
 
-The app is available here: https://quickpoll.top <br /> <strong>New in part 3: SSL enabled</strong><br />
+The app is available here: https://shrouded-falls-6875.herokuapp.com (and here https://quickpoll.top <br /> <strong>New in part 3: SSL enabled</strong>)<br />
 Our presentation website is available here: http://julienamacher.github.io/twebpres/
 
 Documentation

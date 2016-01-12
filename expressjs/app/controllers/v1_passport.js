@@ -31,6 +31,19 @@ function authOrCreateUser(realm, profile, done) {
 		var userEmail = profile.emails[0].value;
 		var userFirstName = profile.displayName;
 		var userLastName = profile.displayName;
+		
+		if (profile.displayName.indexOf(' ') > -1)
+		{
+			var splittedBySpace = profile.displayName.split(" ");
+			
+			userFirstName = splittedBySpace[0];
+			
+			splittedBySpace.shift();
+			
+			userLastName = splittedBySpace.join(" ");
+		}
+		
+		
 
 		console.log("Received callback from " + realm + " from email: " + userEmail);
 
