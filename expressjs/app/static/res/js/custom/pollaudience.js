@@ -127,13 +127,6 @@ tweb.controller('pollaudience', function($scope, $location, $interval, UserDataF
 												   }
 												   
 												   $scope.$apply();
-											   } else {
-												   Lobibox.alert(
-														'error',
-														{
-															"msg": "Cannot vote:\n" + DisplayErrorMessagesFromAPI(voteResult.messages, "<br />")
-														}
-													);
 											   }
 										   });
 										   

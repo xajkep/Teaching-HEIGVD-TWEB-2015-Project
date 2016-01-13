@@ -20,7 +20,7 @@
 	
 	<div ng-show="search.users.length > 0">
 		<div ng-repeat="user in search.users">
-			<h4>{{ user.email }}</h4>
+			<strong>{{ user.email }}</strong>
 			<ul ng-repeat="poll in user.polls">
 				<li><a href="" class="btn btn-info" role="button" ng-click="joinPoll(poll._id)">Join</a> {{ poll.name }} ({{ poll.creation_date | date:'yyyy-MM-dd HH:mm' }})</li>
 			</ul>
