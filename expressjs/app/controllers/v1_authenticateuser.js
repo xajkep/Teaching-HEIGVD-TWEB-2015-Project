@@ -21,11 +21,11 @@ router.post('/account', function (req, res) {
 	var dataToSendToClient = {};
 
 	if (!req.body.hasOwnProperty("email")) {
-		errors.push("Email not supplied");
+		errors.push(common.erro('E_INVALID_REQUEST', "Email not supplied"));
 	}
 	
 	if (!req.body.hasOwnProperty("password")) {
-		errors.push("Password not supplied");
+		errors.push(common.erro('E_INVALID_REQUEST', "Password not supplied"));
 	}
 	
 	var respondCallback = function () { common.respondToUser(res, errors, dataToSendToClient); };

@@ -61,7 +61,7 @@ router.post('/poll/opened/:id', function (req, res) {
 										});
 									},
 									function() {
-										errors.push('Invalid or no session provided');
+										errors.push(common.erro('E_INVALID_SESSION', 'Invalid or no session provided'));
 										respondCallback();
 									});
 });

@@ -19,7 +19,7 @@ router.put('/account/password', function (req, res) {
 	var respondCallback = function () { common.respondToUser(res, errors, null); };
 	
 	if (!req.body.hasOwnProperty("password")) {
-		errors.push("Password not supplied");
+		errors.push(common.erro("E_INVALID_REQUEST", "Password not supplied"));
 		respondCallback();
 	} else {
 		common.checkAndExtractFromSessionToken(authorizationHeader,

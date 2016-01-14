@@ -32,7 +32,7 @@ function authOrCreateUser(realm, profile, done) {
 		var userFirstName = profile.displayName;
 		var userLastName = profile.displayName;
 		
-		if (profile.displayName.indexOf(' ') > -1)
+		if (profile.hasOwnProperty('displayName') && profile.displayName !== null && profile.displayName.indexOf(' ') > -1)
 		{
 			var splittedBySpace = profile.displayName.split(" ");
 			
@@ -40,16 +40,15 @@ function authOrCreateUser(realm, profile, done) {
 			
 			splittedBySpace.shift();
 			
-			userLastName = splittedBySpace.join(" ");
+			if (splittedBySpace.length > 0) {
+				userLastName = splittedBySpace.join(" ");
+			} else {
+				userLastName = '';
+			}
 		}
-		
-		
-
-		console.log("Received callback from " + realm + " from email: " + userEmail);
 
 		User.findOne({ 'email': userEmail }, '_id', function (err, userFound) {
 			if (err || userFound == null){
-				console.log(realm + " callback. The following email does not exist locally, creating it: " + userEmail);
 				common.generateId(function(generatedId) {
 					var newUser = new User({ _id: generatedId,
 											 email: userEmail,
@@ -75,7 +74,6 @@ function authOrCreateUser(realm, profile, done) {
 					"email": userEmail,
 				};
 				
-				console.log(realm + " callback. The following email does exist: " + userEmail);
 				return done(null, profile);
 			}
 		});
@@ -87,7 +85,7 @@ function authOrCreateUser(realm, profile, done) {
 function ssoSuccessCreateSession(req, res) {
 	// Basic check : are we coming from a SSO strategy or is it just a user browsing our urls?
 	if (req.hasOwnProperty("user") && req.user.hasOwnProperty("custom")) {
-		console.log("Authenticated using SSO: %j", req.user.custom);
+		//console.log("Authenticated using SSO: %j", req.user.custom);
 		
 		// Generating a new token for the authenticated user
 		var userSessionToken = jwt.sign({ userId: req.user.custom._id }, sessionSecret, {

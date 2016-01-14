@@ -215,7 +215,7 @@ module.exports = {
 					console.log(" maxVote: " + currentQuestionDTO.maxVote);
 					console.log(" timeout: " + currentQuestionDTO.timeout);
 					
-					if (currentQuestionDTO.name.length < 5 || currentQuestionDTO.name.length > 50) {
+					if (currentQuestionDTO.name.length < 5 || currentQuestionDTO.name.length > 80) {
 						errors.push(erro('E_INVALID_REQUEST', "Question name is invalid"));
 					}
 					

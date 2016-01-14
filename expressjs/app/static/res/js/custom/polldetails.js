@@ -174,131 +174,81 @@ tweb.controller('polldetails', function($scope, $location, $http, UserDataFactor
 		
 		// This will either create a new poll or update the one we are editing
 		$scope.save = function() {
-			var errors = [];
-			var questionsCount = $scope.poll.questions.length;
-			var pollNameLength = $scope.poll.name.length;
-			
-			if (pollNameLength < 3) {
-				errors.push('Poll name is too short');
-			} else if (pollNameLength > 50) {
-				errors.push('Poll name is too long');
-			}
-			
-			if (questionsCount < 1) {
-				errors.push('The poll must have at least one question');
-			}
-			
-			for (var i=0;i<questionsCount;i++) {
-				var currentQuestion = $scope.poll.questions[i];
-				var currentQuestionNameLength = currentQuestion.name.length;
 
-				if (currentQuestionNameLength < 5) {
-					errors.push('Question ' + (i + 1) + ': question name is too short');
-				} else if (currentQuestionNameLength > 30) {
-					errors.push('Question ' + (i + 1) + ': question name is too long');
-				}
-				
-				var answersCount = currentQuestion.answers.count;
-				
-				if (answersCount < 2) {
-					errors.push('Question ' + (i + 1) + ': must have at least 2 answers');
-				}
-				
-				for (var y=0;y<answersCount;y++) {
-					var currentAnswerNameLength = currentQuestion.answers[y].name.length;
-					
-					if (currentAnswerNameLength < 1) {
-						errors.push('Question ' + (i + 1) + ' answer ' + (y + 1) + ': name is too short');
-					} else if (currentAnswerNameLength > 30) {
-						errors.push('Question ' + (i + 1) + ' answer ' + (y + 1) + ': name is too long');
+			// In case we are editing an existing poll
+			if (mode == 'edit') {
+				$http({
+					method: 'PUT',
+					url: "/api/v1/poll/" + $scope.poll._id,
+					data: $scope.poll,
+					cache: false,
+					headers: {
+						'Authorization': userSession
 					}
-				}
-			}
-			
-			if (errors.length == 0) {
-				
-				// In case we are editing an existing poll
-				if (mode == 'edit') {
-					$http({
-						method: 'PUT',
-						url: "/api/v1/poll/" + $scope.poll._id,
-						data: $scope.poll,
-						cache: false,
-						headers: {
-							'Authorization': userSession
-						}
-					})
-					.success(function(data, status, headers, config) {
-						if (data.status == 'ok') {
-							Lobibox.alert(
-								'success',
-								{
-									"msg": 'Poll edited.'
-								}
-							);
-							
-							$location.path("/polls");
-						} else {
-							Lobibox.alert(
-								'error',
-								{
-									"msg": "Could not edit poll:<br />" + DisplayErrorMessagesFromAPI(data.messages, "<br />")
-								}
-							);
-						}
-					}).error(function(data, status, headers, config) {
+				})
+				.success(function(data, status, headers, config) {
+					if (data.status == 'ok') {
+						Lobibox.alert(
+							'success',
+							{
+								"msg": 'Poll edited.'
+							}
+						);
+						
+						$location.path("/polls");
+					} else {
 						Lobibox.alert(
 							'error',
 							{
-								"msg": "Could not edit poll: http error"
+								"msg": "Could not edit poll:<br />" + DisplayErrorMessagesFromAPI(data.messages, "<br />")
 							}
 						);
-					});
-				} else {
-					// In case we want to create a new poll
-					$http({
-						method: 'POST',
-						url: "/api/v1/poll",
-						data: $scope.poll,
-						cache: false,
-						headers: {
-							'Authorization': userSession
+					}
+				}).error(function(data, status, headers, config) {
+					Lobibox.alert(
+						'error',
+						{
+							"msg": "Could not edit poll: http error"
 						}
-					})
-					.success(function(data, status, headers, config) {
-						if (data.status == 'ok') {
-							Lobibox.alert(
-								'success',
-								{
-									"msg": 'Poll created.'
-								}
-							);
-							
-							$location.path("/polls");
-						} else {
-							Lobibox.alert(
-								'error',
-								{
-									"msg": "Could not create poll:\n" + DisplayErrorMessagesFromAPI(data.messages, "<br />")
-								}
-							);
-						}
-					}).error(function(data, status, headers, config) {
-						Lobibox.alert(
-							'error',
-							{
-								"msg": "Could not create poll: http error"
-							}
-						);
-					});
-				}
+					);
+				});
 			} else {
-				Lobibox.alert(
-					'error',
-					{
-						"msg": errors.join("<br />")
+				// In case we want to create a new poll
+				$http({
+					method: 'POST',
+					url: "/api/v1/poll",
+					data: $scope.poll,
+					cache: false,
+					headers: {
+						'Authorization': userSession
 					}
-				);
+				})
+				.success(function(data, status, headers, config) {
+					if (data.status == 'ok') {
+						Lobibox.alert(
+							'success',
+							{
+								"msg": 'Poll created.'
+							}
+						);
+						
+						$location.path("/polls");
+					} else {
+						Lobibox.alert(
+							'error',
+							{
+								"msg": "Could not create poll:\n" + DisplayErrorMessagesFromAPI(data.messages, "<br />")
+							}
+						);
+					}
+				}).error(function(data, status, headers, config) {
+					Lobibox.alert(
+						'error',
+						{
+							"msg": "Could not create poll: http error"
+						}
+					);
+				});
 			}
 		}
 		
