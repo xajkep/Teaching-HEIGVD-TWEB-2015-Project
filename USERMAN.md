@@ -11,27 +11,35 @@ Register a new account if you don't already have one by clicking on the "Registe
 
 ![register](./usermanimg/register.png)
 
-Input the required information:
+You can either:
+* Register using our GitHub or Facebook account
+  To do so, click on the `Register using ...` button
 
-![register2](./usermanimg/register2.png)
+  You will need to authorize the Quickpoll application.
 
-and then click on Register:
+  Once logged in, you will be redirected to the members page
 
-![register3](./usermanimg/register3.png)
+* Register an account
 
-Your account is now created and you should be redirected to the login screen.
+  ![register2](./usermanimg/register2.png)
 
-## Login
+  and then click on Register:
 
-Input your email address and the associated password and then click Login.
+  ![register3](./usermanimg/register3.png)
 
-![login](./usermanimg/login.png)
+  Your account is now created and you should be redirected to the login screen.
+
+  ## Login
+
+  Input your email address and the associated password and then click Login.
+
+  ![login](./usermanimg/login.png)
 
 Your home page is shown:
 
 ![polls](./usermanimg/polls.png)
 
-To log ou, click on Log out.
+To log out, click on Log out.
 
 ## Create a new poll
 
@@ -149,3 +157,11 @@ When you click on View poll results in a finished poll or click on View results 
 ![pollstats](./usermanimg/pollstats.png)
 
 You can click on Go back to return to the home page.
+
+Participants can anlso view the results of the poll they joined, these are listed on the top right when logged:
+
+![participation](./usermanimg/tr.png)
+
+You can then click on View results:
+
+![participation](./usermanimg/participation.png)

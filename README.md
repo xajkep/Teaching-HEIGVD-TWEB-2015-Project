@@ -27,6 +27,8 @@ Documentation
 Done in part 3
 ========================================
 
+* Updated the <a href="USERMAN.md">user manual</a>
+
 * Implemented Gravatar
 
   Users first need to configure their display picture.
