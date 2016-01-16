@@ -11,6 +11,7 @@ Websites
 ========================================
 
 The app is available here: https://shrouded-falls-6875.herokuapp.com (and here https://quickpoll.top <br /> <strong>New in part 3: SSL enabled</strong>)<br />
+**Note:** Authenticating using GitHub and Facebook only work on the quickpoll.top domain.<br />
 Our presentation website is available here: http://julienamacher.github.io/twebpres/
 
 Documentation
@@ -62,6 +63,7 @@ Done in part 3
   * Removed 2 unused scope.apply calls
   * Forms can be submitted using the Enter key
   * Updated the Jekyll website to be more attractive
+  * Removed the default username in the login form
   * Removed alerts(). We are now using <a href="http://lobianijs.com/site/lobibox">Lobibox</a> for user notifications
   * Added the feature listing polls in which the user participated ("Participated" button once logged in the top right corner). Allows for re-joining a poll (if it is opened) or viewing its results (if it is completed). API has been modified to allow people who participated in the poll to view it, in addition of its owner.
   
@@ -80,7 +82,7 @@ Done in part 3
   The following additional environment variables are necessary:
   
   * SSL_PRIVATE_KEY_PATH : Path of the private key (pem format). Should look like: /etc/letsencrypt/live/SITE/privkey.pem
-  * SSL_CERTIFICATE_PATH : Path of the certificate (pem format). Should look like: /etc/letsencrypt/live/SITE/cert.pem
+  * SSL_CERTIFICATE_PATH : Path of the certificate (pem format). Should look like: /etc/letsencrypt/live/SITE/fullchain.pem
   
   And this one is optional:
   
@@ -88,8 +90,60 @@ Done in part 3
   
 * A <a href="install_debian/howto.md">manual</a> on how to install the required execution environment in order to execute the application.
 
-  The server we are using is a 1.2€/month VPS in the Cloud at <a href="https://www.arubacloud.com/">Arubacloud</a> (<a href="https://www.arubacloud.com/free-trial.aspx">Free 10€ voucher</a>)
-  
+### Example of environment variables
+
+#### Example 1
+
+Port: 443 (HTTPS)<br />
+Database: on localhost. Database name: tweb<br />
+Session secret: **choose randomly**<br />
+GitHub client id: **your GitHub client id**<br />
+GitHub client secret: **your GitHub client secret**<br />
+GitHub callback url: **host**/api/v1/callbacks/github<br />
+Facebook client id: **your Facebook client id**<br />
+Facebook client secret: **your Facebook client secret**<br />
+Facebook callback url: **host**/api/v1/callbacks/github<br />
+SSL private key: **path to your privkey.pem**<br />
+SSL certificate: **path to your fullchain.pem**<br />
+Redirect HTTP (80) users to the secured server: yes<br />
+
+	export PORT=443
+	export DATABASE_STRING=mongodb://127.0.0.1:27017/tweb
+	export SESSION_SECRET=**choose randomly**
+	export PASSPORT_GITHUB_CLIENT_ID=**your GitHub client id**
+	export PASSPORT_GITHUB_CLIENT_SECRET=**your GitHub client secret**
+	export PASSPORT_GITHUB_CALLBACK_URL=https://quickpoll.top/api/v1/callbacks/github
+	export PASSPORT_FACEBOOK_CLIENT_ID=**your Facebook client id**
+	export PASSPORT_FACEBOOK_CLIENT_SECRET=**your Facebook client secret**
+	export PASSPORT_FACEBOOK_CALLBACK_URL=https://quickpoll.top/api/v1/callbacks/facebook
+	export SSL_PRIVATE_KEY_PATH=/etc/letsencrypt/live/quickpoll.top/privkey.pem
+	export SSL_CERTIFICATE_PATH=/etc/letsencrypt/live/quickpoll.top/fullchain.pem
+	export SSL_REDIRECT_80_TO_SECURED=true
+	
+#### Example 2
+
+Port: 80 (HTTP). No secured version.<br />
+Database: on localhost. Database name: tweb<br />
+Session secret: **choose randomly**<br />
+GitHub client id: **your GitHub client id**<br />
+GitHub client secret: **your GitHub client secret**<br />
+GitHub callback url: **host**/api/v1/callbacks/github<br />
+Facebook client id: **your Facebook client id**<br />
+Facebook client secret: **your Facebook client secret**<br />
+Facebook callback url: **host**/api/v1/callbacks/github<br />
+
+	export PORT=80
+	export DATABASE_STRING=mongodb://127.0.0.1:27017/tweb
+	export SESSION_SECRET=vD5amWkATuikLhfI4wl2DiY6
+	export PASSPORT_GITHUB_CLIENT_ID=**your GitHub client id**
+	export PASSPORT_GITHUB_CLIENT_SECRET=**your GitHub client secret**
+	export PASSPORT_GITHUB_CALLBACK_URL=https://quickpoll.top/api/v1/callbacks/github
+	export PASSPORT_FACEBOOK_CLIENT_ID=**your Facebook client id**
+	export PASSPORT_FACEBOOK_CLIENT_SECRET=**your Facebook client secret**
+	export PASSPORT_FACEBOOK_CALLBACK_URL=https://quickpoll.top/api/v1/callbacks/facebook
+	export SSL_PRIVATE_KEY_PATH=/etc/letsencrypt/live/quickpoll.top/privkey.pem
+	export SSL_CERTIFICATE_PATH=/etc/letsencrypt/live/quickpoll.top/fullchain.pem
+
 Done in part 2
 ========================================
 
